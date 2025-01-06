@@ -1,10 +1,5 @@
 import { POI } from "./post";
-import { Rect } from "./area";
-
-type Cluster = {
-    size: number;
-    bound: Rect;
-};
+import { Rect, roundDown } from "./area";
 
 /** adjacent and corner-touching rects are considered intersecting */
 function intersects(a: Rect, b: Rect) {
@@ -48,29 +43,17 @@ class QNode {
         this.size = 0;
     }
 
-    search(query: Rect, res: [POI[], Cluster[]], maxDensity?: number) {
+    search(query: Rect, res: POI[]) {
         if (!intersects(query, this.bound)) return;
 
-        if (maxDensity) {
-            const density = this.size / (this.bound.right - this.bound.left);
-            console.log(density, maxDensity);
-            if (density > maxDensity) {
-                res[1].push({
-                    size: this.size,
-                    bound: this.bound,
-                });
-                return;
-            }
-        }
-
         if (this.children) {
-            this.children[0].search(query, res, maxDensity);
-            this.children[1].search(query, res, maxDensity);
-            this.children[2].search(query, res, maxDensity);
-            this.children[3].search(query, res, maxDensity);
+            this.children[0].search(query, res);
+            this.children[1].search(query, res);
+            this.children[2].search(query, res);
+            this.children[3].search(query, res);
         } else {
             for (const d of this.data!) {
-                if (withinInclusiveAll(d.pos, query)) res[0].push(d);
+                if (withinInclusiveAll(d.pos, query)) res.push(d);
             }
         }
     }
@@ -184,9 +167,9 @@ export default class QTree {
     }
 
     /** bounds are inclusive */
-    search(query: Rect, maxDensity?: number) {
-        const res: [POI[], Cluster[]] = [[], []];
-        this.root.search(query, res, maxDensity);
+    search(query: Rect) {
+        const res: POI[] = [];
+        this.root.search(query, res);
         return res;
     }
 
@@ -198,4 +181,52 @@ export default class QTree {
     public get size() {
         return this.root.size;
     }
+}
+
+type Cluster = {
+    size: number;
+    bound: Rect;
+};
+
+function cluster(pois: POI[], bound: Rect): [POI[], Cluster[]] {
+    const maxSize = 20;
+    const gridLength = 20;
+
+    const buckets: Record<string, POI[]> = {};
+
+    for (const poi of pois) {
+        const bucket = `${roundDown(
+            poi.pos[0] - bound.left,
+            gridLength
+        )},${roundDown(poi.pos[1] - bound.bottom, gridLength)}`;
+        buckets[bucket] = buckets[bucket] ?? [];
+        buckets[bucket].push(poi);
+    }
+
+    const remainingPois: POI[] = [];
+    const clusters: Cluster[] = [];
+
+    for (const [bucket, poisInBucket] of Object.entries(buckets)) {
+        if (poisInBucket.length > maxSize) {
+            const split = bucket.split(",");
+            const lowerLeft = [
+                Number(split[0]) + bound.left,
+                Number(split[1]) + bound.bottom,
+            ];
+
+            clusters.push({
+                size: 0,
+                bound: {
+                    top: lowerLeft[1] + gridLength,
+                    bottom: lowerLeft[1],
+                    left: lowerLeft[0],
+                    right: lowerLeft[0] + gridLength,
+                },
+            });
+        } else {
+            remainingPois.push(...poisInBucket);
+        }
+    }
+
+    return [remainingPois, clusters];
 }

@@ -15,10 +15,10 @@ export function envelops(larger: Rect, smaller: Rect) {
 
 export const BOUND = 180;
 
-function roundUp(n: number, size: number) {
+export function roundUp(n: number, size: number) {
     return Math.ceil(n / size) * size;
 }
-function roundDown(n: number, size: number) {
+export function roundDown(n: number, size: number) {
     return Math.floor(n / size) * size;
 }
 
