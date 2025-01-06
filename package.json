@@ -1,24 +1,30 @@
 {
-  "name": "nearsay",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.1.3"
-  },
-  "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1"
-  }
+    "name": "nearsay",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint",
+        "a": "netstat -ano | findstr :3000, taskkill /F /PID "
+    },
+    "dependencies": {
+        "@googlemaps/markerclusterer": "^2.5.3",
+        "@types/d3-quadtree": "^3.0.6",
+        "@vis.gl/react-google-maps": "^1.4.2",
+        "d3-quadtree": "^3.0.1",
+        "next": "15.1.3",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "socket.io-client": "^4.8.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "postcss": "^8",
+        "tailwindcss": "^3.4.1",
+        "typescript": "^5"
+    }
 }
