@@ -1,20 +1,5 @@
-export type POI = {
-    _id: string;
-    pos: [number, number];
-};
-export type Rect = {
-    top: number;
-    bottom: number;
-    left: number;
-    right: number;
-};
-
-export function roundUp(n: number, size: number) {
-    return Math.ceil(n / size) * size;
-}
-export function roundDown(n: number, size: number) {
-    return Math.floor(n / size) * size;
-}
+import { Rect, roundDown } from "./area";
+import { POI } from "./post";
 
 /** adjacent and corner-touching rects are considered intersecting */
 function intersects(a: Rect, b: Rect) {
@@ -198,35 +183,44 @@ export default class QTree {
     }
 }
 
-type Cluster = {
+export type Cluster = {
     pos: [number, number];
     size: number;
-    bound: Rect;
 };
-function isClusterType(obj: any) {
-    return obj.bound !== undefined;
-}
-function addToCluster(cluster: Cluster, other: POI | Cluster) {
-    const newSize = cluster.size + ((other as any).size ?? 1);
-
-    cluster.pos[0] = cluster.pos[0] + (other.pos[0] - cluster.pos[0]) / newSize;
-
-    cluster.pos[1] = cluster.pos[1] + (other.pos[1] - cluster.pos[1]) / newSize;
-
-    cluster.size++;
+export function isCluster(obj: any) {
+    return typeof obj.pos === "object" && typeof obj.size === "number";
 }
 
-function poiToCluster(poi: POI, bound: Rect): Cluster {
+function poiToCluster(poi: POI): Cluster {
     return {
-        pos: poi.pos,
+        // make a copy of poi.pos, so that moving this cluster doesnt move the poi!
+        pos: [...poi.pos],
         size: 1,
-        bound,
     };
 }
+function addToCluster(cluster: Cluster, other: POI | Cluster) {
+    const cluster2 = isCluster(other)
+        ? (other as Cluster)
+        : poiToCluster(other as POI);
 
-function cluster(pois: POI[], bound: Rect, range: number): [POI[], Cluster[]] {
+    cluster.pos[0] =
+        (cluster.size * cluster.pos[0] + cluster2.size * cluster2.pos[0]) /
+        (cluster.size + cluster2.size);
+    cluster.pos[1] =
+        (cluster.size * cluster.pos[1] + cluster2.size * cluster2.pos[1]) /
+        (cluster.size + cluster2.size);
+
+    cluster.size += cluster2.size;
+}
+
+export function cluster(
+    pois: POI[],
+    range: number,
+    bound: Rect
+): (POI | Cluster)[] {
     const grid: Record<string, POI | Cluster> = {};
 
+    // sort pois into grid of clusters or pois
     for (const poi of pois) {
         const bucketPos = [
             roundDown(poi.pos[0] - bound.left, range),
@@ -242,48 +236,67 @@ function cluster(pois: POI[], bound: Rect, range: number): [POI[], Cluster[]] {
         }
 
         // there's a cluster in this bucket
-        else if (isClusterType(inhabitant)) {
+        else if (isCluster(inhabitant)) {
             addToCluster(inhabitant as Cluster, poi);
         }
 
         // there's a poi in this bucket
         else {
-            const cluster = poiToCluster(inhabitant as POI, {
-                top: bucketPos[1] + range,
-                bottom: bucketPos[1],
-                left: bucketPos[0],
-                right: bucketPos[0] + range,
-            });
+            const cluster = poiToCluster(inhabitant as POI);
             addToCluster(cluster, poi);
             grid[bucketName] = cluster;
         }
     }
 
-    return [[], []];
+    // console.log(grid);
+
+    const res: (POI | Cluster)[] = [];
+
+    const bucketNames = Object.keys(grid);
+    const unvisited = new Set(bucketNames);
+
+    for (const bucketName of bucketNames) {
+        const [x, y] = bucketName.split(",");
+        const bucketPos: [number, number] = [Number(x), Number(y)];
+
+        const finalItem: [Cluster | POI | null] = [null];
+
+        clusterGridDFS(grid, range, bucketPos, finalItem, unvisited);
+
+        if (finalItem[0]) res.push(finalItem[0]);
+    }
+
+    return res;
 }
 
-function dfs(
+function clusterGridDFS(
     grid: Record<string, POI | Cluster>,
     range: number,
     bucketPos: [number, number],
-    res: [Cluster | null]
+    finalItem: [Cluster | POI | null],
+    unvisited: Set<string>
 ) {
     const bucketName = bucketPos.join(",");
+
+    if (!unvisited.has(bucketName)) return;
+    unvisited.delete(bucketName);
+
     const inhabitant = grid[bucketName];
 
-    if (!res[0]) {
-        if (isClusterType(inhabitant)) {
-            res[0] = inhabitant as Cluster;
-        } else {
-            res[0] = poiToCluster(inhabitant as POI, {
-                top: bucketPos[1] + range,
-                bottom: bucketPos[1],
-                left: bucketPos[0],
-                right: bucketPos[0] + range,
-            });
+    // this is where dfs started
+    if (!finalItem[0]) {
+        finalItem[0] = inhabitant;
+    }
+
+    //  this is not the dfs' origin
+    else {
+        // if final item is not a cluster yet, make it one
+        if (!isCluster(finalItem[0])) {
+            finalItem[0] = poiToCluster(finalItem[0] as POI);
         }
-    } else {
-        addToCluster(res[0], inhabitant);
+
+        // add current item to final cluster
+        addToCluster(finalItem[0] as Cluster, inhabitant);
     }
 
     const adj: [number, number][] = [
@@ -298,53 +311,10 @@ function dfs(
         const adjInhabitant = grid[adjBucketName];
 
         if (adjInhabitant && dist(inhabitant.pos, adjInhabitant.pos) <= range) {
-            dfs(grid, range, adjBucketPos, res);
+            clusterGridDFS(grid, range, adjBucketPos, finalItem, unvisited);
         }
     }
 }
 function dist(p1: [number, number], p2: [number, number]) {
     return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
 }
-// const data: POI[] = [];
-
-// for (let x = 0; x < 100; x++) {
-//     for (let y = 0; y < 100; y++) {
-//         data.push({
-//             _id: x + "," + y,
-//             pos: [x, y],
-//         });
-//     }
-// }
-
-// const [remaining, clusters] = cluster(data, {
-//     left: 0,
-//     right: 100,
-//     top: 100,
-//     bottom: 0,
-// });
-
-// console.log(remaining);
-// console.log(clusters);
-
-function makePOI(x: number, y: number): POI {
-    return {
-        _id: x + "," + y,
-        pos: [x, y],
-    };
-}
-
-const c: Cluster = {
-    pos: [-1, 0],
-    size: 1,
-    bound: {
-        top: 5,
-        bottom: -5,
-        left: -5,
-        right: 5,
-    },
-};
-
-addToCluster(c, makePOI(-2, 0));
-addToCluster(c, makePOI(-3, 0));
-addToCluster(c, makePOI(-4, 0));
-console.log(c);

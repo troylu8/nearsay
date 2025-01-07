@@ -39,7 +39,7 @@ type MoveResponse = {
 export async function sendMoveRequest(curr: TileRegion, prev?: TileRegion) {
     const timestamps: Record<string, number> = {};
 
-    for (const poi of poisTree.search(curr.area)[0]) {
+    for (const poi of poisTree.search(curr.area)) {
         timestamps[poi._id] = poi.timestamp;
     }
 
