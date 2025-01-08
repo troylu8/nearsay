@@ -1,11 +1,11 @@
 "use client";
 
-import { Rect } from "@/lib/area";
+import { pxToDegrees, Rect } from "@/lib/area";
 import { poisTree, POI } from "@/lib/post";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import "./marker.css";
-import { cluster, isCluster, Cluster } from "@/lib/qtree";
+import { cluster, isCluster, Cluster } from "@/lib/cluster";
 
 type Props = {
     view?: Rect;
@@ -16,18 +16,11 @@ export default function Markers({ view }: Props) {
 
     if (!view) return <></>;
 
-    function pxToDegrees(px: number) {
-        const mapWidthDegrees =
-            map.getBounds()!.getNorthEast().lng() -
-            map.getBounds()!.getSouthWest().lng();
-
-        return (px * mapWidthDegrees) / map.getDiv().clientWidth;
-    }
     function handleMarkerClicked() {
         router.replace("/posts/asd", { scroll: true });
     }
 
-    return cluster(poisTree.search(view), pxToDegrees(30), view).map(
+    return cluster(poisTree.search(view), pxToDegrees(map, 30), view).map(
         (item: POI | Cluster, i) => {
             if (isCluster(item)) {
                 const cluster = item as Cluster;

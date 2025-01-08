@@ -62,3 +62,11 @@ export function getTileRegion(view: Rect): TileRegion {
         },
     };
 }
+
+export function pxToDegrees(map: google.maps.Map, px: number) {
+    const mapWidthDegrees =
+        map.getBounds()!.getNorthEast().lng() -
+        map.getBounds()!.getSouthWest().lng();
+
+    return (px * mapWidthDegrees) / map.getDiv().clientWidth;
+}

@@ -5,28 +5,60 @@ import {
     Map as GoogleMap,
     MapCameraChangedEvent,
     MapProps,
+    useMap,
 } from "@vis.gl/react-google-maps";
 import { FunctionComponent, useRef, useState } from "react";
 import { sendMoveRequest } from "@/lib/post";
 
-import { getTileRegion, isEqual, Rect, TileRegion } from "@/lib/area";
+import {
+    getTileRegion,
+    isEqual,
+    pxToDegrees,
+    Rect,
+    TileRegion,
+} from "@/lib/area";
 import { Polygon } from "./polygon";
 import Markers from "./markers";
+import TestDisplay from "./TestDisplay";
+
+export function isSplit(rect: Rect | [Rect, Rect]) {
+    return (rect as any).length == 2;
+}
+function trySplit(rect: Rect): Rect | [Rect, Rect] {
+    return rect.right < rect.left
+        ? [
+              {
+                  top: rect.top,
+                  bottom: rect.bottom,
+                  left: -180,
+                  right: rect.right,
+              },
+              {
+                  top: rect.top,
+                  bottom: rect.bottom,
+                  left: rect.left,
+                  right: 180,
+              },
+          ]
+        : rect;
+}
+
+function applyGap(rect: Rect, gap: number) {
+    rect.top -= gap;
+    rect.bottom += gap;
+    rect.left += gap;
+    rect.right -= gap;
+}
 
 export default function Map() {
-    const [view, setView] = useState<Rect | undefined>(undefined);
+    const [view, setView] = useState<Rect | [Rect, Rect] | undefined>(
+        undefined
+    );
     const [tileRegion, setTileRegion] = useState<TileRegion | undefined>(
         undefined
     );
 
     function handleCameraChanged(e: MapCameraChangedEvent) {
-        const testGapW = (e.detail.bounds.east - e.detail.bounds.west) * 0.3;
-        const testGapH = (e.detail.bounds.north - e.detail.bounds.south) * 0.3;
-        e.detail.bounds.north -= testGapH;
-        e.detail.bounds.south += testGapH;
-        e.detail.bounds.west += testGapW;
-        e.detail.bounds.east -= testGapW;
-
         const {
             north: top,
             south: bottom,
@@ -34,13 +66,67 @@ export default function Map() {
             east: right,
         } = e.detail.bounds;
 
-        setView({ top, bottom, left, right });
-        const nextTileRegion = getTileRegion({ top, bottom, left, right });
+        let view = trySplit({ top, bottom, left, right });
+        let gapW;
+        let gapH;
 
-        if (isEqual(nextTileRegion, tileRegion)) return;
-        setTileRegion(nextTileRegion);
+        if (isSplit(view)) {
+            const [a, b] = view as [Rect, Rect];
+            gapW = (a.right - a.left + (b.right - b.left)) * 0.3;
+            gapH = (a.top - a.bottom) * 0.3;
 
-        sendMoveRequest(nextTileRegion, tileRegion);
+            if (a.right - a.left < gapW) {
+                view = b;
+                view.top -= gapH;
+                view.bottom += gapH;
+
+                if (a.left == -180) {
+                    view.right = 180 - (gapW - (a.right - a.left));
+                    view.left += gapW;
+                } else {
+                    view.left = -180 + (gapW - (a.right - a.left));
+                    view.right -= gapW;
+                }
+            } else if (b.right - b.left < gapW) {
+                view = a;
+                view.top -= gapH;
+                view.bottom += gapH;
+
+                if (b.left == -180) {
+                    view.right = 180 - (gapW - (b.right - b.left));
+                    view.left += gapW;
+                } else {
+                    view.left = -180 + (gapW - (b.right - b.left));
+                    view.right -= gapW;
+                }
+            } else {
+                console.log("a");
+                a.top -= gapH;
+                b.top -= gapH;
+                a.bottom += gapH;
+                b.bottom += gapH;
+                if (a.left == -180) a.right -= gapW;
+                if (a.right == 180) a.left += gapW;
+                if (b.left == -180) b.right -= gapW;
+                if (b.right == 180) b.left += gapW;
+            }
+        } else {
+            view = view as Rect;
+            gapW = (view.right - view.left) * 0.3;
+            gapH = (view.top - view.bottom) * 0.3;
+            view.top -= gapH;
+            view.bottom += gapH;
+            view.left += gapW;
+            view.right -= gapW;
+        }
+
+        setView(view);
+        // const nextTileRegion = getTileRegion({ top, bottom, left, right });
+
+        // if (isEqual(nextTileRegion, tileRegion)) return;
+        // setTileRegion(nextTileRegion);
+
+        // sendMoveRequest(nextTileRegion, tileRegion);
     }
 
     return (
@@ -54,67 +140,11 @@ export default function Map() {
                     keyboardShortcuts={false}
                     onCameraChanged={handleCameraChanged}
                 >
-                    <Markers view={view} />
-
-                    {/* view */}
-                    {view && (
-                        <Polygon
-                            paths={[
-                                [
-                                    {
-                                        lng: view.left,
-                                        lat: view.top,
-                                    },
-                                    {
-                                        lng: view.right,
-                                        lat: view.top,
-                                    },
-                                    {
-                                        lng: view.right,
-                                        lat: view.bottom,
-                                    },
-                                    {
-                                        lng: view.left,
-                                        lat: view.bottom,
-                                    },
-                                    {
-                                        lng: view.left,
-                                        lat: view.top,
-                                    },
-                                ],
-                            ]}
-                        />
-                    )}
-
-                    {/* snapped view */}
-                    {tileRegion && (
-                        <Polygon
-                            paths={[
-                                [
-                                    {
-                                        lng: tileRegion.area.left,
-                                        lat: tileRegion.area.top,
-                                    },
-                                    {
-                                        lng: tileRegion.area.right,
-                                        lat: tileRegion.area.top,
-                                    },
-                                    {
-                                        lng: tileRegion.area.right,
-                                        lat: tileRegion.area.bottom,
-                                    },
-                                    {
-                                        lng: tileRegion.area.left,
-                                        lat: tileRegion.area.bottom,
-                                    },
-                                    {
-                                        lng: tileRegion.area.left,
-                                        lat: tileRegion.area.top,
-                                    },
-                                ],
-                            ]}
-                        />
-                    )}
+                    {/* <Markers view={view} /> */}
+                    <TestDisplay
+                        view={view}
+                        tileRegionArea={tileRegion?.area}
+                    />
                 </GoogleMap>
             </APIProvider>
         </div>
