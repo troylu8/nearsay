@@ -1,6 +1,7 @@
 import { BOUND, TileRegion } from "./area";
 import { io } from "socket.io-client";
 import QTree from "./qtree";
+import { SplitTileRegion } from "@/app/components/map/map";
 
 export type POI = {
     _id: string;
@@ -36,20 +37,21 @@ type MoveResponse = {
     fresh: POI[];
 };
 
-export async function sendMoveRequest(curr: TileRegion, prev?: TileRegion) {
+export async function sendMoveRequest(curr: SplitTileRegion, prev: SplitTileRegion) {
     const timestamps: Record<string, number> = {};
 
-    for (const poi of poisTree.search(curr.area)) {
+    const searchRects = curr.map(tilereg => tilereg? tilereg.area : undefined)
+                            .filter(rect => rect != undefined);
+
+    for (const poi of poisTree.search(...searchRects)) {
         timestamps[poi._id] = poi.timestamp;
     }
 
-    const response = await new Promise<MoveResponse | null>(
-        (resolve, reject) => {
+    const response = await new Promise<MoveResponse>(
+        (resolve, _) => {
             clientSocket.emit("move", { curr, prev, timestamps }, resolve);
         }
     );
-
-    if (!response) return;
 
     for (const _id of response.delete) {
         poisTree.remove(poisMap[_id]);

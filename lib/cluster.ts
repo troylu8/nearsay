@@ -66,8 +66,6 @@ export function cluster(
         }
     }
 
-    // console.log(grid);
-
     const res: (POI | Cluster)[] = [];
 
     const bucketNames = Object.keys(grid);

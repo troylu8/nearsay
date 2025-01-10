@@ -167,13 +167,16 @@ export default class QTree {
     }
 
     /** bounds are inclusive */
-    search(query: Rect) {
-        if (!envelops(this.root.bound, query)) {
-            
+    search(...queries: Rect[]) {
+        const res: POI[] = [];
+
+        for (const query of queries) {
+            if (!intersects(this.root.bound, query)) 
+                continue;
+
+            this.root.search(query, res);
         }
 
-        const res: POI[] = [];
-        this.root.search(query, res);
         return res;
     }
 

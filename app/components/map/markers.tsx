@@ -6,9 +6,10 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import "./marker.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
+import { SplitRect } from "./map";
 
 type Props = {
-    view?: Rect;
+    view?: SplitRect;
 };
 export default function Markers({ view }: Props) {
     const map = useMap()!;
@@ -20,37 +21,48 @@ export default function Markers({ view }: Props) {
         router.replace("/posts/asd", { scroll: true });
     }
 
-    return cluster(poisTree.search(view), pxToDegrees(map, 30), view).map(
-        (item: POI | Cluster, i) => {
-            if (isCluster(item)) {
-                const cluster = item as Cluster;
-                return (
-                    <AdvancedMarker
-                        key={i}
-                        position={{
-                            lng: cluster.pos[0],
-                            lat: cluster.pos[1],
-                        }}
-                    >
-                        <div className="post-marker bg-red-400 after:border-t-red-400">
-                            {cluster.size}x
-                        </div>
-                    </AdvancedMarker>
-                );
-            } else {
-                const poi = item as POI;
-                return (
-                    <AdvancedMarker
-                        key={i}
-                        position={{
-                            lng: poi.pos[0],
-                            lat: poi.pos[1],
-                        }}
-                    >
-                        <div className="post-marker">{poi.variant}</div>
-                    </AdvancedMarker>
-                );
-            }
+    const markers = [];
+
+    if (view[0]) {
+        markers.push(
+            ...cluster(poisTree.search(view[0]), pxToDegrees(map, 30), view[0])
+        );
+    }
+    if (view[1]) {
+        markers.push(
+            ...cluster(poisTree.search(view[1]), pxToDegrees(map, 30), view[1])
+        );
+    }
+
+    return markers.map((item: POI | Cluster, i) => {
+        if (isCluster(item)) {
+            const cluster = item as Cluster;
+            return (
+                <AdvancedMarker
+                    key={i}
+                    position={{
+                        lng: cluster.pos[0],
+                        lat: cluster.pos[1],
+                    }}
+                >
+                    <div className="post-marker bg-red-400 after:border-t-red-400">
+                        {cluster.size}x
+                    </div>
+                </AdvancedMarker>
+            );
+        } else {
+            const poi = item as POI;
+            return (
+                <AdvancedMarker
+                    key={i}
+                    position={{
+                        lng: poi.pos[0],
+                        lat: poi.pos[1],
+                    }}
+                >
+                    <div className="post-marker">{poi.variant}</div>
+                </AdvancedMarker>
+            );
         }
-    );
+    });
 }
