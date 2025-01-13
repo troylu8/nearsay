@@ -1,5 +1,5 @@
 import { envelops, Rect } from "./area";
-import { POI } from "./post";
+import { POI, Pos } from "./data";
 
 /** adjacent and corner-touching rects are considered intersecting */
 function intersects(a: Rect, b: Rect) {
@@ -9,7 +9,7 @@ function intersects(a: Rect, b: Rect) {
     );
 }
 
-function withinInclusiveSW(point: [number, number], rect: Rect) {
+function withinInclusiveSW(point: Pos, rect: Rect) {
     return (
         point[0] >= rect.left &&
         point[0] < rect.right &&
@@ -17,7 +17,7 @@ function withinInclusiveSW(point: [number, number], rect: Rect) {
         point[1] < rect.top
     );
 }
-function withinInclusiveAll(point: [number, number], rect: Rect) {
+function withinInclusiveAll(point: Pos, rect: Rect) {
     return (
         point[0] >= rect.left &&
         point[0] <= rect.right &&

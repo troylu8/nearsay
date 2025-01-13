@@ -1,8 +1,8 @@
 import { Rect, roundDown } from "./area";
-import { POI } from "./post";
+import { POI, Pos } from "./data";
 
 export type Cluster = {
-    pos: [number, number];
+    pos: Pos;
     size: number;
 };
 export function isCluster(obj: any) {
@@ -73,7 +73,7 @@ export function cluster(
 
     for (const bucketName of bucketNames) {
         const [x, y] = bucketName.split(",");
-        const bucketPos: [number, number] = [Number(x), Number(y)];
+        const bucketPos: Pos = [Number(x), Number(y)];
 
         const finalItem: [Cluster | POI | null] = [null];
 
@@ -88,7 +88,7 @@ export function cluster(
 function clusterGridDFS(
     grid: Record<string, POI | Cluster>,
     range: number,
-    bucketPos: [number, number],
+    bucketPos: Pos,
     finalItem: [Cluster | POI | null],
     unvisited: Set<string>
 ) {
@@ -115,7 +115,7 @@ function clusterGridDFS(
         addToCluster(finalItem[0] as Cluster, inhabitant);
     }
 
-    const adj: [number, number][] = [
+    const adj: Pos[] = [
         [bucketPos[0] + range, bucketPos[1]],
         [bucketPos[0] - range, bucketPos[1]],
         [bucketPos[0], bucketPos[1] + range],
@@ -131,6 +131,6 @@ function clusterGridDFS(
         }
     }
 }
-function dist(p1: [number, number], p2: [number, number]) {
+function dist(p1: Pos, p2: Pos) {
     return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
 }

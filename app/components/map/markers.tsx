@@ -1,7 +1,7 @@
 "use client";
 
-import { pxToDegrees, Rect } from "@/lib/area";
-import { poisTree, POI } from "@/lib/post";
+import { pxToDegrees } from "@/lib/area";
+import { poisTree, POI } from "@/lib/data";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import "./marker.css";
@@ -17,20 +17,20 @@ export default function Markers({ view }: Props) {
 
     if (!view) return <></>;
 
-    function handleMarkerClicked() {
-        router.replace("/posts/asd", { scroll: true });
+    function handleMarkerClicked(id: string) {
+        router.replace("/posts/" + id, { scroll: false });
     }
 
     const markers = [];
 
     if (view[0]) {
         markers.push(
-            ...cluster(poisTree.search(view[0]), pxToDegrees(map, 30), view[0])
+            ...cluster(poisTree.search(view[0]), pxToDegrees(map, 80), view[0])
         );
     }
     if (view[1]) {
         markers.push(
-            ...cluster(poisTree.search(view[1]), pxToDegrees(map, 30), view[1])
+            ...cluster(poisTree.search(view[1]), pxToDegrees(map, 80), view[1])
         );
     }
 
@@ -59,6 +59,7 @@ export default function Markers({ view }: Props) {
                         lng: poi.pos[0],
                         lat: poi.pos[1],
                     }}
+                    onClick={() => handleMarkerClicked(poi._id)}
                 >
                     <div className="post-marker">{poi.variant}</div>
                 </AdvancedMarker>

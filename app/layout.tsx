@@ -1,3 +1,5 @@
+import Map from "./components/map/map";
+import PostPosContextProvider from "./components/post/post-pos-context-provider";
 import "./globals.css";
 
 export default function RootLayout({
@@ -7,7 +9,12 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body>
+                <PostPosContextProvider>
+                    <Map />
+                    {children}
+                </PostPosContextProvider>
+            </body>
         </html>
     );
 }

@@ -1,10 +1,19 @@
+import { MouseEvent } from "react";
+
 type Props = Readonly<{
     src: string;
     width: number;
     height: number;
     color: string;
+    onClick?: (e: MouseEvent<HTMLDivElement>) => any;
 }>;
-export default function ColoredSvg({ src, width, height, color }: Props) {
+export default function ColoredSvg({
+    src,
+    width,
+    height,
+    color,
+    onClick,
+}: Props) {
     return (
         <div
             style={{
@@ -14,8 +23,9 @@ export default function ColoredSvg({ src, width, height, color }: Props) {
                 WebkitMaskSize: "cover",
                 maskImage: `url(${src})`,
                 WebkitMaskImage: `url(${src})`,
-                backgroundColor: color,
             }}
+            className={`bg-[${color}]`}
+            onClick={onClick}
         ></div>
     );
 }

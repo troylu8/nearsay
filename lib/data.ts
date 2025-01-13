@@ -1,17 +1,19 @@
-import { BOUND, TileRegion } from "./area";
 import { io } from "socket.io-client";
+import { BOUND } from "./area";
 import QTree from "./qtree";
 import { SplitTileRegion } from "@/app/components/map/map";
 
+export type Pos = [number, number];
+
 export type POI = {
     _id: string;
-    pos: [number, number];
+    pos: Pos;
     variant: "post";
-    data?: Post;
     timestamp: number;
 };
 
 export type Post = {
+    pos: Pos;
     body: string;
     likes: number;
     dislikes: number;
@@ -27,7 +29,7 @@ export const poisTree = new QTree({
     bottom: -BOUND,
 });
 
-const clientSocket = io("http://localhost:5000");
+const clientSocket = io("https://troy-book.tail2138e6.ts.net:8443/");
 
 type MoveResponse = {
     /** list of poi ids to delete */
