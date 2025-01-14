@@ -1,12 +1,11 @@
 "use client";
 
-import { pxToDegrees } from "@/lib/area";
+import { pxToDegrees, SplitRect } from "@/lib/area";
 import { poisTree, POI } from "@/lib/data";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
-import "./marker.css";
+import "./markers.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
-import { SplitRect } from "./map";
 
 type Props = {
     view?: SplitRect;

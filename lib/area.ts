@@ -26,17 +26,22 @@ export type TileRegion = {
     depth: number;
     area: Rect;
 };
-export function isEqual(a: TileRegion | undefined, b: TileRegion | undefined) {
+
+export function splitTileRegionsEqual(a: SplitTileRegion, b: SplitTileRegion) {
+    return tileRegionsEqual(a[0], b[0]) && tileRegionsEqual(a[1], b[1]);
+}
+export function tileRegionsEqual(a: TileRegion | undefined, b: TileRegion | undefined) {
     if (!a && !b) return true;
     if (!a || !b) return false;
 
-    if (a.depth != b.depth) return false;
-
+    return a.depth == b.depth && rectsEqual(a.area, b.area);
+}
+export function rectsEqual(a: Rect, b: Rect) {
     return (
-        a.area.top == b.area.top &&
-        a.area.bottom == b.area.bottom &&
-        a.area.left == b.area.left &&
-        a.area.right == b.area.right
+        a.top == b.top &&
+        a.bottom == b.bottom &&
+        a.left == b.left &&
+        a.right == b.right
     );
 }
 
@@ -69,4 +74,43 @@ export function pxToDegrees(map: google.maps.Map, px: number) {
         map.getBounds()!.getSouthWest().lng();
 
     return (px * mapWidthDegrees) / map.getDiv().clientWidth;
+}
+
+
+export type SplitRect = [Rect?, Rect?];
+export type SplitTileRegion = [TileRegion?, TileRegion?];
+
+export function toSplitTileRegion(splitRect: SplitRect): SplitTileRegion {
+    return [
+        splitRect[0] && getTileRegion(splitRect[0]),
+        splitRect[1] && getTileRegion(splitRect[1]),
+    ];
+}
+export function toSplitRect(splitTileRegion: SplitTileRegion): SplitRect {
+    return [
+        splitTileRegion[0] && splitTileRegion[0].area,
+        splitTileRegion[1] && splitTileRegion[1].area,
+    ];
+}
+export function isSplit(rect: SplitRect) {
+    return rect[1] != undefined;
+}
+
+export function split(rect: Rect): SplitRect {
+    return rect.right < rect.left
+        ? [
+              {
+                  top: rect.top,
+                  bottom: rect.bottom,
+                  left: rect.left,
+                  right: 180,
+              },
+              {
+                  top: rect.top,
+                  bottom: rect.bottom,
+                  left: -180,
+                  right: rect.right,
+              },
+          ]
+        : [rect, undefined];
 }

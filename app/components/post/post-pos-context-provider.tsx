@@ -1,18 +1,11 @@
 "use client";
 
-import {
-    useContext,
-    createContext,
-    useState,
-    Dispatch,
-    SetStateAction,
-    useRef,
-} from "react";
-import { Pos, Post } from "@/lib/data";
+import { useContext, createContext, useState, useRef } from "react";
+import { Pos } from "@/lib/data";
 
-type PostPosStatePair = [Pos | null, (id: string, pos: Pos) => void];
+type PostPosState = [Pos | null, (id: string | null, pos?: Pos) => void];
 
-const PostPosContext = createContext<PostPosStatePair | null>(null);
+const PostPosContext = createContext<PostPosState>([null, () => {}]);
 
 export function usePostPos() {
     return useContext(PostPosContext);
@@ -26,9 +19,11 @@ export default function PostPosContextProvider({ children }: Props) {
 
     const [postPos, setPostPos] = useState<Pos | null>(null);
 
-    function updatePostPos(id: string, pos: Pos) {
+    function updatePostPos(id: string | null, pos?: Pos) {
+        if (!id) return setPostPos(null);
+
         if (postIdRef.current != id) {
-            setPostPos(pos);
+            setPostPos(pos!);
         }
     }
 

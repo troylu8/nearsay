@@ -23,8 +23,8 @@ export default function ColoredSvg({
                 WebkitMaskSize: "cover",
                 maskImage: `url(${src})`,
                 WebkitMaskImage: `url(${src})`,
+                backgroundColor: color,
             }}
-            className={`bg-[${color}]`}
             onClick={onClick}
         ></div>
     );

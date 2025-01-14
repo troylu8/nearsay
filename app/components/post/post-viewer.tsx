@@ -30,6 +30,11 @@ enum PostInteraction {
     LIKE,
     DISLIKE,
 }
+const COLOR: Readonly<Record<PostInteraction, string>> = {
+    [PostInteraction.NONE]: "var(--foreground)",
+    [PostInteraction.LIKE]: "#00ff00",
+    [PostInteraction.DISLIKE]: "#ff0000",
+};
 
 type Props = {
     id: string;
@@ -37,11 +42,14 @@ type Props = {
 };
 export default function PostViewer({ id, post }: Props) {
     const router = useRouter();
-    const [_, updatePostPos] = usePostPos()!;
+    const [_, updatePostPos] = usePostPos();
 
     const [interaction, setInteraction] = useState(PostInteraction.NONE);
 
-    useEffect(() => updatePostPos(id, post.pos), []);
+    useEffect(() => {
+        updatePostPos(id, post.pos);
+        return () => updatePostPos(null);
+    }, []);
 
     function handleToggleLike() {
         setInteraction(
@@ -70,7 +78,7 @@ export default function PostViewer({ id, post }: Props) {
             className="fixed w-full h-full flex flex-col justify-center items-center bg-[#00000058]"
             onClick={handleClose}
         >
-            <div className="w-[80%] h-[80%] bg-white">
+            <div className="w-[80%] h-[80%] bg-white flex flex-col">
                 <div className="p-3 flex justify-start relative">
                     <Link href="/" scroll={false}>
                         <ColoredSvg
@@ -86,8 +94,9 @@ export default function PostViewer({ id, post }: Props) {
                         post
                     </h2>
                 </div>
-                <div className="px-5 pb-5 overflow-y-auto">
+                <div className="h-full m-5 mb-7 overflow-y-auto">
                     <p className="my-3"> {post.body} </p>
+                    <Link href={"/posts/jtqfc3Pay4"}>to post</Link>
                     <div className="flex justify-between">
                         <div className="flex gap-3 justify-start">
                             <PropertyIcon
@@ -98,7 +107,7 @@ export default function PostViewer({ id, post }: Props) {
                                 }
                                 color={
                                     interaction === PostInteraction.LIKE
-                                        ? "#ff0000"
+                                        ? COLOR[PostInteraction.LIKE]
                                         : undefined
                                 }
                                 value={post.likes}
@@ -112,7 +121,7 @@ export default function PostViewer({ id, post }: Props) {
                                 }
                                 color={
                                     interaction === PostInteraction.DISLIKE
-                                        ? "#ff0000"
+                                        ? COLOR[PostInteraction.DISLIKE]
                                         : undefined
                                 }
                                 value={post.dislikes}
@@ -155,22 +164,14 @@ function ExpiryIcon({ expiry, interaction }: ExpiryIconProps) {
             ? " - 1d"
             : undefined;
 
-    const color =
-        interaction === PostInteraction.LIKE
-            ? "#00ff00"
-            : interaction === PostInteraction.DISLIKE
-            ? "#ff0000"
-            : undefined;
-
     return (
         <div className="relative">
-            <PropertyIcon
-                src="/icons/clock.svg"
-                value={expiryDisplay}
-                color={color}
-            />
+            <PropertyIcon src="/icons/clock.svg" value={expiryDisplay} />
             {note && (
-                <p className="absolute top-full left-1/2 -translate-x-1/2">
+                <p
+                    className="absolute top-full left-1/2 -translate-x-1/2"
+                    style={{ color: COLOR[interaction] }}
+                >
                     {note}
                 </p>
             )}
@@ -191,9 +192,14 @@ function PropertyIcon({
     onClick,
 }: PropertyIconProps) {
     return (
-        <div className="flex items-center gap-1" onClick={onClick}>
+        <div
+            className={`flex items-center gap-1 ${
+                onClick ? "cursor-pointer" : "cursor-default"
+            }`}
+            onClick={onClick}
+        >
             <ColoredSvg src={src} width={20} height={20} color={color} />
-            <p className={`text-[${color}]`}> {value} </p>
+            <p> {value} </p>
         </div>
     );
 }

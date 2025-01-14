@@ -1,3 +1,4 @@
+import GeolocationContextProvider from "./components/geolocation-context-provider";
 import Map from "./components/map/map";
 import PostPosContextProvider from "./components/post/post-pos-context-provider";
 import "./globals.css";
@@ -11,7 +12,9 @@ export default function RootLayout({
         <html lang="en">
             <body>
                 <PostPosContextProvider>
-                    <Map />
+                    <GeolocationContextProvider>
+                        <Map />
+                    </GeolocationContextProvider>
                     {children}
                 </PostPosContextProvider>
             </body>
