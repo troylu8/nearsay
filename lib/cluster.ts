@@ -34,15 +34,14 @@ function addToCluster(cluster: Cluster, other: POI | Cluster) {
 export function cluster(
     pois: POI[],
     range: number,
-    bound: Rect
 ): (POI | Cluster)[] {
     const grid: Record<string, POI | Cluster> = {};
 
     // sort pois into grid of clusters or pois
     for (const poi of pois) {
         const bucketPos = [
-            roundDown(poi.pos[0] - bound.left, range),
-            roundDown(poi.pos[1] - bound.bottom, range),
+            roundDown(poi.pos[0], range),
+            roundDown(poi.pos[1], range),
         ];
         const bucketName = bucketPos.join(",");
 

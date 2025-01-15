@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 import { BOUND } from "./area";
 import QTree from "./qtree";
-import { SplitTileRegion } from "@/app/components/map/map";
+import { SplitTileRegion } from "@/lib/area";
 
 export type Pos = [number, number];
 
