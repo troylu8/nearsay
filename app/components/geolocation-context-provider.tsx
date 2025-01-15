@@ -6,6 +6,7 @@ type Geolocation = {
     pos?: google.maps.LatLngLiteral;
     err?: GeolocationPositionError;
 };
+
 const GeolocationContext = createContext<Geolocation>({});
 
 export function useGeolocation() {

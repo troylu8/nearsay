@@ -6,6 +6,7 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import "./markers.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
+import { useEffect } from "react";
 
 type Props = {
     view?: SplitRect;
@@ -20,18 +21,15 @@ export default function Markers({ view }: Props) {
         router.replace("/posts/" + id, { scroll: false });
     }
 
-    const markers = [];
+    const markers = view
+        .map((v) => {
+            if (!v) return [];
 
-    if (view[0]) {
-        markers.push(
-            ...cluster(poisTree.search(view[0]), pxToDegrees(map, 80), view[0])
-        );
-    }
-    if (view[1]) {
-        markers.push(
-            ...cluster(poisTree.search(view[1]), pxToDegrees(map, 80), view[1])
-        );
-    }
+            // console.log(pxToDegrees(map, 50));
+
+            return cluster(poisTree.search(v), pxToDegrees(map, 50));
+        })
+        .flat();
 
     return markers.map((item: POI | Cluster, i) => {
         if (isCluster(item)) {

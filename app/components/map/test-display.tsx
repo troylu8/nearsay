@@ -1,5 +1,5 @@
 import { Polygon } from "./polygon";
-import { SplitRect, SplitTileRegion } from "./map";
+import { SplitRect, toSplitRect, toSplitTileRegion } from "@/lib/area";
 
 function getPolygonsOfSplitRect(splitRect: SplitRect) {
     return splitRect.map((rect, i) =>
@@ -37,16 +37,16 @@ function getPolygonsOfSplitRect(splitRect: SplitRect) {
 
 type Props = {
     view: SplitRect;
-    tileRegionAreas: SplitRect;
 };
-export default function TestDisplay({ view, tileRegionAreas }: Props) {
+export default function TestDisplay({ view }: Props) {
     return (
         <>
             {/* view */}
             {view && getPolygonsOfSplitRect(view)}
 
             {/* snapped view */}
-            {tileRegionAreas && getPolygonsOfSplitRect(tileRegionAreas)}
+            {view &&
+                getPolygonsOfSplitRect(toSplitRect(toSplitTileRegion(view)))}
         </>
     );
 }

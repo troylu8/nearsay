@@ -6,16 +6,17 @@ import {
     MapCameraChangedEvent,
     useMap,
 } from "@vis.gl/react-google-maps";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sendMoveRequest } from "@/lib/data";
 
 import {
     split,
     SplitRect,
     SplitTileRegion,
-    toSplitRect,
     toSplitTileRegion,
     splitTileRegionsEqual,
+    isSplit,
+    Rect,
 } from "@/lib/area";
 import TestDisplay from "./test-display";
 import { usePostPos } from "../post/post-pos-context-provider";
@@ -26,16 +27,13 @@ import YouAreHereMarker from "./markers/you-are-here-marker";
 export default function Map() {
     const [view, setView] = useState<SplitRect>([undefined, undefined]);
 
-    const [tileRegion, setTileRegion] = useState<SplitTileRegion>([
-        undefined,
-        undefined,
-    ]);
+    const tileRegion = useRef<SplitTileRegion>([undefined, undefined]);
 
     const geolocation = useGeolocation();
     const [following, setFollowing] = useState(true);
-    const [center, setCenter] = useState<google.maps.LatLngLiteral>({
-        lat: 0,
-        lng: 0,
+    const [userPos, setUserPos] = useState<google.maps.LatLngLiteral>({
+        lng: 139.6917,
+        lat: 35.6895,
     });
 
     function handleCameraChanged(e: MapCameraChangedEvent) {
@@ -48,13 +46,20 @@ export default function Map() {
 
         let view = split({ top, bottom, left, right });
 
-        setView(view);
+        // addGap(view); //TODO: remove
+
         const nextTileRegions = toSplitTileRegion(view);
 
-        if (splitTileRegionsEqual(nextTileRegions, tileRegion)) return;
-        setTileRegion(nextTileRegions);
+        // if tile region hasnt changed, then set view now.
+        if (splitTileRegionsEqual(nextTileRegions, tileRegion.current))
+            return setView(view);
+        // if tile region changed, the set view (to reload markers)
+        // after poi tree is populated with request data
+        sendMoveRequest(nextTileRegions, tileRegion.current).then(
+            () => setView(view) // after a successfull move request, load markers
+        );
 
-        sendMoveRequest(nextTileRegions, tileRegion);
+        tileRegion.current = nextTileRegions;
     }
 
     function handleDrag() {
@@ -62,7 +67,7 @@ export default function Map() {
     }
 
     useEffect(() => {
-        if (geolocation.pos) setCenter(geolocation.pos);
+        if (geolocation.pos) setUserPos(geolocation.pos);
     }, [geolocation]);
 
     return (
@@ -70,20 +75,17 @@ export default function Map() {
             <APIProvider apiKey="AIzaSyCgfo_mjq90b6syVuWL2QbJbKwAqll9ceE">
                 <GoogleMap
                     mapId="4cd1599c3ca39378"
-                    defaultZoom={17}
-                    defaultCenter={{ lng: 139.6917, lat: 35.6895 }}
+                    defaultZoom={7} //TODO: should be 17
+                    defaultCenter={userPos}
                     disableDefaultUI
-                    center={following ? center : undefined}
+                    center={following ? userPos : undefined}
                     keyboardShortcuts={false}
                     onCameraChanged={handleCameraChanged}
                     onDrag={handleDrag}
                 >
-                    <YouAreHereMarker pos={center!} />
+                    <YouAreHereMarker pos={userPos!} />
                     <Markers view={view} />
-                    <TestDisplay
-                        view={view}
-                        tileRegionAreas={toSplitRect(tileRegion)}
-                    />
+                    {/* <TestDisplay view={view} /> */}
                 </GoogleMap>
                 <PanMapToPost setFollowing={setFollowing} />
             </APIProvider>
@@ -115,52 +117,54 @@ function PanMapToPost({ setFollowing }: PanMapProps) {
     return <></>;
 }
 
-// let gapW;
-// let gapH;
-// if (isSplit(view)) {
-//     const [a, b] = view as [Rect, Rect];
-//     gapW = (a.right - a.left + (b.right - b.left)) * 0.3;
-//     gapH = (a.top - a.bottom) * 0.3;
+function addGap(view: SplitRect) {
+    let gapW;
+    let gapH;
+    if (isSplit(view)) {
+        const [a, b] = view as [Rect, Rect];
+        gapW = (a.right - a.left + (b.right - b.left)) * 0.3;
+        gapH = (a.top - a.bottom) * 0.3;
 
-//     if (a.right - a.left < gapW) {
-//         view[0] = undefined;
-//         b.top -= gapH;
-//         b.bottom += gapH;
+        if (a.right - a.left < gapW) {
+            view[0] = undefined;
+            b.top -= gapH;
+            b.bottom += gapH;
 
-//         if (a.left == -180) {
-//             b.right = 180 - (gapW - (a.right - a.left));
-//             b.left += gapW;
-//         } else {
-//             b.left = -180 + (gapW - (a.right - a.left));
-//             b.right -= gapW;
-//         }
-//     } else if (b.right - b.left < gapW) {
-//         view[1] = undefined;
-//         a.top -= gapH;
-//         a.bottom += gapH;
+            if (a.left == -180) {
+                b.right = 180 - (gapW - (a.right - a.left));
+                b.left += gapW;
+            } else {
+                b.left = -180 + (gapW - (a.right - a.left));
+                b.right -= gapW;
+            }
+        } else if (b.right - b.left < gapW) {
+            view[1] = undefined;
+            a.top -= gapH;
+            a.bottom += gapH;
 
-//         if (b.left == -180) {
-//             a.right = 180 - (gapW - (b.right - b.left));
-//             a.left += gapW;
-//         } else {
-//             a.left = -180 + (gapW - (b.right - b.left));
-//             a.right -= gapW;
-//         }
-//     } else {
-//         a.top -= gapH;
-//         b.top -= gapH;
-//         a.bottom += gapH;
-//         b.bottom += gapH;
-//         if (a.left == -180) a.right -= gapW;
-//         if (a.right == 180) a.left += gapW;
-//         if (b.left == -180) b.right -= gapW;
-//         if (b.right == 180) b.left += gapW;
-//     }
-// } else {
-//     gapW = (view[0]!.right - view[0]!.left) * 0.3;
-//     gapH = (view[0]!.top - view[0]!.bottom) * 0.3;
-//     view[0]!.top -= gapH;
-//     view[0]!.bottom += gapH;
-//     view[0]!.left += gapW;
-//     view[0]!.right -= gapW;
-// }
+            if (b.left == -180) {
+                a.right = 180 - (gapW - (b.right - b.left));
+                a.left += gapW;
+            } else {
+                a.left = -180 + (gapW - (b.right - b.left));
+                a.right -= gapW;
+            }
+        } else {
+            a.top -= gapH;
+            b.top -= gapH;
+            a.bottom += gapH;
+            b.bottom += gapH;
+            if (a.left == -180) a.right -= gapW;
+            if (a.right == 180) a.left += gapW;
+            if (b.left == -180) b.right -= gapW;
+            if (b.right == 180) b.left += gapW;
+        }
+    } else {
+        gapW = (view[0]!.right - view[0]!.left) * 0.3;
+        gapH = (view[0]!.top - view[0]!.bottom) * 0.3;
+        view[0]!.top -= gapH;
+        view[0]!.bottom += gapH;
+        view[0]!.left += gapW;
+        view[0]!.right -= gapW;
+    }
+}
