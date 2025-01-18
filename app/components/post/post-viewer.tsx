@@ -73,74 +73,76 @@ export default function PostViewer({ id, post }: Props) {
         }
     }
 
-    // everything wrapped in a <div> to silence the "Skipping auto-scroll behavior due to position: fixed..." warning
     return (
-        <div>
-            <div
-                className="fixed w-full h-full flex flex-col justify-center items-center bg-[#00000058]"
-                onClick={handleClose}
-            >
-                <div className="w-[80%] h-[80%] bg-white flex flex-col">
-                    <div className="p-3 flex justify-start relative">
-                        <Link href="/" scroll={false}>
-                            <ColoredSvg
-                                src={"/icons/back.svg"}
-                                width={25}
-                                height={25}
-                                color="black"
-                                onClick={handleClose}
+        <div
+            className="fixed w-full h-full flex flex-col justify-center items-center bg-[#00000058]"
+            onClick={handleClose}
+        >
+            <div className="w-[80%] h-[80%] bg-white flex flex-col">
+                <div className="p-3 flex justify-start relative">
+                    <Link href="/" scroll={false}>
+                        <ColoredSvg
+                            src={"/icons/back.svg"}
+                            width={25}
+                            height={25}
+                            color="black"
+                            onClick={handleClose}
+                        />
+                    </Link>
+
+                    <h2 className="absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]">
+                        post
+                    </h2>
+                </div>
+                <div className="h-full m-5 mb-7 overflow-y-auto">
+                    <p className="my-3"> {post.body} </p>
+
+                    <Link href={"/posts/jtqfc3Pay4"} scroll={false}>
+                        to post
+                    </Link>
+                    {/* TODO: remove this */}
+
+                    <div className="flex justify-between">
+                        <div className="flex gap-3 justify-start">
+                            <PropertyIcon
+                                src={
+                                    interaction === PostInteraction.LIKE
+                                        ? "/icons/star-filled.svg"
+                                        : "/icons/star.svg"
+                                }
+                                color={
+                                    interaction === PostInteraction.LIKE
+                                        ? COLOR[PostInteraction.LIKE]
+                                        : undefined
+                                }
+                                value={post.likes}
+                                onClick={handleToggleLike}
                             />
-                        </Link>
+                            <PropertyIcon
+                                src={
+                                    interaction === PostInteraction.DISLIKE
+                                        ? "/icons/dislike-filled.svg"
+                                        : "/icons/dislike.svg"
+                                }
+                                color={
+                                    interaction === PostInteraction.DISLIKE
+                                        ? COLOR[PostInteraction.DISLIKE]
+                                        : undefined
+                                }
+                                value={post.dislikes}
+                                onClick={handleToggleDislike}
+                            />
+                            <PropertyIcon
+                                src="/icons/eye.svg"
+                                value={post.views}
+                            />
+                        </div>
 
-                        <h2 className="absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]">
-                            post
-                        </h2>
-                    </div>
-                    <div className="h-full m-5 mb-7 overflow-y-auto">
-                        <p className="my-3"> {post.body} </p>
-                        <Link href={"/posts/jtqfc3Pay4"}>to post</Link>
-                        <div className="flex justify-between">
-                            <div className="flex gap-3 justify-start">
-                                <PropertyIcon
-                                    src={
-                                        interaction === PostInteraction.LIKE
-                                            ? "/icons/star-filled.svg"
-                                            : "/icons/star.svg"
-                                    }
-                                    color={
-                                        interaction === PostInteraction.LIKE
-                                            ? COLOR[PostInteraction.LIKE]
-                                            : undefined
-                                    }
-                                    value={post.likes}
-                                    onClick={handleToggleLike}
-                                />
-                                <PropertyIcon
-                                    src={
-                                        interaction === PostInteraction.DISLIKE
-                                            ? "/icons/dislike-filled.svg"
-                                            : "/icons/dislike.svg"
-                                    }
-                                    color={
-                                        interaction === PostInteraction.DISLIKE
-                                            ? COLOR[PostInteraction.DISLIKE]
-                                            : undefined
-                                    }
-                                    value={post.dislikes}
-                                    onClick={handleToggleDislike}
-                                />
-                                <PropertyIcon
-                                    src="/icons/eye.svg"
-                                    value={post.views}
-                                />
-                            </div>
-
-                            <div className="flex justify-end">
-                                <ExpiryIcon
-                                    expiry={post.expiry}
-                                    interaction={interaction}
-                                />
-                            </div>
+                        <div className="flex justify-end">
+                            <ExpiryIcon
+                                expiry={post.expiry}
+                                interaction={interaction}
+                            />
                         </div>
                     </div>
                 </div>

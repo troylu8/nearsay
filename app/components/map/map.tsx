@@ -23,6 +23,7 @@ import { usePostPos } from "../post/post-pos-context-provider";
 import { useGeolocation } from "../geolocation-context-provider";
 import Markers from "./markers/markers";
 import YouAreHereMarker from "./markers/you-are-here-marker";
+import PanToUser from "./pan-to-user";
 
 export default function Map() {
     const [view, setView] = useState<SplitRect>([undefined, undefined]);
@@ -30,7 +31,6 @@ export default function Map() {
     const tileRegion = useRef<SplitTileRegion>([undefined, undefined]);
 
     const geolocation = useGeolocation();
-    const [following, setFollowing] = useState(true);
     const [userPos, setUserPos] = useState<google.maps.LatLngLiteral>({
         lng: 139.6917,
         lat: 35.6895,
@@ -62,10 +62,6 @@ export default function Map() {
         tileRegion.current = nextTileRegions;
     }
 
-    function handleDrag() {
-        setFollowing(false);
-    }
-
     useEffect(() => {
         if (geolocation.pos) setUserPos(geolocation.pos);
     }, [geolocation]);
@@ -78,28 +74,24 @@ export default function Map() {
                     defaultZoom={7} //TODO: should be 17
                     defaultCenter={userPos}
                     disableDefaultUI
-                    center={following ? userPos : undefined}
                     keyboardShortcuts={false}
                     onCameraChanged={handleCameraChanged}
-                    onDrag={handleDrag}
                 >
                     <YouAreHereMarker pos={userPos!} />
                     <Markers view={view} />
                     {/* <TestDisplay view={view} /> */}
                 </GoogleMap>
-                <PanMapToPost setFollowing={setFollowing} />
+                <PanToUser userPos={userPos} />
+                <PanToActivePost />
             </APIProvider>
         </div>
     );
 }
 
-type PanMapProps = {
-    setFollowing: (newFollowing: boolean) => any;
-};
-function PanMapToPost({ setFollowing }: PanMapProps) {
+function PanToActivePost() {
     const map = useMap(); // the map component itself cannot use useMap()
 
-    const [postPos, _] = usePostPos();
+    const [postPos, __] = usePostPos();
 
     useEffect(() => {
         if (postPos) {
@@ -108,8 +100,7 @@ function PanMapToPost({ setFollowing }: PanMapProps) {
                 lat: postPos![1],
             };
             if (!map?.getBounds()?.contains(postPosLatLng)) {
-                map?.setCenter(postPosLatLng);
-                setFollowing(false);
+                map?.panTo(postPosLatLng);
             }
         }
     }, [map, postPos]);
