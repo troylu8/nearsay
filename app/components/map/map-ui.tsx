@@ -3,6 +3,7 @@ import ColoredSvg from "../colored-svg";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "../circle";
 import { useGeolocation } from "../geolocation-context-provider";
+import PostDrafter from "../post/post-drafter";
 
 export default function MapUI() {
     const { userPos } = useGeolocation();
@@ -62,42 +63,42 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
         return () => centerChangedListener.remove();
     }, [map]);
 
-    function handlePlace() {
-        if (!inRange) {
-        }
-    }
+    const [drafting, setDrafting] = useState(false);
 
     return (
         <>
-            <Circle center={userPos} radius={100} />
+            {drafting ? (
+                <PostDrafter
+                    pos={map?.getCenter()!}
+                    onDone={(e) => {
+                        if (e === "clicked-post") setPlacing(false);
+                        else setDrafting(false);
+                    }}
+                />
+            ) : (
+                <>
+                    <Circle center={userPos} radius={100} />
 
-            <ColoredSvg
-                src="/icons/star.svg"
-                width={40}
-                height={40}
-                color={inRange ? "green" : "red"}
-                className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
+                    <ColoredSvg
+                        src="/icons/star.svg"
+                        width={40}
+                        height={40}
+                        color={inRange ? "green" : "red"}
+                        className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
+                    />
 
-            <button
-                className={`fixed left-1/2 -translate-x-1/2 bottom-[10%] rounded-md px-3 py-1 ${
-                    inRange ? "bg-green-500" : "bg-red-300"
-                }`}
-            >
-                {inRange ? "place note" : "can't place note this far away"}
-            </button>
+                    <button
+                        className={`fixed left-1/2 -translate-x-1/2 bottom-[10%] rounded-md px-3 py-1 ${
+                            inRange ? "bg-green-500" : "bg-red-300"
+                        }`}
+                        onClick={() => inRange && setDrafting(true)}
+                    >
+                        {inRange
+                            ? "place note"
+                            : "can't place note this far away"}
+                    </button>
+                </>
+            )}
         </>
     );
-}
-
-function bound(latlng: google.maps.LatLngLiteral) {
-    const val = latlng.lng;
-
-    const amt = val < 0 ? Math.ceil(val / 180) : Math.floor(val / 180);
-    const ex = val % 180;
-
-    if (amt % 2 == 0) latlng.lng = ex;
-    else latlng.lng = -Math.sign(val) * 180 + ex;
-
-    return latlng;
 }

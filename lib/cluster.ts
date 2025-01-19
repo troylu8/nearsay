@@ -1,5 +1,5 @@
 import { Rect, roundDown } from "./area";
-import { POI, Pos } from "./data";
+import { POI, Pos } from "./server";
 
 export type Cluster = {
     pos: Pos;

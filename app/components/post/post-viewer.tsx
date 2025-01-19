@@ -7,6 +7,7 @@ import { Post } from "@/lib/data";
 import { useEffect, useState } from "react";
 import { usePostPos } from "./post-pos-context-provider";
 import Modal from "../modal";
+import { useRouter } from "next/navigation";
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
@@ -43,6 +44,8 @@ type Props = {
 export default function PostViewer({ id, post }: Props) {
     const [_, updatePostPos] = usePostPos();
 
+    const router = useRouter();
+
     const [interaction, setInteraction] = useState(PostInteraction.NONE);
 
     useEffect(() => {
@@ -67,7 +70,10 @@ export default function PostViewer({ id, post }: Props) {
     }
 
     return (
-        <Modal title="post">
+        <Modal
+            title="post"
+            onClose={() => router.replace("/", { scroll: false })}
+        >
             <div className="h-full m-5 mb-7 overflow-y-auto">
                 <p className="my-3"> {post.body} </p>
 

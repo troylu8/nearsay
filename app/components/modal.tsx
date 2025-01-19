@@ -1,29 +1,27 @@
 "use client";
 
 import { MouseEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ColoredSvg from "./colored-svg";
 
 type Prop = {
     title: string;
     children: React.ReactNode;
+    onClose?: () => any;
 };
-export default function Modal({ title, children }: Prop) {
-    const router = useRouter();
-
+export default function Modal({ title, children, onClose }: Prop) {
     function handleClose(e: MouseEvent<HTMLDivElement>) {
         if (e.target === e.currentTarget) {
-            router.replace("/", { scroll: false });
+            if (onClose) onClose();
         }
     }
 
     return (
         <div
-            className="fixed w-full h-full flex flex-col justify-center items-center bg-[#00000058]"
+            className="fixed top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center bg-[#00000058] z-10"
             onClick={handleClose}
         >
-            <div className="w-[80%] max-h-[80%] bg-white flex flex-col">
+            <div className="w-[80%] max-h-[80%] bg-white rounded-md flex flex-col">
                 <div className="p-3 flex justify-start relative">
                     <Link href="/" scroll={false}>
                         <ColoredSvg

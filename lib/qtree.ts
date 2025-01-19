@@ -1,5 +1,5 @@
 import { envelops, Rect } from "./area";
-import { POI, Pos } from "./data";
+import { POI, Pos } from "./server";
 
 /** adjacent and corner-touching rects are considered intersecting */
 function intersects(a: Rect, b: Rect) {

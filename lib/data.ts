@@ -1,10 +1,6 @@
-import { io } from "socket.io-client";
-import { BOUND } from "./area";
+import EventEmitter from "node:events";
+import { BOUND, Rect } from "./area";
 import QTree from "./qtree";
-import { SplitTileRegion } from "@/lib/area";
-import path from "path";
-
-const SERVER_URL = "https://troy-book.tail2138e6.ts.net:8443/";
 
 export type Pos = [number, number];
 
@@ -24,67 +20,46 @@ export type Post = {
     views: number;
 };
 
-export const poisMap: Record<string, POI> = {};
-export const poisTree = new QTree({
-    left: -BOUND,
-    right: BOUND,
-    top: BOUND,
-    bottom: -BOUND,
-});
-
-const clientSocket = io(SERVER_URL);
-
-export function getPost(id: string) {
-    return fetch(path.join(SERVER_URL, "posts", id));
-}
-
-export function sendPostRequest(pos: [number, number], body: string) {
-    return fetch(path.join(SERVER_URL, "posts"), {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({pos, body}),
+export class POIManager {
+    private map: Record<string, POI> = {};
+    private tree = new QTree({
+        left: -BOUND,
+        right: BOUND,
+        top: BOUND,
+        bottom: -BOUND,
     });
-}
 
-type MoveResponse = {
-    /** list of poi ids to delete */
-    delete: string[];
+    private poisChangedHandlers: Set<() => any> = new Set();
 
-    /** list of pois to add/update */
-    fresh: POI[];
-};
-export async function sendMoveRequest(curr: SplitTileRegion, prev: SplitTileRegion) {
-    const timestamps: Record<string, number> = {};
+    addOrUpdate(poi: POI) {
+        const prev = this.map[poi._id];
+        if (prev) this.tree.remove(prev);
+        
+        this.map[poi._id] = poi;
+        this.tree.add(poi);
 
-    const searchRects = curr.map(tilereg => tilereg? tilereg.area : undefined)
-                            .filter(rect => rect != undefined);
-
-    for (const poi of poisTree.search(...searchRects)) {
-        timestamps[poi._id] = poi.timestamp;
+        for (const handler of this.poisChangedHandlers) 
+            handler();
     }
 
-    const response = await new Promise<MoveResponse>(
-        (resolve, _) => {
-            clientSocket.emit("move", { curr, prev, timestamps }, resolve);
+    remove(_id: string) {
+        if (this.tree.remove(this.map[_id])) {
+            delete this.map[_id];
+            for (const handler of this.poisChangedHandlers) 
+                handler();
         }
-    );
-
-    for (const _id of response.delete) {
-        poisTree.remove(poisMap[_id]);
-        delete poisMap[_id];
     }
-    for (const poi of response.fresh) {
-        if (poisMap[poi._id]) {
-            // update existing poi
-            poisTree.remove(poisMap[poi._id]);
-            poisTree.add(poi);
-        } else {
-            // add new poi
-            poisTree.add(poi);
-        }
 
-        poisMap[poi._id] = poi;
+    search(...queries: Rect[]) {
+        return this.tree.search(...queries);
+    }
+
+    addPoisChangedHandler(func: () => any) {
+        this.poisChangedHandlers.add(func);
+    }
+
+    removePoisChangedHandler(func: () => any) {
+        this.poisChangedHandlers.delete(func);
     }
 }
+export const pois = new POIManager();

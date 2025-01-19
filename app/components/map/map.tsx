@@ -7,7 +7,7 @@ import {
     useMap,
 } from "@vis.gl/react-google-maps";
 import { useEffect, useRef, useState } from "react";
-import { sendMoveRequest } from "@/lib/data";
+import { sendMoveRequest } from "@/lib/server";
 
 import {
     split,

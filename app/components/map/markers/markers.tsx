@@ -1,17 +1,33 @@
 "use client";
 
 import { pxToDegrees, SplitRect } from "@/lib/area";
-import { poisTree, POI } from "@/lib/data";
+import { pois } from "@/lib/data";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import "./markers.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
-import { useEffect } from "react";
+import { POI } from "@/lib/data";
+import { useEffect, useState } from "react";
 
 type Props = {
     view?: SplitRect;
 };
+
 export default function Markers({ view }: Props) {
+    const [key, setKey] = useState(0);
+
+    useEffect(() => {
+        function rerenderMarkers() {
+            setKey(key + 1);
+        }
+        pois.addPoisChangedHandler(rerenderMarkers);
+        return () => pois.removePoisChangedHandler(rerenderMarkers);
+    });
+
+    return <MarkersInner key={key} view={view} />;
+}
+
+function MarkersInner({ view }: Props) {
     const map = useMap()!;
     const router = useRouter();
 
@@ -24,10 +40,7 @@ export default function Markers({ view }: Props) {
     const markers = view
         .map((v) => {
             if (!v) return [];
-
-            // console.log(pxToDegrees(map, 50));
-
-            return cluster(poisTree.search(v), pxToDegrees(map, 50));
+            return cluster(pois.search(v), pxToDegrees(map, 50));
         })
         .flat();
 
