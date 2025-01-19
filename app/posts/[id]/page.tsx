@@ -1,6 +1,6 @@
 import PostViewer from "@/app/components/post/post-viewer";
 import NotFound from "@/app/not-found";
-import { Post } from "@/lib/data";
+import { getPost, Post } from "@/lib/data";
 
 type Props = {
     params: Promise<{ id: string }>;
@@ -8,9 +8,7 @@ type Props = {
 export default async function Page({ params }: Props) {
     const { id } = await params;
 
-    const resp = await fetch(
-        `https://troy-book.tail2138e6.ts.net:8443/posts/${id}`
-    );
+    const resp = await getPost(id);
     if (!resp.ok) return <NotFound />;
 
     const post: Post = await resp.json();

@@ -22,19 +22,14 @@ import TestDisplay from "./test-display";
 import { usePostPos } from "../post/post-pos-context-provider";
 import { useGeolocation } from "../geolocation-context-provider";
 import Markers from "./markers/markers";
-import YouAreHereMarker from "./markers/you-are-here-marker";
-import PanToUser from "./pan-to-user";
+import MapUI from "./map-ui";
 
 export default function Map() {
     const [view, setView] = useState<SplitRect>([undefined, undefined]);
 
     const tileRegion = useRef<SplitTileRegion>([undefined, undefined]);
 
-    const geolocation = useGeolocation();
-    const [userPos, setUserPos] = useState<google.maps.LatLngLiteral>({
-        lng: 139.6917,
-        lat: 35.6895,
-    });
+    const { userPos } = useGeolocation();
 
     function handleCameraChanged(e: MapCameraChangedEvent) {
         const {
@@ -62,13 +57,12 @@ export default function Map() {
         tileRegion.current = nextTileRegions;
     }
 
-    useEffect(() => {
-        if (geolocation.pos) setUserPos(geolocation.pos);
-    }, [geolocation]);
-
     return (
         <div className="fixed w-full h-full">
-            <APIProvider apiKey="AIzaSyCgfo_mjq90b6syVuWL2QbJbKwAqll9ceE">
+            <APIProvider
+                apiKey="AIzaSyCgfo_mjq90b6syVuWL2QbJbKwAqll9ceE"
+                libraries={["geometry"]}
+            >
                 <GoogleMap
                     mapId="4cd1599c3ca39378"
                     defaultZoom={7} //TODO: should be 17
@@ -77,11 +71,11 @@ export default function Map() {
                     keyboardShortcuts={false}
                     onCameraChanged={handleCameraChanged}
                 >
-                    <YouAreHereMarker pos={userPos!} />
                     <Markers view={view} />
                     {/* <TestDisplay view={view} /> */}
+                    <MapUI />
                 </GoogleMap>
-                <PanToUser userPos={userPos} />
+
                 <PanToActivePost />
             </APIProvider>
         </div>

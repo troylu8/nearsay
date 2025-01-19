@@ -14,8 +14,8 @@ export default function RootLayout({
                 <PostPosContextProvider>
                     <GeolocationContextProvider>
                         <Map />
+                        {children}
                     </GeolocationContextProvider>
-                    {children}
                 </PostPosContextProvider>
             </body>
         </html>

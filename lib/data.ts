@@ -2,6 +2,9 @@ import { io } from "socket.io-client";
 import { BOUND } from "./area";
 import QTree from "./qtree";
 import { SplitTileRegion } from "@/lib/area";
+import path from "path";
+
+const SERVER_URL = "https://troy-book.tail2138e6.ts.net:8443/";
 
 export type Pos = [number, number];
 
@@ -29,7 +32,21 @@ export const poisTree = new QTree({
     bottom: -BOUND,
 });
 
-const clientSocket = io("https://troy-book.tail2138e6.ts.net:8443/");
+const clientSocket = io(SERVER_URL);
+
+export function getPost(id: string) {
+    return fetch(path.join(SERVER_URL, "posts", id));
+}
+
+export function sendPostRequest(pos: [number, number], body: string) {
+    return fetch(path.join(SERVER_URL, "posts"), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({pos, body}),
+    });
+}
 
 type MoveResponse = {
     /** list of poi ids to delete */
@@ -38,7 +55,6 @@ type MoveResponse = {
     /** list of pois to add/update */
     fresh: POI[];
 };
-
 export async function sendMoveRequest(curr: SplitTileRegion, prev: SplitTileRegion) {
     const timestamps: Record<string, number> = {};
 

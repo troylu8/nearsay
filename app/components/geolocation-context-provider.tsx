@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 type Geolocation = {
-    pos?: google.maps.LatLngLiteral;
+    userPos?: google.maps.LatLngLiteral;
     err?: GeolocationPositionError;
 };
 
@@ -18,14 +18,14 @@ type Props = {
 };
 export default function GeolocationContextProvider({ children }: Props) {
     const [geolocation, setGeolocation] = useState<Geolocation>(
-        { pos: { lng: 139.6917, lat: 35.6895 } } // default location is tokyo
+        { userPos: { lng: 139.6917, lat: 35.6895 } } // default location is tokyo
     );
 
     useEffect(() => {
         const watchId = navigator.geolocation?.watchPosition(
             (pos) => {
                 setGeolocation({
-                    pos: {
+                    userPos: {
                         lng: pos.coords.longitude,
                         lat: pos.coords.latitude,
                     },

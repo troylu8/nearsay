@@ -6,6 +6,7 @@ type Props = Readonly<{
     height: number;
     color: string;
     onClick?: (e: MouseEvent<HTMLDivElement>) => any;
+    className?: string;
 }>;
 export default function ColoredSvg({
     src,
@@ -13,6 +14,7 @@ export default function ColoredSvg({
     height,
     color,
     onClick,
+    className,
 }: Props) {
     return (
         <div
@@ -26,6 +28,7 @@ export default function ColoredSvg({
                 backgroundColor: color,
             }}
             onClick={onClick}
+            className={className}
         ></div>
     );
 }
