@@ -8,8 +8,8 @@ const SERVER_URL = "https://troy-book.tail2138e6.ts.net:8443/";
 const clientSocket = io(SERVER_URL);
 
 clientSocket.on("new-poi", (poi: POI) => {
+    console.log("received new poi event");
     pois.addOrUpdate(poi);
-    // reload????
 });
 
 type MoveResponse = {

@@ -40,6 +40,7 @@ export class POIManager {
 
         for (const handler of this.poisChangedHandlers) 
             handler();
+
     }
 
     remove(_id: string) {

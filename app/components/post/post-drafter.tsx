@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Modal from "../modal";
 import { sendPostRequest } from "@/lib/server";
 import ResizingTextArea from "../resizing-text-area";
@@ -19,14 +19,6 @@ export default function PostDrafter({ pos, onDone }: Props) {
 
     return (
         <Modal title="create" onClose={() => onDone("closed")}>
-            {/* <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="leave a message..."
-                className="
-                        m-5 p-3  rounded-md
-                        focus:outline-none focus:outline-solid focus:outline-2 focus:outline-black"
-            /> */}
             <ResizingTextArea
                 placeholder="leave a message..."
                 value={body}

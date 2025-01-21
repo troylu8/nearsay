@@ -41,7 +41,7 @@ export default function Map() {
 
         let view = split({ top, bottom, left, right });
 
-        // addGap(view); //TODO: remove
+        addGap(view); //TODO: remove
 
         const nextTileRegions = toSplitTileRegion(view);
 
@@ -72,7 +72,7 @@ export default function Map() {
                     onCameraChanged={handleCameraChanged}
                 >
                     <Markers view={view} />
-                    {/* <TestDisplay view={view} /> */}
+                    <TestDisplay view={view} />
                     <MapUI />
                 </GoogleMap>
 

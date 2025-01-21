@@ -47,16 +47,16 @@ export function rectsEqual(a: Rect, b: Rect) {
 
 export function getTileRegion(view: Rect): TileRegion {
     const viewSize =
-        Math.max(view.right - view.left, view.top - view.bottom) * 2;
+        Math.max(view.right - view.left, view.top - view.bottom);
 
     let depth = 0;
-    let tileSize = BOUND;
+    let tileSize = BOUND * 2;
 
     while (tileSize > viewSize) {
         depth++;
         tileSize /= 2;
     }
-
+    
     return {
         depth,
         area: {

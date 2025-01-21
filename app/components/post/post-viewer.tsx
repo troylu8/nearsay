@@ -82,7 +82,7 @@ export default function PostViewer({ id, post }: Props) {
                     to post
                 </Link>
 
-                <div className="flex justify-between">
+                <div className="flex justify-between mt-6">
                     <div className="flex gap-3 justify-start">
                         <PropertyIcon
                             src={
@@ -150,7 +150,7 @@ function ExpiryIcon({ expiry, interaction }: ExpiryIconProps) {
             <PropertyIcon src="/icons/clock.svg" value={expiryDisplay} />
             {note && (
                 <p
-                    className="absolute top-full left-1/2 -translate-x-1/2"
+                    className="absolute bottom-full left-1/2 -translate-x-1/2"
                     style={{ color: COLOR[interaction] }}
                 >
                     {note}
