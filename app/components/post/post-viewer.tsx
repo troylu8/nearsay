@@ -77,11 +77,6 @@ export default function PostViewer({ id, post }: Props) {
             <div className="h-full m-5 mb-7 overflow-y-auto">
                 <p className="my-3"> {post.body} </p>
 
-                {/* TODO: remove this */}
-                <Link href={"/posts/jtqfc3Pay4"} scroll={false}>
-                    to post
-                </Link>
-
                 <div className="flex justify-between mt-6">
                     <div className="flex gap-3 justify-start">
                         <PropertyIcon

@@ -1,6 +1,7 @@
 import PostViewer from "@/app/components/post/post-viewer";
 import NotFound from "@/app/not-found";
-import { fetchPost, Post } from "@/lib/server";
+import { Post } from "@/lib/data";
+import { fetchPost } from "@/lib/server";
 
 type Props = {
     params: Promise<{ id: string }>;
