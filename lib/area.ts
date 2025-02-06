@@ -87,10 +87,7 @@ export function toSplitTileRegion(splitRect: SplitRect): SplitTileRegion {
     ];
 }
 export function toSplitRect(splitTileRegion: SplitTileRegion): SplitRect {
-    return [
-        splitTileRegion[0] && splitTileRegion[0].area,
-        splitTileRegion[1] && splitTileRegion[1].area,
-    ];
+    return [splitTileRegion[0]?.area, splitTileRegion[1]?.area];
 }
 export function isSplit(rect: SplitRect) {
     return rect[1] != undefined;

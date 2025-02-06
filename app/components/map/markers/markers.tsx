@@ -6,7 +6,7 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import "./markers.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
-import { POI } from "@/lib/data";
+import { POI } from "@/lib/types";
 import { useEffect, useState } from "react";
 
 type Props = {

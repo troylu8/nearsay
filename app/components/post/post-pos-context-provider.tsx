@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, createContext, useState, useRef } from "react";
-import { Pos } from "@/lib/data";
+import { Pos } from "@/lib/types";
 
 type PostPosState = [Pos | null, (id: string | null, pos?: Pos) => void];
 

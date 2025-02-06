@@ -39,6 +39,9 @@ type PlacingOverlayProps = {
     setPlacing: (nextPlacing: boolean) => any;
 };
 
+// range in meters where you can place notes
+const PLACE_NOTE_RANGE = 1000;
+
 function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
     const { userPos } = useGeolocation();
     const map = useMap();
@@ -49,7 +52,7 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
             google.maps.geometry.spherical.computeDistanceBetween(
                 map.getCenter()!,
                 userPos!
-            ) < 100,
+            ) < PLACE_NOTE_RANGE,
         []
     );
 
@@ -77,7 +80,7 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
                 />
             ) : (
                 <>
-                    <Circle center={userPos} radius={100} />
+                    <Circle center={userPos} radius={PLACE_NOTE_RANGE} />
 
                     <ColoredSvg
                         src="/icons/star.svg"

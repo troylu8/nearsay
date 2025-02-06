@@ -1,9 +1,8 @@
 "use client";
 
 import ColoredSvg from "@/app/components/colored-svg";
-import Link from "next/link";
 
-import { Post } from "@/lib/data";
+import { Post } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { usePostPos } from "./post-pos-context-provider";
 import Modal from "../modal";
@@ -26,47 +25,41 @@ function msTilDay(day: number) {
     return typeof window === "undefined" ? 0 : day * DAY_IN_MS - Date.now();
 }
 
-enum PostInteraction {
-    NONE,
-    LIKE,
-    DISLIKE,
+enum Vote {
+    NONE = "none",
+    LIKE = "like",
+    DISLIKE = "dislike",
 }
-const COLOR: Readonly<Record<PostInteraction, string>> = {
-    [PostInteraction.NONE]: "var(--foreground)",
-    [PostInteraction.LIKE]: "#00ff00",
-    [PostInteraction.DISLIKE]: "#ff0000",
+const VOTE_COLOR: Readonly<Record<Vote, string>> = {
+    [Vote.NONE]: "var(--foreground)",
+    [Vote.LIKE]: "#00ff00",
+    [Vote.DISLIKE]: "#ff0000",
 };
 
 type Props = {
     id: string;
+    pos: [number, number];
+    initialVote: Vote;
     post: Post;
 };
-export default function PostViewer({ id, post }: Props) {
+export default function PostViewer({ id, initialVote, pos, post }: Props) {
     const [_, updatePostPos] = usePostPos();
 
     const router = useRouter();
 
-    const [interaction, setInteraction] = useState(PostInteraction.NONE);
+    const [interaction, setInteraction] = useState(initialVote);
 
     useEffect(() => {
-        updatePostPos(id, post.pos);
+        updatePostPos(id, pos);
         return () => updatePostPos(null);
     }, []);
 
     function handleToggleLike() {
-        setInteraction(
-            interaction === PostInteraction.LIKE
-                ? PostInteraction.NONE
-                : PostInteraction.LIKE
-        );
+        setInteraction(interaction === Vote.LIKE ? Vote.NONE : Vote.LIKE);
     }
 
     function handleToggleDislike() {
-        setInteraction(
-            interaction === PostInteraction.DISLIKE
-                ? PostInteraction.NONE
-                : PostInteraction.DISLIKE
-        );
+        setInteraction(interaction === Vote.DISLIKE ? Vote.NONE : Vote.DISLIKE);
     }
 
     return (
@@ -75,19 +68,20 @@ export default function PostViewer({ id, post }: Props) {
             onClose={() => router.replace("/", { scroll: false })}
         >
             <div className="h-full m-5 mb-7 overflow-y-auto">
+                <p className="my-3"> {post.author} </p>
                 <p className="my-3"> {post.body} </p>
 
                 <div className="flex justify-between mt-6">
                     <div className="flex gap-3 justify-start">
                         <PropertyIcon
                             src={
-                                interaction === PostInteraction.LIKE
+                                interaction === Vote.LIKE
                                     ? "/icons/star-filled.svg"
                                     : "/icons/star.svg"
                             }
                             color={
-                                interaction === PostInteraction.LIKE
-                                    ? COLOR[PostInteraction.LIKE]
+                                interaction === Vote.LIKE
+                                    ? VOTE_COLOR[Vote.LIKE]
                                     : undefined
                             }
                             value={post.likes}
@@ -95,13 +89,13 @@ export default function PostViewer({ id, post }: Props) {
                         />
                         <PropertyIcon
                             src={
-                                interaction === PostInteraction.DISLIKE
+                                interaction === Vote.DISLIKE
                                     ? "/icons/dislike-filled.svg"
                                     : "/icons/dislike.svg"
                             }
                             color={
-                                interaction === PostInteraction.DISLIKE
-                                    ? COLOR[PostInteraction.DISLIKE]
+                                interaction === Vote.DISLIKE
+                                    ? VOTE_COLOR[Vote.DISLIKE]
                                     : undefined
                             }
                             value={post.dislikes}
@@ -124,7 +118,7 @@ export default function PostViewer({ id, post }: Props) {
 
 type ExpiryIconProps = {
     expiry: number;
-    interaction: PostInteraction;
+    interaction: Vote;
 };
 function ExpiryIcon({ expiry, interaction }: ExpiryIconProps) {
     const [expiryDisplay, setExpiryDisplay] = useState("");
@@ -134,9 +128,9 @@ function ExpiryIcon({ expiry, interaction }: ExpiryIconProps) {
     }, []);
 
     const note =
-        interaction === PostInteraction.LIKE
+        interaction === Vote.LIKE
             ? " + 2d"
-            : interaction === PostInteraction.DISLIKE
+            : interaction === Vote.DISLIKE
             ? " - 1d"
             : undefined;
 
@@ -146,7 +140,7 @@ function ExpiryIcon({ expiry, interaction }: ExpiryIconProps) {
             {note && (
                 <p
                     className="absolute bottom-full left-1/2 -translate-x-1/2"
-                    style={{ color: COLOR[interaction] }}
+                    style={{ color: VOTE_COLOR[interaction] }}
                 >
                     {note}
                 </p>

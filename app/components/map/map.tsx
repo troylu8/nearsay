@@ -7,7 +7,7 @@ import {
     useMap,
 } from "@vis.gl/react-google-maps";
 import { useEffect, useRef, useState } from "react";
-import { sendMoveRequest } from "@/lib/server";
+import { sendViewShiftEvent } from "@/lib/data";
 
 import {
     split,
@@ -48,10 +48,11 @@ export default function Map() {
         // if tile region hasnt changed, then set view now.
         if (splitTileRegionsEqual(nextTileRegions, tileRegion.current))
             return setView(view);
+
         // if tile region changed, the set view (to reload markers)
         // after poi tree is populated with request data
-        sendMoveRequest(nextTileRegions, tileRegion.current).then(
-            () => setView(view) // after a successfull move request, load markers
+        sendViewShiftEvent(nextTileRegions, tileRegion.current).then(
+            () => setView(view) // after a successful move request, load markers
         );
 
         tileRegion.current = nextTileRegions;

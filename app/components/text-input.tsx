@@ -14,16 +14,11 @@ export default function TextInput({
 }: Props) {
     const [text, setText] = textState;
 
-    function handleInput(e: FormEvent<HTMLInputElement>) {
-        const value = e.currentTarget.value.trim();
-        setText(value);
-    }
-
     return (
         <input
             type={type}
             placeholder={placeholder}
-            onInput={handleInput}
+            onInput={(e) => setText(e.currentTarget.value)}
             className={valid ? "text-green-300" : "text-red-400"}
             value={text}
         />

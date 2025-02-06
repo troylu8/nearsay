@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Modal from "../modal";
-import { sendPostRequest } from "@/lib/server";
+import { sendPostEvent } from "@/lib/data";
 import ResizingTextArea from "../resizing-text-area";
 
 type Props = {
@@ -14,7 +14,7 @@ export default function PostDrafter({ pos, onDone }: Props) {
 
     function handlePost() {
         onDone("clicked-post");
-        sendPostRequest([pos.lng(), pos.lat()], body);
+        sendPostEvent([pos.lng(), pos.lat()], body);
     }
 
     return (
