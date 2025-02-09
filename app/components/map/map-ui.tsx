@@ -1,7 +1,7 @@
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import ColoredSvg from "../colored-svg";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Circle } from "../circle";
+import { Circle } from "./circle";
 import { useGeolocation } from "../geolocation-context-provider";
 import PostDrafter from "../post/post-drafter";
 

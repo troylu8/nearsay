@@ -62,3 +62,9 @@ export class POIManager {
         this.poisChangedHandlers.delete(func);
     }
 }
+
+export enum Vote {
+    NONE = "none",
+    LIKE = "like",
+    DISLIKE = "dislike",
+}

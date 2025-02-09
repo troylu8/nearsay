@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 import { SplitTileRegion } from "@/lib/area";
 import path from "path";
-import { POI, POIManager } from "./types";
+import { POI, POIManager, Vote } from "./types";
 import bcrypt from "bcryptjs";
 
 
@@ -47,8 +47,20 @@ export async function sendViewShiftEvent(curr: SplitTileRegion, prev: SplitTileR
 }
 
 
-export function fetchPost(id: string) {
-    return fetch(path.join(SERVER_URL, "posts", id));
+export async function fetchPost(post_id: string) {
+    const headers: Record<string, string> = {};
+    const jwt = localStorage.getItem("jwt");
+
+    if (jwt) headers["Authorization"] = `Bearer ${jwt}`;
+    if (sessionStorage.getItem(post_id) == null) headers["Increment-View"] = "";
+    
+    const resp = await fetch(path.join(SERVER_URL, "posts", post_id), {headers} );
+    
+    if (resp.ok) sessionStorage.setItem(post_id, "");
+    
+    // console.log(await resp.json());
+    
+    return await resp.json();
 }
 
 export function sendPostEvent(pos: [number, number], body: string) {
@@ -67,7 +79,7 @@ export async function sendNewUserRequest(username: string, password: string) {
     if (!resp.ok) 
         throw new Error(resp.status == 409 ? "username taken" : "server error");
 
-    localStorage.setItem("CSRF-TOKEN", resp.headers.get("CSRF-TOKEN")!);
+    localStorage.setItem("jwt", await resp.text());
 }
 
 export async function sendGetJWTRequest(username: string, password: string) {
@@ -83,4 +95,12 @@ export async function sendGetJWTRequest(username: string, password: string) {
     if (!resp.ok) {
         resp.status
     }
+}
+
+export function sendVoteRequest(post_id: string, vote: Vote) {
+    return fetch(path.join(SERVER_URL, "vote", post_id), {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + localStorage.getItem("jwt") },
+        body: vote,
+    });
 }
