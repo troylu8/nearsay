@@ -1,24 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import Modal from "../modal";
-import { sendPostEvent } from "@/lib/data";
+import Modal from "./modal";
 import ResizingTextArea from "../resizing-text-area";
+import { sendPostEvent } from "@/lib/data";
 
 type Props = {
     pos: google.maps.LatLng;
-    onDone: (e: "clicked-post" | "closed") => any;
+    onPost?: () => any;
+    onCancel?: () => any;
 };
-export default function PostDrafter({ pos, onDone }: Props) {
+export default function CreatePostModal({ pos, onPost, onCancel }: Props) {
     const [body, setBody] = useState("");
 
     function handlePost() {
-        onDone("clicked-post");
         sendPostEvent([pos.lng(), pos.lat()], body);
+        if (onPost) onPost();
     }
 
     return (
-        <Modal title="create" onClose={() => onDone("closed")}>
+        <Modal title="create" onClose={() => {if (onCancel) onCancel()}}>
             <ResizingTextArea
                 placeholder="leave a message..."
                 value={body}

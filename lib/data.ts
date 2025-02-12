@@ -1,19 +1,9 @@
-import { io } from "socket.io-client";
 import { SplitTileRegion } from "@/lib/area";
 import path from "path";
 import { POI, POIManager, Vote } from "./types";
-import bcrypt from "bcryptjs";
-
+import { clientSocket, emitAsync, SERVER_URL } from "./server";
 
 export const pois = new POIManager();
-
-
-const SERVER_URL = "https://troy-book.tail2138e6.ts.net:8443/";
-const clientSocket = io(SERVER_URL);
-
-async function emitAsync<ResponseType>(event: string, data: Record<string, any>) {
-    return new Promise<ResponseType>((resolve, _) => clientSocket.emit(event, data, resolve));
-}
 
 clientSocket.on("new-poi", (poi: POI) => {
     console.log("received new poi event");
@@ -58,8 +48,6 @@ export async function fetchPost(post_id: string) {
     
     if (resp.ok) sessionStorage.setItem(post_id, "");
     
-    // console.log(await resp.json());
-    
     return await resp.json();
 }
 
@@ -67,35 +55,7 @@ export function sendPostEvent(pos: [number, number], body: string) {
     clientSocket.emit("post", { pos, body });
 }
 
-export async function sendNewUserRequest(username: string, password: string) {
-    
-    const userhash = await bcrypt.hash(password, 10);
 
-    const resp = await fetch(path.join(SERVER_URL, "sign-up"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, userhash }),
-    });
-    if (!resp.ok) 
-        throw new Error(resp.status == 409 ? "username taken" : "server error");
-
-    localStorage.setItem("jwt", await resp.text());
-}
-
-export async function sendGetJWTRequest(username: string, password: string) {
-
-    const userhash = await bcrypt.hash(password, 10);    
-
-    const resp = await fetch(path.join(SERVER_URL, "sign-in"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, userhash }),
-    });
-
-    if (!resp.ok) {
-        resp.status
-    }
-}
 
 export function sendVoteRequest(post_id: string, vote: Vote) {
     return fetch(path.join(SERVER_URL, "vote", post_id), {

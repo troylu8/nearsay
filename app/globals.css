@@ -5,3 +5,7 @@
 :root {
     --foreground: #000000
 }
+
+body {
+    user-select: none;
+}

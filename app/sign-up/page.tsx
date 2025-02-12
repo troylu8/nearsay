@@ -1,5 +1,5 @@
-import ReceptionModal from "../components/reception-modal";
+import ReceptionModal from "../components/modal/reception-modal";
 
 export default function SignUp() {
-    return <ReceptionModal initialMode="sign-up" />;
+    return <ReceptionModal mode="sign-up"/>
 }

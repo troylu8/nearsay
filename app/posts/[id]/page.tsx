@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 
 import { fetchPost, sendVoteRequest } from "@/lib/data";
@@ -9,14 +8,28 @@ import { Pos, Post, Vote } from "@/lib/types";
 
 import NotFound from "@/app/not-found";
 import ColoredSvg from "@/app/components/colored-svg";
-import { usePostPos } from "../../components/post/post-pos-context-provider";
-import Modal from "../../components/modal";
+import { usePostPos } from "../../contexts/post-pos-context-provider";
+import Modal from "@/app/components/modal/modal";
+import { useNotifications } from "@/app/contexts/notifications-context-provider";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-function getLifetimeWeight(vote: Vote) {
-    if (vote == Vote.LIKE) return 2;
-    if (vote == Vote.DISLIKE) return -1;
-    return 0;
-}
+
+const ACTION_NAME: Readonly<Record<Vote, string>> = {
+    [Vote.NONE]: "ignore",
+    [Vote.LIKE]: "star",
+    [Vote.DISLIKE]: "dislike",
+};
+const LIFETIME_WEIGHT: Readonly<Record<Vote, number>> = {
+    [Vote.NONE]: 0,
+    [Vote.LIKE]: 2,
+    [Vote.DISLIKE]: -1,
+};
+const COLOR: Readonly<Record<Vote, string>> = {
+    [Vote.NONE]: "var(--foreground)",
+    [Vote.LIKE]: "#00ff00",
+    [Vote.DISLIKE]: "#ff0000",
+};
 
 type UsePostType = {
     data?: {
@@ -35,7 +48,7 @@ type Props = {
     params: Promise<{ id: string }>;
 };
 export default function Page({ params }: Props) {
-    const router = useRouter();
+    const sendNotification = useNotifications();
 
     const post_id = use(params).id;
     const { data, error, isLoading } = usePost(post_id);
@@ -64,16 +77,20 @@ export default function Page({ params }: Props) {
     const { post } = data;
 
     function handleVote(nextVote: Vote) {
+
         if (nextVote == vote) return;
 
         if (localStorage.getItem("jwt")) {
             sendVoteRequest(post_id, nextVote);
             setVote(nextVote);
         } else {
-            //TODO: tooltip first
-            router.replace(
-                `/sign-up?origin=/posts/${post_id}?set-vote=${nextVote}`, 
-                { scroll: false }
+            sendNotification(
+                <p>
+                    <Link href={`/sign-up?origin=/posts/${post_id}?set-vote=${nextVote}`} scroll={false}> create an account </Link>
+                    or
+                    <Link href={`/sign-in?origin=/posts/${post_id}?set-vote=${nextVote}`} scroll={false}> sign in </Link>
+                    to {ACTION_NAME[nextVote]} this post.
+                </p>
             );
         }
     }
@@ -81,27 +98,28 @@ export default function Page({ params }: Props) {
     const { likes, dislikes } = data.post;
 
     // votes not counting the user's vote
-    const baseLikes = data.vote == Vote.LIKE ? likes - 1 : likes;
-    const baseDislikes = data.vote == Vote.DISLIKE ? dislikes - 1 : dislikes;
+    const priorVote = data.vote ?? Vote.NONE;
+    const baseLikes = priorVote == Vote.LIKE ? likes - 1 : likes;
+    const baseDislikes = priorVote == Vote.DISLIKE ? dislikes - 1 : dislikes;
 
     return (
-        <Modal title="post" onClose={() => router.replace("/", { scroll: false })}>
+        <Modal title="post">
             <div className="h-full m-5 mb-7 overflow-y-auto">
-                <p className="my-3"> {post.author} </p>
-                <p className="my-3"> {post.body} </p>
+                <p className="my-3 select-all"> {post.author} </p>
+                <p className="my-3 select-all"> {post.body} </p>
 
                 {/* property icons row */}
                 <div className="flex justify-between mt-6">
                     <div className="flex gap-3 justify-start">
                         <PropertyIcon 
                             src={vote === Vote.LIKE ? "/icons/star-filled.svg" : "/icons/star.svg"} 
-                            color={vote === Vote.LIKE ? VOTE_COLOR[Vote.LIKE] : undefined} 
+                            color={vote === Vote.LIKE ? COLOR[Vote.LIKE] : undefined} 
                             value={vote == Vote.LIKE ? baseLikes + 1 : baseLikes} 
                             onClick={() => handleVote(vote === Vote.LIKE ? Vote.NONE : Vote.LIKE)} 
                         />
                         <PropertyIcon 
                             src={vote === Vote.DISLIKE ? "/icons/dislike-filled.svg" : "/icons/dislike.svg"} 
-                            color={vote === Vote.DISLIKE ? VOTE_COLOR[Vote.DISLIKE] : undefined} 
+                            color={vote === Vote.DISLIKE ? COLOR[Vote.DISLIKE] : undefined} 
                             value={vote == Vote.DISLIKE ? baseDislikes + 1 : baseDislikes} 
                             onClick={() => handleVote(vote === Vote.DISLIKE ? Vote.NONE : Vote.DISLIKE)} 
                         />
@@ -110,7 +128,7 @@ export default function Page({ params }: Props) {
 
                     <div className="flex justify-end">
                         <ExpiryIcon 
-                            baseExpiry={data.post.expiry - getLifetimeWeight(vote)} 
+                            baseExpiry={data.post.expiry - LIFETIME_WEIGHT[priorVote]} 
                             vote={vote} 
                         />
                     </div>
@@ -136,11 +154,7 @@ function msTilDay(day: number) {
     return typeof window === "undefined" ? 0 : day * DAY_IN_MS - Date.now();
 }
 
-const VOTE_COLOR: Readonly<Record<Vote, string>> = {
-    [Vote.NONE]: "var(--foreground)",
-    [Vote.LIKE]: "#00ff00",
-    [Vote.DISLIKE]: "#ff0000",
-};
+
 
 type PropertyIconProps = {
     src: string;
@@ -170,11 +184,11 @@ function ExpiryIcon({ baseExpiry = 0, vote }: ExpiryIconProps) {
 
     return (
         <div className="relative">
-            <PropertyIcon src="/icons/clock.svg" value={toTimeDisplay(msTilDay(baseExpiry + getLifetimeWeight(vote))) + " left"} />
+            <PropertyIcon src="/icons/clock.svg" value={toTimeDisplay(msTilDay(baseExpiry + LIFETIME_WEIGHT[vote])) + " left"} />
             {note && (
                 <p 
                     className="absolute bottom-full left-1/2 -translate-x-1/2" 
-                    style={{ color: VOTE_COLOR[vote] }}
+                    style={{ color: COLOR[vote] }}
                 >
                     {note}
                 </p>

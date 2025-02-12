@@ -19,8 +19,8 @@ import {
     Rect,
 } from "@/lib/area";
 import TestDisplay from "./test-display";
-import { usePostPos } from "../post/post-pos-context-provider";
-import { useGeolocation } from "../geolocation-context-provider";
+import { usePostPos } from "../../contexts/post-pos-context-provider";
+import { useGeolocation } from "../../contexts/geolocation-context-provider";
 import Markers from "./markers/markers";
 import MapUI from "./map-ui";
 

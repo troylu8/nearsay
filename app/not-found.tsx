@@ -9,7 +9,7 @@ export default function NotFound() {
         >
             <h2>[404] page not found</h2>
             <p>this link leads nowhere</p>
-            <Link href="/">
+            <Link href="/" scroll={false}>
                 <p> back to map </p>
             </Link>
         </div>

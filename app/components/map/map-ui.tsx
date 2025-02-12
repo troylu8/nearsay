@@ -2,8 +2,8 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import ColoredSvg from "../colored-svg";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
-import { useGeolocation } from "../geolocation-context-provider";
-import PostDrafter from "../post/post-drafter";
+import { useGeolocation } from "../../contexts/geolocation-context-provider";
+import CreatePostModal from "../modal/create-post-modal";
 
 export default function MapUI() {
     const { userPos } = useGeolocation();
@@ -40,7 +40,7 @@ type PlacingOverlayProps = {
 };
 
 // range in meters where you can place notes
-const PLACE_NOTE_RANGE = 1000;
+const PLACE_NOTE_RANGE = 100;
 
 function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
     const { userPos } = useGeolocation();
@@ -71,12 +71,10 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
     return (
         <>
             {drafting ? (
-                <PostDrafter
+                <CreatePostModal
                     pos={map?.getCenter()!}
-                    onDone={(e) => {
-                        if (e === "clicked-post") setPlacing(false);
-                        else setDrafting(false);
-                    }}
+                    onPost={() => setPlacing(false)}
+                    onCancel={() => setDrafting(false)}
                 />
             ) : (
                 <>

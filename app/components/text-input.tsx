@@ -1,4 +1,3 @@
-import { FormEvent } from "react";
 
 type Props = {
     type?: "text" | "password";
