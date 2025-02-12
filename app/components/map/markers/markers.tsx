@@ -6,7 +6,7 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import "./markers.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
-import { POI } from "@/lib/types";
+import { POI, PostPOIExt, UserPOIExt } from "@/lib/types";
 import { useEffect, useState } from "react";
 
 type Props = {
@@ -17,7 +17,7 @@ export default function Markers({ view }: Props) {
     const [key, setKey] = useState(0);
 
     useEffect(() => {
-        function rerenderMarkers() { setKey(key + 1); }
+        function rerenderMarkers() { setKey(key + 1); console.log("rerendering markers", key); }
         pois.addPoisChangedHandler(rerenderMarkers);
         return () => pois.removePoisChangedHandler(rerenderMarkers);
     }, []);
@@ -42,6 +42,8 @@ function MarkersInner({ view }: Props) {
         })
         .flat();
 
+    console.log("size: ", pois.size);
+
     return markers.map((item: POI | Cluster, i) => {
         if (isCluster(item)) {
             const cluster = item as Cluster;
@@ -53,13 +55,17 @@ function MarkersInner({ view }: Props) {
                         lat: cluster.pos[1],
                     }}
                 >
-                    <div className="post-marker bg-red-400 after:border-t-red-400">
+                    <div className="rect-marker bg-red-400 after:border-t-red-400">
                         {cluster.size}x
                     </div>
                 </AdvancedMarker>
             );
         } else {
-            const poi = item as POI;
+            const poi = item as POI & (PostPOIExt | UserPOIExt);
+            
+            const icon = poi.kind === "post"? "post" : (poi as UserPOIExt).username;
+            const label = poi.kind === "post"? (poi as PostPOIExt).blurb : (poi as UserPOIExt).avatar;
+            
             return (
                 <AdvancedMarker
                     key={i}
@@ -69,7 +75,10 @@ function MarkersInner({ view }: Props) {
                     }}
                     onClick={() => handleMarkerClicked(poi._id)}
                 >
-                    <div className="post-marker">{poi.variant}</div>
+                    <div className="rect-marker">
+                        {icon}
+                        <p className="marker-label">{label}</p>
+                    </div>
                 </AdvancedMarker>
             );
         }

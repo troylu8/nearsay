@@ -105,7 +105,7 @@ export default function Page({ params }: Props) {
     return (
         <Modal title="post">
             <div className="h-full m-5 mb-7 overflow-y-auto">
-                <p className="my-3 select-all"> {post.author} </p>
+                <p className="my-3 select-all"> {post.author_name} </p>
                 <p className="my-3 select-all"> {post.body} </p>
 
                 {/* property icons row */}

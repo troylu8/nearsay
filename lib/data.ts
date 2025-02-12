@@ -6,7 +6,7 @@ import { clientSocket, emitAsync, SERVER_URL } from "./server";
 export const pois = new POIManager();
 
 clientSocket.on("new-poi", (poi: POI) => {
-    console.log("received new poi event");
+    console.log("received new poi event", poi);
     pois.addOrUpdate(poi);
 });
 
@@ -23,11 +23,10 @@ export async function sendViewShiftEvent(curr: SplitTileRegion, prev: SplitTileR
                             .map(tilereg => tilereg.area)
 
     for (const poi of pois.search(...searchRects)) {
-        timestamps[poi._id] = poi.timestamp;
+        timestamps[poi._id] = poi.updated;
     }
 
     const resp = await emitAsync<MoveResponse>("view-shift", { curr, prev, timestamps });
-
     for (const _id of resp.delete) {
         pois.remove(_id);
     }
@@ -52,6 +51,7 @@ export async function fetchPost(post_id: string) {
 }
 
 export function sendPostEvent(pos: [number, number], body: string) {
+    console.log("sending post event");
     clientSocket.emit("post", { pos, body });
 }
 

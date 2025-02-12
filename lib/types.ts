@@ -6,12 +6,20 @@ export type Pos = [number, number];
 export type POI = {
     _id: string;
     pos: Pos;
-    variant: "post";
-    timestamp: number;
+    kind: "user" | "post";
+    updated: number;
 };
+export type PostPOIExt = {
+    blurb: string,
+}
+export type UserPOIExt = {
+    username: string,
+    avatar: string
+}
 
 export type Post = {
     author: string;
+    author_name: string,
     body: string;
     likes: number;
     dislikes: number;
@@ -62,6 +70,12 @@ export class POIManager {
     removePoisChangedHandler(func: () => any) {
         this.poisChangedHandlers.delete(func);
     }
+
+    
+    get size() : number {
+        return this.tree.size;
+    }
+    
 }
 
 export enum Vote {

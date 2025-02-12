@@ -1,4 +1,4 @@
-.post-marker {
+.rect-marker {
     background-color: #4285F4;
     border-radius: 8px;
     color: #FFFFFF;
@@ -8,7 +8,7 @@
     bottom: 8px;
 }
   
-.post-marker::after {
+.rect-marker::after {
     content: "";
     position: absolute;
     left: 50%;
@@ -19,6 +19,13 @@
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-top: 8px solid #4285F4;
+}
+
+.marker-label {
+    position: absolute;
+    left: calc(100% + 3px);
+    top: 0;
+    max-width: 50px;
 }
 
 
