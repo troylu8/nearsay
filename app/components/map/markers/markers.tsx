@@ -17,12 +17,10 @@ export default function Markers({ view }: Props) {
     const [key, setKey] = useState(0);
 
     useEffect(() => {
-        function rerenderMarkers() {
-            setKey(key + 1);
-        }
+        function rerenderMarkers() { setKey(key + 1); }
         pois.addPoisChangedHandler(rerenderMarkers);
         return () => pois.removePoisChangedHandler(rerenderMarkers);
-    });
+    }, []);
 
     return <MarkersInner key={key} view={view} />;
 }

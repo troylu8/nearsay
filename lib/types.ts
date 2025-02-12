@@ -56,6 +56,7 @@ export class POIManager {
 
     addPoisChangedHandler(func: () => any) {
         this.poisChangedHandlers.add(func);
+        func()
     }
 
     removePoisChangedHandler(func: () => any) {

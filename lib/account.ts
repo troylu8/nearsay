@@ -1,18 +1,7 @@
 import path from "path";
-import bcrypt from "bcryptjs";
 import { SERVER_URL } from "./server";
 import { createHash } from "crypto";
 
-/** https://stackoverflow.com/questions/38552003/how-to-decode-jwt-token-in-javascript-without-using-a-library */
-function parseJwt(token: string) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    return JSON.parse(jsonPayload);
-}
 
 let jwt: string | null;
 export let username: string | null;
@@ -22,6 +11,7 @@ const usernameChangedHandlers: Set<UsernameChangedHandler> = new Set();
 
 export function addUsernameChangedHandler(func: UsernameChangedHandler) {
     usernameChangedHandlers.add(func);
+    func(username);
 }
 export function removeUsernameChangedHandler(func: UsernameChangedHandler) {
     usernameChangedHandlers.delete(func);
@@ -43,7 +33,7 @@ function setUsername(nextUsername: string | null) {
 
     for (const handler of usernameChangedHandlers) handler(username);
 }
-setAccount(localStorage.getItem("jwt"), localStorage.getItem("username"));
+
 
 
 /** returns request status code  */
@@ -54,6 +44,10 @@ export function signUp(username: string, password: string) {
 /** returns request status code  */
 export function signIn(username: string, password: string) {
     return sendAccountChangeRequest("sign-in", username, password);
+}
+
+export function signInFromLocalStorage() {
+    setAccount(localStorage.getItem("jwt"), localStorage.getItem("username"));
 }
 
 export function signOut() { 
