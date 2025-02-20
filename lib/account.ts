@@ -1,58 +1,49 @@
 import path from "path";
-import { SERVER_URL } from "./server";
+import { emitAsync, SERVER_URL } from "./server";
 import { createHash } from "crypto";
 
 
-let jwt: string | null;
-export let username: string | null;
+type AccountInfo = {
+    jwt: string | null;
+    username: string | null;
+    avatar: number;
+    settings: {
+        invisible: boolean;
+    }
+}
+const acc: AccountInfo = {
+    jwt: null,
+    username: null,
+    avatar: 0,
+    settings: {
+        invisible: false
+    }
+}
 
 type UsernameChangedHandler = (username: string | null) => any
 const usernameChangedHandlers: Set<UsernameChangedHandler> = new Set();
 
 export function addUsernameChangedHandler(func: UsernameChangedHandler) {
     usernameChangedHandlers.add(func);
-    func(username);
+    func(acc.username);
 }
 export function removeUsernameChangedHandler(func: UsernameChangedHandler) {
     usernameChangedHandlers.delete(func);
 }
 
-function setAccount(nextJwt: string | null, nextUsername: string | null) {
-    jwt = nextJwt;
+function setJWT(jwt: string | null) {
+    acc.jwt = jwt;
     
-    if (jwt)    localStorage.setItem("jwt", jwt);
-    else        localStorage.removeItem("jwt");
-    
-    setUsername(nextUsername);
+    if (jwt)        localStorage.setItem("jwt", jwt);
+    else            localStorage.removeItem("jwt");
 }
-function setUsername(nextUsername: string | null) {
-    username = nextUsername;
+function setUsername(username: string | null) {
+    acc.username = username;
     
     if (username)       localStorage.setItem("username", username);
     else                localStorage.removeItem("username");
 
     for (const handler of usernameChangedHandlers) handler(username);
-}
-
-
-
-/** returns request status code  */
-export function signUp(username: string, password: string) {
-    return sendAccountChangeRequest("sign-up", username, password);
-}
-
-/** returns request status code  */
-export function signIn(username: string, password: string) {
-    return sendAccountChangeRequest("sign-in", username, password);
-}
-
-export function signInFromLocalStorage() {
-    setAccount(localStorage.getItem("jwt"), localStorage.getItem("username"));
-}
-
-export function signOut() { 
-    setAccount(null, null); 
-    sessionStorage.clear();
 }
 
 /** returns request status code  */
@@ -66,7 +57,37 @@ async function sendAccountChangeRequest(route: "sign-in" | "sign-up", username: 
         }),
     });
 
-    if (resp.ok) setAccount(await resp.text(), username);
+    if (resp.ok) setJWT(await resp.text());
 
     return resp.status;
 }
+
+
+export async function signInAsGuest(pos: [number, number]) {
+    const jwt = await emitAsync<string | null>("sign-in-guest", {pos, avatar: acc.avatar});
+    if (jwt) {
+        setJWT(jwt);
+    }
+}
+
+/** returns request status code  */
+export function signUp(username: string, password: string) {
+    return sendAccountChangeRequest("sign-up", username, password);
+}
+
+/** returns request status code  */
+export function signIn(username: string, password: string) {
+    return sendAccountChangeRequest("sign-in", username, password);
+}
+
+export function signInFromLocalStorage() {
+    setJWT(localStorage.getItem("jwt"));
+    setUsername(localStorage.getItem("username"));
+}
+
+export function signOut() { 
+    setJWT(null);
+    setUsername(null); 
+    sessionStorage.clear();
+}
+

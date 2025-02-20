@@ -2,7 +2,7 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import ColoredSvg from "../colored-svg";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
-import { useGeolocation } from "../../contexts/geolocation-context-provider";
+import { useGeolocation } from "../../contexts/geolocation-provider";
 import CreatePostModal from "../modal/create-post-modal";
 
 export default function MapUI() {

@@ -5,7 +5,7 @@ import { clientSocket, emitAsync, SERVER_URL } from "./server";
 
 export const pois = new POIManager();
 
-clientSocket.on("new-poi", (poi: POI) => {
+clientSocket.on("new-poi", (poi: any) => {
     console.log("received new poi event", poi);
     pois.addOrUpdate(poi);
 });

@@ -1,4 +1,4 @@
-import { Rect, roundDown } from "./area";
+import { roundDown } from "./area";
 import { POI, Pos } from "./types";
 
 export type Cluster = {

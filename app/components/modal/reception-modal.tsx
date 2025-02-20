@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Modal from "./modal";
 import TextInput from "../text-input";
-import { useNotifications } from "@/app/contexts/notifications-context-provider";
+import { useNotifications } from "@/app/contexts/notifications-provider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, signUp } from "@/lib/account";
 

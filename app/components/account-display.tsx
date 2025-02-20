@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ColoredSvg from "./colored-svg";
 import { username as initialUsername, addUsernameChangedHandler, removeUsernameChangedHandler, signOut, signInFromLocalStorage } from "@/lib/account";
-import { useNotifications } from "../contexts/notifications-context-provider";
+import { useNotifications } from "../contexts/notifications-provider";
 import Link from "next/link";
 
 
@@ -24,7 +24,6 @@ export default function AccountDisplay() {
         
         function hideDropdown() { setShowDropdown(false) };
         window.addEventListener("mousedown", hideDropdown);
-        
 
         return () => {
             removeUsernameChangedHandler(setUsername);

@@ -7,27 +7,21 @@ import { useRouter } from "next/navigation";
 import "./markers.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
 import { POI, PostPOIExt, UserPOIExt } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
 type Props = {
     view?: SplitRect;
 };
 
 export default function Markers({ view }: Props) {
-    const [key, setKey] = useState(0);
-
-    useEffect(() => {
-        function rerenderMarkers() { setKey(key + 1); console.log("rerendering markers", key); }
-        pois.addPoisChangedHandler(rerenderMarkers);
-        return () => pois.removePoisChangedHandler(rerenderMarkers);
-    }, []);
-
-    return <MarkersInner key={key} view={view} />;
-}
-
-function MarkersInner({ view }: Props) {
     const map = useMap()!;
     const router = useRouter();
+
+    const [_, forceUpdate] = useReducer(x => x + 1, 0);
+    useEffect(() => {
+        pois.addPoisChangedHandler(forceUpdate);
+        return () => pois.removePoisChangedHandler(forceUpdate);
+    }, []);
 
     if (!view) return <></>;
 
@@ -41,9 +35,7 @@ function MarkersInner({ view }: Props) {
             return cluster(pois.search(v), pxToDegrees(map, 50));
         })
         .flat();
-
-    console.log("size: ", pois.size);
-
+    
     return markers.map((item: POI | Cluster, i) => {
         if (isCluster(item)) {
             const cluster = item as Cluster;

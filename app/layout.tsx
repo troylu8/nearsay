@@ -1,8 +1,8 @@
-import GeolocationContextProvider from "./contexts/geolocation-context-provider";
-import Map from "./components/map/map";
-import PostPosContextProvider from "./contexts/post-pos-context-provider";
-import { NotificationsContextProvider } from "./contexts/notifications-context-provider";
+import GeolocationContextProvider from "./contexts/geolocation-provider";
+import PostPosContextProvider from "./contexts/post-pos-provider";
+import { NotificationsContextProvider } from "./contexts/notifications-provider";
 import "./globals.css";
+import Map from "./components/map/map";
 
 export default function RootLayout({
     children,

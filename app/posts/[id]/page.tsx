@@ -8,9 +8,9 @@ import { Pos, Post, Vote } from "@/lib/types";
 
 import NotFound from "@/app/not-found";
 import ColoredSvg from "@/app/components/colored-svg";
-import { usePostPos } from "../../contexts/post-pos-context-provider";
+import { usePostPos } from "../../contexts/post-pos-provider";
 import Modal from "@/app/components/modal/modal";
-import { useNotifications } from "@/app/contexts/notifications-context-provider";
+import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
