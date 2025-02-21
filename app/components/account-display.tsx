@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ColoredSvg from "./colored-svg";
-import { username as initialUsername, addUsernameChangedHandler, removeUsernameChangedHandler, signOut, signInFromLocalStorage } from "@/lib/account";
+import { username as initialUsername, addUsernameChangedHandler, removeUsernameChangedHandler, signOut, getStoredAccountInfo } from "@/lib/account";
 import { useNotifications } from "../contexts/notifications-provider";
 import Link from "next/link";
 
@@ -18,7 +18,7 @@ export default function AccountDisplay() {
     const [showDropdown, setShowDropdown] = useState(false);
     
     useEffect(() => {
-        signInFromLocalStorage();
+        getStoredAccountInfo();
         
         addUsernameChangedHandler(setUsername);
         

@@ -12,6 +12,9 @@ const GeolocationContext = createContext<Geolocation>({});
 export function useGeolocation() {
     return useContext(GeolocationContext);
 }
+export function toArrayCoords(latlng: google.maps.LatLngLiteral): [number, number] {
+    return [latlng.lng, latlng.lat];
+}
 
 type Props = {
     children: React.ReactNode;
