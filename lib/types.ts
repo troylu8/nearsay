@@ -14,7 +14,7 @@ export type PostPOIExt = {
 }
 export type UserPOIExt = {
     username: string,
-    avatar: string
+    avatar: number
 }
 
 export type Post = {

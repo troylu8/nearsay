@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
     --foreground: #000000
 }
@@ -9,3 +5,56 @@
 body {
     user-select: none;
 }
+
+
+.post-marker {
+    background-color: #4285F4;
+    border-radius: 8px;
+    color: #FFFFFF;
+    font-size: 14px;
+    padding: 10px 15px;
+    position: relative;
+    bottom: 8px;
+}
+  
+.post-marker::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translate(-50%, 0);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #4285F4;
+}
+
+/* blurbs */
+.post-marker > p {
+    position: absolute;
+    left: calc(100% + 3px);
+    top: 0;
+    max-width: 50px;
+}
+
+.avatar {
+    background-color: #408085;
+    border-radius: 999px;
+    color: #FFFFFF;
+    font-size: 16px;
+    padding: 3px 10px;
+    position: relative;
+}
+.avatar > p {
+    position: absolute;
+    top: 100%;
+    
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

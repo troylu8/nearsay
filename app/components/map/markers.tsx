@@ -4,10 +4,10 @@ import { pxToDegrees, SplitRect } from "@/lib/area";
 import { pois } from "@/lib/data";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
-import "./markers.css";
 import { cluster, isCluster, Cluster } from "@/lib/cluster";
 import { POI, PostPOIExt, UserPOIExt } from "@/lib/types";
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer } from "react";
+import { EMOTICONS } from "@/lib/emoticon";
 
 type Props = {
     view?: SplitRect;
@@ -29,10 +29,18 @@ export default function Markers({ view }: Props) {
         router.replace("/posts/" + id, { scroll: false });
     }
 
+
     const markers = view
         .map((v) => {
             if (!v) return [];
-            return cluster(pois.search(v), pxToDegrees(map, 50));
+            const visiblePOIs = pois.search(v);
+
+            
+
+            return [
+                ...visiblePOIs.filter(poi => poi.kind === "user"),
+                ...cluster(visiblePOIs.filter(poi => poi.kind === "post"), pxToDegrees(map, 50))
+            ]
         })
         .flat();
     
@@ -42,12 +50,9 @@ export default function Markers({ view }: Props) {
             return (
                 <AdvancedMarker
                     key={i}
-                    position={{
-                        lng: cluster.pos[0],
-                        lat: cluster.pos[1],
-                    }}
+                    position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
                 >
-                    <div className="rect-marker bg-red-400 after:border-t-red-400">
+                    <div className="post-marker bg-red-400 after:border-t-red-400">
                         {cluster.size}x
                     </div>
                 </AdvancedMarker>
@@ -55,21 +60,18 @@ export default function Markers({ view }: Props) {
         } else {
             const poi = item as POI & (PostPOIExt | UserPOIExt);
             
-            const icon = poi.kind === "post"? "post" : (poi as UserPOIExt).username;
-            const label = poi.kind === "post"? (poi as PostPOIExt).blurb : (poi as UserPOIExt).avatar;
+            const icon = poi.kind === "post"? "post" : EMOTICONS[(poi as UserPOIExt).avatar];
+            const label = poi.kind === "post"? (poi as PostPOIExt).blurb : (poi as UserPOIExt).username;
             
             return (
                 <AdvancedMarker
                     key={i}
-                    position={{
-                        lng: poi.pos[0],
-                        lat: poi.pos[1],
-                    }}
+                    position={{lng: poi.pos[0], lat: poi.pos[1]}}
                     onClick={() => handleMarkerClicked(poi._id)}
                 >
-                    <div className="rect-marker">
+                    <div className={poi.kind === "post"? "post-marker" : "avatar translate-y-1/2"}>
                         {icon}
-                        <p className="marker-label">{label}</p>
+                        <p>{label}</p>
                     </div>
                 </AdvancedMarker>
             );

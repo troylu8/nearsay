@@ -3,6 +3,7 @@ import PostPosContextProvider from "./contexts/post-pos-provider";
 import { NotificationsContextProvider } from "./contexts/notifications-provider";
 import "./globals.css";
 import Map from "./components/map/map";
+import AccountContextProvider from "./contexts/account-providers";
 
 export default function RootLayout({
     children,
@@ -15,8 +16,10 @@ export default function RootLayout({
                 <PostPosContextProvider>
                     <GeolocationContextProvider>
                         <NotificationsContextProvider>
-                            <Map />
-                            {children}
+                            <AccountContextProvider>
+                                <Map />
+                                {children}
+                            </AccountContextProvider>
                         </NotificationsContextProvider>
                     </GeolocationContextProvider>
                 </PostPosContextProvider>

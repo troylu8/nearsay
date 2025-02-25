@@ -51,7 +51,6 @@ export async function fetchPost(post_id: string) {
 }
 
 export function sendPostEvent(pos: [number, number], body: string) {
-    console.log("sending post event");
     clientSocket.emit("post", { pos, body });
 }
 

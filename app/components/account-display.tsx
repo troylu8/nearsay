@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react";
 import ColoredSvg from "./colored-svg";
-import { username as initialUsername, addUsernameChangedHandler, removeUsernameChangedHandler, signOut, getStoredAccountInfo } from "@/lib/account";
 import { useNotifications } from "../contexts/notifications-provider";
 import Link from "next/link";
+import { useAccountControls, useUsername } from "../contexts/account-providers";
 
 
 export default function AccountDisplay() {
 
-    const [username, setUsername] = useState<string | null>(initialUsername);
+    const [username, _] = useUsername();
+    const signOut = useAccountControls()[2];
+
     function handleSignOut() {
         signOut();
         sendNotification("signed out!");
@@ -18,17 +20,9 @@ export default function AccountDisplay() {
     const [showDropdown, setShowDropdown] = useState(false);
     
     useEffect(() => {
-        getStoredAccountInfo();
-        
-        addUsernameChangedHandler(setUsername);
-        
         function hideDropdown() { setShowDropdown(false) };
         window.addEventListener("mousedown", hideDropdown);
-
-        return () => {
-            removeUsernameChangedHandler(setUsername);
-            window.removeEventListener("mousedown", hideDropdown);
-        };
+        return () => window.removeEventListener("mousedown", hideDropdown);
     }, []);
 
     const sendNotification = useNotifications();

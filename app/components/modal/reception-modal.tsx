@@ -5,13 +5,15 @@ import Modal from "./modal";
 import TextInput from "../text-input";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn, signUp } from "@/lib/account";
+import { useAccountControls } from "@/app/contexts/account-providers";
 
 type Props = {
     mode: "sign-in" | "sign-up";
     onSuccess?: () => any
 };
 export default function ReceptionModal({ mode, onSuccess }: Props) {
+
+    const [signUp, signIn, _] = useAccountControls();
 
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -68,18 +70,21 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
 
 
     async function handleSubmit() {
+        
         // submit was clicked when signing in
         if (currentlySigningIn && verifyUsernameInput(username)) {
             //TODO: loading
 
-            const status = await signIn(username, password);
-            
-            if (status == 401)         setPasswordErr("wrong password");
-            else if (status == 404)    setUsernameErr("username doesnt exist");
-            else if (status == 500)    sendNotification("server error");
-            else /* if (status == 200) */ {
-                sendNotification(<p> signed in! welcome, {username} </p>);
+            try {
+                await signIn(username, password);
+
+                sendNotification(`signed in! welcome, ${username}`);
                 onSuccess!();
+            }
+            catch (err: any) {
+                if (err.code == 401)            setPasswordErr("wrong password");
+                else if (err.code == 404)       setUsernameErr("username doesnt exist");
+                else                            sendNotification("server error");
             }
         }
 
@@ -87,15 +92,16 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
         else if (verifyUsernameInput(username) && verifyPasswordsInput(password, passwordRepeated)) {
 
             //TODO: loading bar
-            const status = await signUp(username, password);
+            try {
+                await signUp(username, password);
 
-            if (status == 409)         setUsernameErr("username taken");
-            else if (status == 500)    sendNotification("server error");
-            else /*if (status == 200)*/ {
                 sendNotification(`account created! welcome, ${username}`);
                 onSuccess!();
             }
-
+            catch (err: any) {
+                if (err.code == 409)        setPasswordErr("username taken");
+                else                        sendNotification("server error");
+            }
         }
     }
 

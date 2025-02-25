@@ -4,9 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
 import { useGeolocation } from "../../contexts/geolocation-provider";
 import CreatePostModal from "../modal/create-post-modal";
+import { useAvatar } from "@/app/contexts/account-providers";
 
 export default function MapUI() {
     const { userPos } = useGeolocation();
+    const [avatar, _] = useAvatar();
+
 
     const map = useMap();
 
@@ -20,7 +23,10 @@ export default function MapUI() {
     return (
         <>
             <AdvancedMarker key="you are here" position={userPos}>
-                <div className="w-3 h-3 translate-y-1/2 rounded-[50%] bg-red-600 text-white "></div>
+                <div className="avatar translate-y-1/2 bg-red-600 ">
+                    { avatar }
+                    <p>you</p>
+                </div>
             </AdvancedMarker>
 
             {placing && <PlacingOverlay setPlacing={setPlacing} />}
