@@ -31,8 +31,8 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
     const [usernameErr, setUsernameErr] = useState<string | null>(null);
     const [passwordErr, setPasswordErr] = useState<string | null>(null);
 
-    function verifyUsernameInput(username: string) {
-        if (username == "") {
+    function verifyUsernameInput(newUsername: string) {
+        if (newUsername == "") {
             setUsernameErr("username cannot be empty");
             return false;
         }
@@ -99,7 +99,7 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
                 onSuccess!();
             }
             catch (err: any) {
-                if (err.code == 409)        setPasswordErr("username taken");
+                if (err.code == 409)        setUsernameErr("username taken");
                 else                        sendNotification("server error");
             }
         }

@@ -28,10 +28,10 @@ export default function Modal({ title, children, onClose }: Prop) {
             onMouseUp={(e) => { if (e.target === e.currentTarget && mousePressed) handleClose() }}
         >
             <div className="w-[80%] max-h-[80%] bg-white rounded-md flex flex-col">
-                <div className="p-3 flex justify-start relative">
+                <div className="p-3 flex justify-end relative">
                     <Link href="/" scroll={false}>
                         <ColoredSvg
-                            src={"/icons/back.svg"}
+                            src={"/icons/x.svg"}
                             width={25}
                             height={25}
                             color="black"

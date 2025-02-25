@@ -46,7 +46,7 @@ export default function AccountDisplay() {
                 >
                     {username?
                         (<>
-                            <button>edit profile</button>
+                            <Link href="/edit-profile" scroll={false}>edit profile</Link>
                             <button onClick={handleSignOut}>sign out</button>
                         </>) :
                         (<>

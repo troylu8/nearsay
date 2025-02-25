@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, use, useContext, useEffect, useState } from "react";
 import { toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { emitAsync } from "@/lib/server";
 import { createHash } from "crypto";
@@ -10,11 +10,16 @@ type Settings = {
     presence: boolean
 }
 
-type StatePair<T> = [T, (next: T) => any];
 const JWTContext = createContext<string | null>(null);
-const UsernameContext = createContext<StatePair<string | null> | null>(null);
-const AvatarContext = createContext<StatePair<string> | null>(null);
-const SettingsContext = createContext<StatePair<Settings> | null>(null);
+const UsernameContext = createContext<
+    [string | null, (nextUsername: string) => Promise<void>] | null
+>(null);
+const AvatarContext = createContext<
+    [string | null, (nextAvatar: number) => Promise<void>] | null
+>(null);
+const SettingsContext = createContext<
+    [Settings, (settingsUpdate: Record<string, any>) => void] | null
+>(null);
 
 type SignUp = (username: string, password: string, newAvatar?: number) => Promise<void>
 type SignIn = (username: string, password: string) => Promise<void>
@@ -50,6 +55,18 @@ export default function AccountContextProvider({ children }: Props) {
     const [settings, setSettings] = useState<Settings>({
         presence: true
     });
+
+    async function changeUsername(username: string) {
+        await emitAsync("edit-user", {jwt, update: { username } } );
+        setUsername(username);
+    }
+    async function changeAvatar(avatar: number) {
+        await emitAsync("edit-user", {jwt, update: { avatar } } );
+        setAvatar(avatar);
+    }
+    function changeSettings(settingsUpdate: Record<string, any>) {
+        setSettings(prev => ({...prev, ...settingsUpdate}) );
+    }
 
     const geolocation = useGeolocation();
 
@@ -149,9 +166,9 @@ export default function AccountContextProvider({ children }: Props) {
 
     return (
         <JWTContext.Provider value={jwt}>
-            <UsernameContext.Provider value={[username, console.log]}>
-                <AvatarContext.Provider value={[EMOTICONS[avatar], console.log]}>
-                    <SettingsContext.Provider value={[settings, console.log]}>
+            <UsernameContext.Provider value={[username, changeUsername]}>
+                <AvatarContext.Provider value={[EMOTICONS[avatar], changeAvatar]}>
+                    <SettingsContext.Provider value={[settings, changeSettings]}>
                         <AccountControlsContext.Provider value={[signUp, signIn, signOut]}>
                             {children}
                         </AccountControlsContext.Provider>
