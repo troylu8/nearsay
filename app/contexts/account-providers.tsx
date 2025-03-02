@@ -23,7 +23,7 @@ const SettingsContext = createContext<
 
 type SignUp = (username: string, password: string, newAvatar?: number) => Promise<void>
 type SignIn = (username: string, password: string) => Promise<void>
-type SignOut = (stayOnline?: boolean) => Promise<void>
+type SignOut = (stayOnline?: boolean, deleteAccount?: boolean) => Promise<void>
 const AccountControlsContext = createContext<[SignUp, SignIn, SignOut] | null>(null);
 
 export function useJwt() { return useContext(JWTContext); }
@@ -119,11 +119,10 @@ export default function AccountContextProvider({ children }: Props) {
             console.log("error getting geolocation");
         }
     }
-    async function signOut(stayOnline: boolean = settings.presence) {
-        console.log("signing out: ", jwt);
+    async function signOut(stayOnline: boolean = settings.presence, deleteAccount?: boolean) {
         if (!jwt) return;
 
-        let guest_jwt = await emitAsync<string | null>("sign-out", { jwt, stay_online: stayOnline });
+        let guest_jwt = await signOutRequest(jwt, stayOnline, deleteAccount);
         if (guest_jwt) {
             saveUsername(null);
             saveJWT(guest_jwt);
@@ -214,6 +213,14 @@ function signInRequest(username: string, password: string, pos: [number, number]
 
 function signInAsGuestRequest(pos: [number, number], avatar: number) {
     return emitAsync<string>("sign-in-guest", { pos, avatar });
+}
+
+function signOutRequest(jwt: string, stayOnline?: boolean, deleteAccount?: boolean) {
+    return emitAsync<string | null>("sign-out", { 
+        jwt, 
+        stay_online: stayOnline,
+        delete_account: deleteAccount
+    });
 }
 
 function startSessionRequest(jwt: string, pos: [number, number]) {

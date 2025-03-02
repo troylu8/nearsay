@@ -36,15 +36,13 @@ export async function sendViewShiftEvent(curr: SplitTileRegion, prev: SplitTileR
 }
 
 
-export async function fetchPost(post_id: string) {
+export async function fetchPost(jwt: string | null, post_id: string) {
     const headers: Record<string, string> = {};
-    const jwt = localStorage.getItem("jwt");
 
     if (jwt) headers["Authorization"] = `Bearer ${jwt}`;
     if (sessionStorage.getItem(post_id) == null) headers["Increment-View"] = "";
     
     const resp = await fetch(path.join(SERVER_URL, "posts", post_id), {headers} );
-    
     if (resp.ok) sessionStorage.setItem(post_id, "");
     
     return await resp.json();
@@ -56,10 +54,10 @@ export function sendPostEvent(pos: [number, number], body: string) {
 
 
 
-export function sendVoteRequest(post_id: string, vote: Vote) {
+export function sendVoteRequest(jwt: string, post_id: string, vote: Vote) {
     return fetch(path.join(SERVER_URL, "vote", post_id), {
         method: "POST",
-        headers: { "Authorization": "Bearer " + localStorage.getItem("jwt") },
+        headers: { "Authorization": "Bearer " + jwt },
         body: vote,
     });
 }

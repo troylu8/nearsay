@@ -13,6 +13,7 @@ import Modal from "@/app/components/modal/modal";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useJwt, useUsername } from "@/app/contexts/account-providers";
 
 
 const ACTION_NAME: Readonly<Record<Vote, string>> = {
@@ -40,18 +41,22 @@ type UsePostType = {
     error?: Error;
     isLoading: boolean;
 };
-function usePost(post_id: string): UsePostType {
-    return useSWR(post_id, fetchPost);
+function usePost(jwt: string | null, post_id: string): UsePostType {
+    return useSWR(post_id, () => fetchPost(jwt, post_id) );
 }
 
 type Props = {
     params: Promise<{ id: string }>;
 };
 export default function Page({ params }: Props) {
+    const jwt = useJwt();
+    
+    const username = useUsername()[0];
+
     const sendNotification = useNotifications();
 
     const post_id = use(params).id;
-    const { data, error, isLoading } = usePost(post_id);
+    const { data, error, isLoading } = usePost(jwt, post_id);
 
     const [_, updatePostPos] = usePostPos();
 
@@ -72,6 +77,7 @@ export default function Page({ params }: Props) {
         return () => updatePostPos(null);
     }, [data]);
 
+    //TODO: error page instead of not found page
     if (error) return <NotFound />;
     if (!data || isLoading) return <></>; //TODO: loading
     const { post } = data;
@@ -80,8 +86,8 @@ export default function Page({ params }: Props) {
 
         if (nextVote == vote) return;
 
-        if (localStorage.getItem("jwt")) {
-            sendVoteRequest(post_id, nextVote);
+        if (jwt && username) {
+            sendVoteRequest(jwt, post_id, nextVote);
             setVote(nextVote);
         } else {
             sendNotification(

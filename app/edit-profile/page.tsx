@@ -3,14 +3,88 @@
 import { useState } from "react";
 import TextInput from "../components/text-input";
 import Modal from "../components/modal/modal";
-import {  useUsername } from "@/app/contexts/account-providers";
+import {  useAccountControls, useUsername } from "@/app/contexts/account-providers";
 import { useNotifications } from "@/app/contexts/notifications-provider";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+import { EMOTICONS } from "@/lib/emoticon";
 
 
 export default function EditProfile() {
+    const signedIn = useUsername()[0] != null;
 
+    if (!signedIn) {
+        return (
+            <Modal title="edit profile">
+                <p> <Link href="/sign-in" scroll={false}> sign in </Link> to edit your profile ~ </p>
+                //TODO: emoticon here
+            </Modal>
+        );
+    }
+
+    return (
+        <Modal title="edit profile">
+            <div className="flex flex-col gap-3">
+                <UsernameEditor/>
+                <AvatarEditor/>
+                <DeleteAccount/>
+            </div>
+        </Modal>
+    );
+}
+
+function DeleteAccount() {
+    const username = useUsername()[0];
+    const sendNotification = useNotifications();
+    const signOut = useAccountControls()[2];
+
+    const [confirmation, setConfirmation] = useState("");
+    const [valid, setValid] = useState(true);
+
+    async function handleDeleteAccount() {
+        if (confirmation != username) {
+            setValid(false);
+            return;
+        };
+
+        try {
+            await signOut(undefined, true); //TODO: confirmation
+            sendNotification("account successfully deleted");
+        }
+        catch (_) {
+            sendNotification("error deleting your account");
+        }
+    }
+
+    return (
+        <>
+            <p>type "{username}" to confirm</p>
+            <TextInput 
+                textState={[confirmation, next => {
+                    setConfirmation(next);
+                    setValid(true);
+                }]} 
+                valid={valid}
+                placeholder={username ?? undefined}
+            />
+            <button onClick={handleDeleteAccount}>delete account</button>
+        </>
+    )
+}
+
+function AvatarEditor() {
+    return (
+        <>
+            <div className="grid grid-cols-5">
+                {
+                    EMOTICONS.map((e, i) => <div key={i} className="avatar">{e}</div>)
+                }
+            </div>
+        </>
+    )
+}
+
+function UsernameEditor() {
     const sendNotification = useNotifications();
     const [username, changeUsername] = useUsername();
 
@@ -45,17 +119,8 @@ export default function EditProfile() {
         }
     }
 
-    if (!username) {
-        return (
-            <Modal title="edit profile">
-                <p> <Link href="/sign-in" scroll={false}> sign in </Link> to edit your profile ~ </p>
-                //TODO: emoticon here
-            </Modal>
-        );
-    }
-
     return (
-        <Modal title="edit profile">
+        <>
             <label>username</label>
             <div className="flex gap-3">
                 <TextInput 
@@ -68,6 +133,6 @@ export default function EditProfile() {
                 <button onClick={handleChangeUsername}>apply</button>
             </div>
             <p>{usernameErr}</p>
-        </Modal>
+        </>
     );
 }
