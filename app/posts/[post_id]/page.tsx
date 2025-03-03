@@ -46,7 +46,7 @@ function usePost(jwt: string | null, post_id: string): UsePostType {
 }
 
 type Props = {
-    params: Promise<{ id: string }>;
+    params: Promise<{ post_id: string }>;
 };
 export default function Page({ params }: Props) {
     const jwt = useJwt();
@@ -55,7 +55,7 @@ export default function Page({ params }: Props) {
 
     const sendNotification = useNotifications();
 
-    const post_id = use(params).id;
+    const { post_id } = use(params);
     const { data, error, isLoading } = usePost(jwt, post_id);
 
     const [_, updatePostPos] = usePostPos();
@@ -81,6 +81,7 @@ export default function Page({ params }: Props) {
     if (error) return <NotFound />;
     if (!data || isLoading) return <></>; //TODO: loading
     const { post } = data;
+    console.log(post);
 
     function handleVote(nextVote: Vote) {
 
@@ -111,7 +112,7 @@ export default function Page({ params }: Props) {
     return (
         <Modal title="post">
             <div className="h-full m-5 mb-7 overflow-y-auto">
-                <p className="my-3 select-all"> {post.author_name} </p>
+                <p className="my-3 select-all"> {post.authorName ?? "[anonymous]"} </p>
                 <p className="my-3 select-all"> {post.body} </p>
 
                 {/* property icons row */}

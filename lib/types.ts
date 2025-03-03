@@ -18,14 +18,22 @@ export type UserPOIExt = {
 }
 
 export type Post = {
-    author: string;
-    author_name: string,
+    authorId?: string;
+    authorName?: string,
     body: string;
     likes: number;
     dislikes: number;
     expiry: number;
     views: number;
 };
+
+export type User = {
+    _id: string,
+    pos?: [number, number],
+    updated: number,
+    username: string,
+    avatar: number
+}
 
 export class POIManager {
     private map: Record<string, POI> = {};

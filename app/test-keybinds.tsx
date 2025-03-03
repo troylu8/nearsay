@@ -5,31 +5,31 @@ import { useAccountControls, useAvatar, useJwt, useUsername } from "./contexts/a
 
 export default function TestKeybinds() {
 
-    const jwt = useJwt();
-    const username = useUsername()[0];
-    const avatar = useAvatar()[0];
+    // const jwt = useJwt();
+    // const username = useUsername()[0];
+    // const avatar = useAvatar()[0];
 
-    const signOut = useAccountControls()[2];
+    // const signOut = useAccountControls()[2];
 
-    useEffect(() => {
+    // useEffect(() => {
         
-        function test(e: KeyboardEvent) {
-            console.log("pressed", e.key);
-            if (e.key == "a") {
-                console.dir(process.env);
-            }
-            if (e.key == "b") {
-                signOut(false);
-            }
-            if (e.key == "e") {
-                console.log({jwt, username, avatar});
-            }
-        }
+    //     function test(e: KeyboardEvent) {
+    //         console.log("pressed", e.key);
+    //         if (e.key == "a") {
+    //             console.dir(process.env);
+    //         }
+    //         if (e.key == "b") {
+    //             signOut(false);
+    //         }
+    //         if (e.key == "e") {
+    //             console.log({jwt, username, avatar});
+    //         }
+    //     }
         
-        window.addEventListener("keypress", test);
+    //     window.addEventListener("keypress", test);
 
-        return () => window.removeEventListener("keypress", test);
-    });
+    //     return () => window.removeEventListener("keypress", test);
+    // });
 
 
     return <></>;

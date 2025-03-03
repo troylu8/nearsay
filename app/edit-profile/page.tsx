@@ -3,7 +3,7 @@
 import { useState } from "react";
 import TextInput from "../components/text-input";
 import Modal from "../components/modal/modal";
-import {  useAccountControls, useUsername } from "@/app/contexts/account-providers";
+import {  useAccountControls, useAvatar, useUsername } from "@/app/contexts/account-providers";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 
@@ -31,6 +31,39 @@ export default function EditProfile() {
             </div>
         </Modal>
     );
+}
+
+function AvatarEditor() {
+    const [avatar, changeAvatar] = useAvatar();
+    const sendNotification = useNotifications();
+
+    async function handleChangeAvatar(next: number) {
+        try {
+            await changeAvatar(next);
+        }
+        catch (_) {
+            sendNotification("server error when changing avatar");
+        }
+    }
+    return (
+        <>
+            <h2>select avatar</h2>
+            <div className="flex flex-wrap justify-center gap-1 ">
+                {
+                    EMOTICONS.map((e, i) => 
+                        <div 
+                            key={i} 
+                            className={`
+                                avatar self-center cursor-pointer
+                                ${(avatar == e) && "border-red-600 border-4"}
+                            `}
+                            onClick={() => handleChangeAvatar(i)}
+                        >{e}</div>
+                    )
+                }
+            </div>
+        </>
+    )
 }
 
 function DeleteAccount() {
@@ -68,18 +101,6 @@ function DeleteAccount() {
                 placeholder={username ?? undefined}
             />
             <button onClick={handleDeleteAccount}>delete account</button>
-        </>
-    )
-}
-
-function AvatarEditor() {
-    return (
-        <>
-            <div className="grid grid-cols-5">
-                {
-                    EMOTICONS.map((e, i) => <div key={i} className="avatar">{e}</div>)
-                }
-            </div>
         </>
     )
 }

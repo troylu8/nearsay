@@ -41,12 +41,16 @@ body {
 .avatar {
     background-color: #408085;
     border-radius: 999px;
+
     color: #FFFFFF;
     font-size: 16px;
-    padding: 3px 10px;
+    padding: 4px 7px;
     position: relative;
 
     text-align: center;
+
+    font-family: 'Consolas', monospace;
+    
 }
 .avatar > p {
     position: absolute;
