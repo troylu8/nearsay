@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import TextInput from "../components/text-input";
+import BindedInput from "../components/text-input";
 import Modal from "../components/modal/modal";
 import {  useAccountControls, useAvatar, useUsername } from "@/app/contexts/account-providers";
 import { useNotifications } from "@/app/contexts/notifications-provider";
@@ -92,8 +92,8 @@ function DeleteAccount() {
     return (
         <>
             <p>type "{username}" to confirm</p>
-            <TextInput 
-                textState={[confirmation, next => {
+            <BindedInput 
+                bind={[confirmation, next => {
                     setConfirmation(next);
                     setValid(true);
                 }]} 
@@ -144,8 +144,8 @@ function UsernameEditor() {
         <>
             <label>username</label>
             <div className="flex gap-3">
-                <TextInput 
-                    textState={[newUsername ?? "", username => {
+                <BindedInput 
+                    bind={[newUsername ?? "", username => {
                         setNewUsername(username);
                         verifyUsernameInput(username);
                     }]} 

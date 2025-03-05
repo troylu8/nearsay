@@ -10,6 +10,10 @@ clientSocket.on("new-poi", (poi: any) => {
     pois.addOrUpdate(poi);
 });
 
+clientSocket.on("chat", ({uid, msg}) => {
+    console.log(uid, msg);
+});
+
 type MoveResponse = {
     /** list of poi ids to delete */
     delete: string[];

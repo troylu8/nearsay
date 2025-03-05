@@ -1,25 +1,41 @@
+import { KeyboardEvent } from "react";
 
-type Props = {
+type BindedInputProps = {
     type?: "text" | "password";
-    textState: [string, (nextText: string) => any];
+    bind: [string, (nextText: string) => any];
     valid?: boolean;
+    className?: string;
     placeholder?: string;
+    onSubmit?: () => any 
 };
-export default function TextInput({
+export default function BindedInput({
     type = "text",
-    textState,
-    valid = true,
+    bind,
+    valid,
+    className,
     placeholder,
-}: Props) {
-    const [text, setText] = textState;
+    onSubmit
+}: BindedInputProps) {
+    const [text, setText] = bind;
+
+    const handleKeyDown = onSubmit?
+        (e: KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && onSubmit()
+        : undefined;
 
     return (
         <input
             type={type}
             placeholder={placeholder}
             onInput={(e) => setText(e.currentTarget.value)}
-            className={valid ? "text-green-300" : "text-red-400"}
+            className={
+                className + (
+                    valid == true ? "text-red-400" : 
+                    valid == false? "text-green-300" : 
+                    ""  // if valid == undefined, apply neither
+                )
+            } 
             value={text}
+            onKeyDown={handleKeyDown}
         />
     );
 }

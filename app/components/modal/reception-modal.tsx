@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Modal from "./modal";
-import TextInput from "../text-input";
+import BindedInput from "../text-input";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccountControls } from "@/app/contexts/account-providers";
@@ -107,17 +107,17 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
 
     return (
         <Modal title={currentlySigningIn ? "sign in" : "create an account"}>
-            <TextInput
-                textState={[username, username => {
+            <BindedInput
+                bind={[username, username => {
                     setUsername(username);
                     verifyUsernameInput(username);
                 }]}
                 placeholder="username"
                 valid={usernameErr == null}
             />
-            <TextInput
+            <BindedInput
                 //TODO: type="password"
-                textState={[
+                bind={[
                     password,
                     password => {
                         setPassword(password);
@@ -129,9 +129,9 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
             />
 
             {!currentlySigningIn && 
-                <TextInput
+                <BindedInput
                     //TODO: type="password"
-                    textState={[
+                    bind={[
                         passwordRepeated,
                         (repeated) => {
                             setPasswordRepeated(repeated);

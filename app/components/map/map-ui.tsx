@@ -2,44 +2,113 @@ import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import ColoredSvg from "../colored-svg";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
-import { useGeolocation } from "../../contexts/geolocation-provider";
+import { toArrayCoords, useGeolocation } from "../../contexts/geolocation-provider";
 import CreatePostModal from "../modal/create-post-modal";
-import { useAvatar } from "@/app/contexts/account-providers";
+import { useAvatar, useJwt } from "@/app/contexts/account-providers";
+import BindedInput from "../text-input";
+import { emitAsync } from "@/lib/server";
 
 export default function MapUI() {
+    
     const { userPos } = useGeolocation();
-    const [avatar, _] = useAvatar();
+    const avatar = useAvatar()[0];
 
-
-    const map = useMap();
-
-    const [placing, setPlacing] = useState(false);
-
-    function panToUser() {
-        map?.setCenter(userPos!);
-        map?.setZoom(17);
-    }
+    
 
     return (
         <>
-            <AdvancedMarker key="you are here" position={userPos}>
-                <div className="avatar translate-y-1/2 bg-red-600 ">
-                    { avatar }
-                    <p>you</p>
-                </div>
-            </AdvancedMarker>
+            
+            {userPos && <AvatarMarker key="you are here" pos={userPos} avatar={avatar!} username="you" />}
 
-            {placing && <PlacingOverlay setPlacing={setPlacing} />}
-
-            <div className="fixed right-3 bottom-3 flex flex-col">
-                <button onClick={panToUser}>to me</button>
-                <button onClick={() => setPlacing(!placing)}>
-                    {placing ? "cancel" : "place note"}
-                </button>
+            <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end">
+                {userPos && <PanToButton pos={userPos} />}
+                <PlaceNoteButton />
+                <ChatButton />
             </div>
         </>
     );
 }
+
+function ChatButton() {
+    const jwt = useJwt();
+    const { userPos } = useGeolocation();
+
+    const [msg, setMsg] = useState("");
+    const [chatboxVisible, setChatboxVisible] = useState(true);
+    
+    if (jwt == null || !userPos) return;
+    
+    function handleSend() {
+        emitAsync("chat", {jwt, msg, pos: toArrayCoords(userPos!)})
+    }
+
+    return (
+        <>
+            <div className="w-full max-w-screen-sm flex gap-3 items-end justify-end">
+                <button onClick={() => setChatboxVisible(!chatboxVisible)}> 
+                    {chatboxVisible? "hide chat" : "show chat"} 
+                </button>
+                {
+                    chatboxVisible && 
+                    <>
+                        <BindedInput 
+                            bind={[msg, setMsg]}
+                            className="flex-1 rounded-md" 
+                            placeholder="shout to the world..."
+                            onSubmit={handleSend}
+                        />
+                        <button onClick={handleSend}> send </button>
+                    </>
+                }
+            </div>
+        </>
+    )
+}
+
+type AvatarMarkerProps = {
+    pos: google.maps.LatLngLiteral,
+    avatar: string,
+    username: string
+}
+function AvatarMarker({ pos, avatar, username }: AvatarMarkerProps) {
+    return (
+        <>
+            <AdvancedMarker position={pos}>
+                <div className="avatar translate-y-1/2 bg-red-600 ">
+                    { avatar }
+                    <p>{username}</p>
+                </div>
+            </AdvancedMarker>
+        </>
+    )
+}
+
+function PanToButton({ pos }: { pos: google.maps.LatLngLiteral }) {
+
+    const map = useMap();
+
+    function panToUser() {
+        map?.setCenter(pos);
+        map?.setZoom(17);
+    }
+
+    return <button onClick={panToUser}> to me </button>;
+}
+
+function PlaceNoteButton() {
+    const [placing, setPlacing] = useState(false);
+
+    return (
+        <>
+            {placing && <PlacingOverlay setPlacing={setPlacing} />}
+
+            <button onClick={() => setPlacing(!placing)}>
+                {placing ? "cancel" : "place note"}
+            </button>
+        </>
+    )
+}
+
 
 type PlacingOverlayProps = {
     setPlacing: (nextPlacing: boolean) => any;
