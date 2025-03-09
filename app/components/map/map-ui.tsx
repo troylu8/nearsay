@@ -51,7 +51,7 @@ function ChatButton() {
                 {
                     chatboxVisible && 
                     <>
-                        <BindedInput 
+                        <BindedInput
                             bind={[msg, setMsg]}
                             className="flex-1 rounded-md" 
                             placeholder="shout to the world..."

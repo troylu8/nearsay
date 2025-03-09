@@ -1,4 +1,4 @@
-import AccountDisplay from "./components/account-display";
+import HamburgerMenu from "./components/hamburger-menu";
 import TestKeybinds from "./test-keybinds";
 
 
@@ -6,7 +6,7 @@ export default function App() {
 
     return (
         <>
-            <AccountDisplay/>
+            <HamburgerMenu/>
             <TestKeybinds/>
         </>
     );

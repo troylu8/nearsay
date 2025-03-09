@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAccountControls, useUsername } from "../contexts/account-providers";
 
 
-export default function AccountDisplay() {
+export default function HamburgerMenu() {
 
     const [username, _] = useUsername();
     const signOut = useAccountControls()[2];
@@ -35,7 +35,7 @@ export default function AccountDisplay() {
         >
             <p>{username ?? "[signed out]"}</p>
             <div className="relative bg-slate-400 rounded-md p-2">
-                <ColoredSvg src={showDropdown? "/icons/x.svg" : "/icons/profile.svg"} width={20} height={20} color="white" />
+                <ColoredSvg src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} width={20} height={20} color="white" />
                 
                 <div 
                     className={`
@@ -46,15 +46,16 @@ export default function AccountDisplay() {
                 >
                     {username?
                         (<>
-                            <Link href="/edit-profile" scroll={false}>edit profile</Link>
-                            <button onClick={handleSignOut}>sign out</button>
+                            <Link href="/edit-profile" scroll={false}> edit profile </Link>
+                            <button onClick={handleSignOut}> sign out </button>
                         </>) :
                         (<>
-                            <Link href="/sign-up" scroll={false}>create account</Link>
-                            <Link href="/sign-in" scroll={false}>sign in</Link>
+                            <Link href="/sign-up" scroll={false}> create account </Link>
+                            <Link href="/sign-in" scroll={false}> sign in </Link>
                         </>)
                     }
-                    
+
+                    <Link href="/settings" scroll={false}> settings </Link>
                     
                 </div>
             </div>

@@ -5,10 +5,7 @@ import { toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { emitAsync } from "@/lib/server";
 import { createHash } from "crypto";
 import { EMOTICONS } from "@/lib/emoticon";
-
-type Settings = {
-    presence: boolean
-}
+import { useSettings } from "./settings-provider";
 
 const JWTContext = createContext<string | null>(null);
 const UsernameContext = createContext<
@@ -16,9 +13,6 @@ const UsernameContext = createContext<
 >(null);
 const AvatarContext = createContext<
     [string | null, (nextAvatar: number) => Promise<void>] | null
->(null);
-const SettingsContext = createContext<
-    [Settings, (settingsUpdate: Record<string, any>) => void] | null
 >(null);
 
 type SignUp = (username: string, password: string, newAvatar?: number) => Promise<void>
@@ -29,7 +23,6 @@ const AccountControlsContext = createContext<[SignUp, SignIn, SignOut] | null>(n
 export function useJwt() { return useContext(JWTContext); }
 export function useUsername() { return useContext(UsernameContext)!; }
 export function useAvatar() { return useContext(AvatarContext)!; }
-export function useSettings() { return useContext(SettingsContext)!; }
 
 export function useAccountControls() { return useContext(AccountControlsContext)!; }
 
@@ -49,12 +42,11 @@ type Props = {
     children: React.ReactNode;
 };
 export default function AccountContextProvider({ children }: Props) {
+    const settings = useSettings()[0];
+
     const [jwt, setJWT] = useState<string | null>(null);
     const [username, setUsername] = useState<string | null>(null);
     const [avatar, setAvatar] = useState<number>(0);
-    const [settings, setSettings] = useState<Settings>({
-        presence: true
-    });
 
     async function changeUsername(username: string) {
         await emitAsync("edit-user", {jwt, update: { username } } );
@@ -63,9 +55,6 @@ export default function AccountContextProvider({ children }: Props) {
     async function changeAvatar(avatar: number) {
         await emitAsync("edit-user", {jwt, update: { avatar } } );
         setAvatar(avatar);
-    }
-    function changeSettings(settingsUpdate: Record<string, any>) {
-        setSettings(prev => ({...prev, ...settingsUpdate}) );
     }
 
     const geolocation = useGeolocation();
@@ -119,7 +108,7 @@ export default function AccountContextProvider({ children }: Props) {
             console.log("error getting geolocation");
         }
     }
-    async function signOut(stayOnline: boolean = settings.presence, deleteAccount?: boolean) {
+    async function signOut(stayOnline: boolean = settings.present, deleteAccount?: boolean) {
         if (!jwt) return;
 
         let guest_jwt = await signOutRequest(jwt, stayOnline, deleteAccount);
@@ -161,17 +150,15 @@ export default function AccountContextProvider({ children }: Props) {
         
         window.addEventListener("beforeunload", goOffline);
         return () => window.removeEventListener("beforeunload", goOffline);
-    }, [jwt, settings.presence])
+    }, [jwt, settings.present])
 
     return (
         <JWTContext.Provider value={jwt}>
             <UsernameContext.Provider value={[username, changeUsername]}>
                 <AvatarContext.Provider value={[EMOTICONS[avatar], changeAvatar]}>
-                    <SettingsContext.Provider value={[settings, changeSettings]}>
-                        <AccountControlsContext.Provider value={[signUp, signIn, signOut]}>
-                            {children}
-                        </AccountControlsContext.Provider>
-                    </SettingsContext.Provider>
+                    <AccountControlsContext.Provider value={[signUp, signIn, signOut]}>
+                        {children}
+                    </AccountControlsContext.Provider>
                 </AvatarContext.Provider>
             </UsernameContext.Provider>
         </JWTContext.Provider>
