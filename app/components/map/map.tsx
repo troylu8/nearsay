@@ -7,7 +7,6 @@ import {
     useMap,
 } from "@vis.gl/react-google-maps";
 import { useEffect, useRef, useState } from "react";
-import { sendViewShiftEvent } from "@/lib/data";
 
 import {
     split,
@@ -23,6 +22,8 @@ import { usePostPos } from "../../contexts/post-pos-provider";
 import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
+import { emitAsync } from "@/lib/server";
+import { Cluster } from "@/lib/types";
 
 
 export default function Map() {
@@ -32,7 +33,7 @@ export default function Map() {
 
     const { userPos } = useGeolocation();
 
-    function handleCameraChanged(e: MapCameraChangedEvent) {
+    async function handleCameraChanged(e: MapCameraChangedEvent) {
         const {
             north: top,
             south: bottom,
@@ -52,7 +53,8 @@ export default function Map() {
 
         // if tile region changed, the set view (to reload markers)
         // after poi tree is populated with request data
-        sendViewShiftEvent(nextTileRegions, tileRegion.current).then(
+        
+        sendViewShiftEvent(nextTileRegions).then(
             () => setView(view) // after a successful move request, load markers
         );
 
@@ -67,7 +69,7 @@ export default function Map() {
             >
                 <GoogleMap
                     mapId="4cd1599c3ca39378"
-                    defaultZoom={7} //TODO: should be 17
+                    defaultZoom={17}
                     defaultCenter={userPos}
                     disableDefaultUI
                     keyboardShortcuts={false}
@@ -83,6 +85,8 @@ export default function Map() {
         </div>
     );
 }
+
+
 
 function PanToActivePost() {
     const map = useMap(); // the map component itself cannot use useMap()

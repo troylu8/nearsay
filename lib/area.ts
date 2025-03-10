@@ -68,12 +68,19 @@ export function getTileRegion(view: Rect): TileRegion {
     };
 }
 
-export function pxToDegrees(map: google.maps.Map, px: number) {
+export function pxToMeters(map: google.maps.Map, px: number) {
+
+    
     const mapWidthDegrees =
         map.getBounds()!.getNorthEast().lng() -
         map.getBounds()!.getSouthWest().lng();
+    
+    const pxInDegrees = (px * mapWidthDegrees) / map.getDiv().clientWidth;
 
-    return (px * mapWidthDegrees) / map.getDiv().clientWidth;
+    return google.maps.geometry.spherical.computeDistanceBetween(
+        { lat: 0, lng: 0 },
+        { lat: 0, lng: pxInDegrees },
+    );
 }
 
 

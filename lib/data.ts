@@ -1,43 +1,15 @@
-import { SplitTileRegion } from "@/lib/area";
 import path from "path";
-import { POI, POIManager, Vote } from "./types";
 import { clientSocket, emitAsync, SERVER_URL } from "./server";
-
-export const pois = new POIManager();
+import { Vote } from "./types";
 
 clientSocket.on("new-poi", (poi: any) => {
     console.log("received new poi event", poi);
-    pois.addOrUpdate(poi);
 });
 
 clientSocket.on("chat", ({uid, msg}) => {
     console.log(uid, msg);
 });
 
-type MoveResponse = {
-    /** list of poi ids to delete */
-    delete: string[];
-    /** list of pois to add/update */
-    fresh: POI[];
-};
-export async function sendViewShiftEvent(curr: SplitTileRegion, prev: SplitTileRegion) {
-    const timestamps: Record<string, number> = {};
-
-    const searchRects = curr.filter(tilereg => tilereg != undefined)
-                            .map(tilereg => tilereg.area)
-
-    for (const poi of pois.search(...searchRects)) {
-        timestamps[poi._id] = poi.updated;
-    }
-
-    const resp = await emitAsync<MoveResponse>("view-shift", { curr, prev, timestamps });
-    for (const _id of resp.delete) {
-        pois.remove(_id);
-    }
-    for (const poi of resp.fresh) {
-        pois.addOrUpdate(poi);
-    }
-}
 
 
 export async function fetchPost(jwt: string | null, post_id: string) {

@@ -1,80 +1,88 @@
 "use client";
 
-import { pxToDegrees, SplitRect } from "@/lib/area";
-import { pois } from "@/lib/data";
+import { pxToMeters, SplitRect, SplitTileRegion } from "@/lib/area";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
-import { cluster, isCluster, Cluster } from "@/lib/cluster";
-import { POI, PostPOIExt, UserPOIExt } from "@/lib/types";
-import { useEffect, useReducer } from "react";
+import { Cluster, User } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
+import { emitAsync } from "@/lib/server";
+import useSWR from "swr";
 
-type Props = {
-    view?: SplitRect;
+
+type ViewShiftResponse = { posts: Cluster[], users: User[] };
+type UseClustersType = {
+    data?: ViewShiftResponse;
+    error?: Error;
+    isLoading: boolean;
 };
+function useClusters(view?: SplitRect): UseClustersType {
+    return useSWR("view-shift", async () => {
+        return view? 
+            await emitAsync<ViewShiftResponse>("view-shift", { view }) :
+            { posts: [], users: []};
+    });
+}
 
+
+type Props = { 
+    view?: SplitRect 
+}
 export default function Markers({ view }: Props) {
-    const map = useMap()!;
     const router = useRouter();
 
-    const [_, forceUpdate] = useReducer(x => x + 1, 0);
-    useEffect(() => {
-        pois.addPoisChangedHandler(forceUpdate);
-        return () => pois.removePoisChangedHandler(forceUpdate);
-    }, []);
+    const { data } = useClusters(view);
 
-    if (!view) return <></>;
+    // const [_, forceUpdate] = useReducer(x => x + 1, 0);
+    // useEffect(() => {
+    //     pois.addPoisChangedHandler(forceUpdate);
+    //     return () => pois.removePoisChangedHandler(forceUpdate);
+    // }, []);
 
-    function handleMarkerClicked(id: string) {
+    if (!data) return <></>;
+    const { users, posts } = data;
+
+    function handlePostClicked(id: string) {
         router.replace("/posts/" + id, { scroll: false });
     }
 
-
-    const markers = view
-        .map((v) => {
-            if (!v) return [];
-            const visiblePOIs = pois.search(v);
-
-            
-
-            return [
-                ...visiblePOIs.filter(poi => poi.kind === "user"),
-                ...cluster(visiblePOIs.filter(poi => poi.kind === "post"), pxToDegrees(map, 50))
-            ]
-        })
-        .flat();
-    
-    return markers.map((item: POI | Cluster, i) => {
-        if (isCluster(item)) {
-            const cluster = item as Cluster;
-            return (
-                <AdvancedMarker
-                    key={i}
-                    position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
-                >
-                    <div className="post-marker bg-red-400 after:border-t-red-400">
-                        {cluster.size}x
-                    </div>
-                </AdvancedMarker>
-            );
-        } else {
-            const poi = item as POI & (PostPOIExt | UserPOIExt);
-            
-            const icon = poi.kind === "post"? "post" : EMOTICONS[(poi as UserPOIExt).avatar];
-            const label = poi.kind === "post"? (poi as PostPOIExt).blurb : (poi as UserPOIExt).username;
-            
-            return (
-                <AdvancedMarker
-                    key={i}
-                    position={{lng: poi.pos[0], lat: poi.pos[1]}}
-                    onClick={() => handleMarkerClicked(poi._id)}
-                >
-                    <div className={poi.kind === "post"? "post-marker" : "avatar translate-y-1/2"}>
-                        {icon}
-                        <p>{label}</p>
-                    </div>
-                </AdvancedMarker>
-            );
-        }
-    });
+    return (
+        <>
+            {
+                users.map(user => 
+                    <AdvancedMarker
+                        key={user._id}
+                        position={{lng: user.pos![1], lat: user.pos![0]}}
+                    >
+                        <div className="avatar translate-y-1/2">
+                            {EMOTICONS[user.avatar]}
+                            <p>{user.username}</p>
+                        </div>
+                    </AdvancedMarker>
+                )
+            }
+            {
+                posts.map(cluster => 
+                    <AdvancedMarker
+                        key={cluster.id}
+                        position={{lng: cluster.y, lat: cluster.x}}
+                    >
+                        {
+                            cluster.blurb? 
+                                <div 
+                                    className="post-marker" 
+                                    onClick={() => handlePostClicked(cluster.id)}
+                                >
+                                    post
+                                    <p> {cluster.blurb} </p>
+                                </div> 
+                                :
+                                <div className="post-marker bg-red-400 after:border-t-red-400">
+                                    {cluster.size}x
+                                </div>
+                        }
+                    </AdvancedMarker>
+                )
+            }
+        </>
+    );
 }
