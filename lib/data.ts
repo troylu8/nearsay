@@ -10,8 +10,6 @@ clientSocket.on("chat", ({uid, msg}) => {
     console.log(uid, msg);
 });
 
-
-
 export async function fetchPost(jwt: string | null, post_id: string) {
     const headers: Record<string, string> = {};
 

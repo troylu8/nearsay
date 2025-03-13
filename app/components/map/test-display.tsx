@@ -1,5 +1,6 @@
+import { ViewShiftData } from "./markers";
 import { Polygon } from "./polygon";
-import { SplitRect, toSplitRect, toSplitTileRegion } from "@/lib/area";
+import { SplitRect } from "@/lib/area";
 
 function getPolygonsOfSplitRect(splitRect: SplitRect) {
     return splitRect.map((rect, i) =>
@@ -35,18 +36,19 @@ function getPolygonsOfSplitRect(splitRect: SplitRect) {
     );
 }
 
-type Props = {
+type TestProps = {
     view: SplitRect;
-};
-export default function TestDisplay({ view }: Props) {
+    viewShiftData: ViewShiftData | null;
+}
+export default function TestDisplay({ view, viewShiftData }: TestProps) {
     return (
         <>
             {/* view */}
             {view && getPolygonsOfSplitRect(view)}
 
             {/* snapped view */}
-            {view &&
-                getPolygonsOfSplitRect(toSplitRect(toSplitTileRegion(view)))}
+            {viewShiftData &&
+                getPolygonsOfSplitRect(viewShiftData.area)}
         </>
     );
 }

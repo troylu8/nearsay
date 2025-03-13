@@ -1,45 +1,68 @@
 "use client";
 
-import { pxToMeters, SplitRect, SplitTileRegion } from "@/lib/area";
+import { addGap, Rect, rectsEqual, split, SplitRect, splitRectsEqual, toTileRegion } from "@/lib/area";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
-import { Cluster, User } from "@/lib/types";
+import { User } from "@/lib/types";
+import { useEffect, useReducer, useRef } from "react";
 import { EMOTICONS } from "@/lib/emoticon";
-import { emitAsync } from "@/lib/server";
 import useSWR from "swr";
+import { emitAsync } from "@/lib/server";
+import TestDisplay from "./test-display";
 
+type Cluster = {
+    id?: string,
+    pos: [number, number],
+    size: number,
+    blurb?: string
+}
 
-type ViewShiftResponse = { posts: Cluster[], users: User[] };
-type UseClustersType = {
-    data?: ViewShiftResponse;
+type Markers = {
+    posts: Cluster[];
+    users: User[]
+}
+
+type UseMarkersType = {
+    data?: Markers;
     error?: Error;
     isLoading: boolean;
-};
-function useClusters(view?: SplitRect): UseClustersType {
-    return useSWR("view-shift", async () => {
-        return view? 
-            await emitAsync<ViewShiftResponse>("view-shift", { view }) :
-            { posts: [], users: []};
-    });
+}
+function useMarkers(data: ViewShiftData | null, prevMarkers: Markers): UseMarkersType {
+    return useSWR("view-shift", async () => 
+        data?
+            await emitAsync<Markers>("view-shift", data) :
+            prevMarkers
+    );
 }
 
-
-type Props = { 
-    view?: SplitRect 
+type Props = {
+    bounds: google.maps.LatLngBoundsLiteral;
 }
-export default function Markers({ view }: Props) {
+export default function Markers({ bounds }: Props) {
     const router = useRouter();
 
-    const { data } = useClusters(view);
+    const prevMarkers = useRef<Markers>({posts: [], users: []});
+    const prevViewShiftData = useRef<ViewShiftData | null>(null);
 
-    // const [_, forceUpdate] = useReducer(x => x + 1, 0);
-    // useEffect(() => {
-    //     pois.addPoisChangedHandler(forceUpdate);
-    //     return () => pois.removePoisChangedHandler(forceUpdate);
-    // }, []);
+    const { north: top, south: bottom, west: left, east: right } = bounds;
+    const splitView = split({top, bottom, left, right});
+    addGap(splitView); //TODO: remove
+    let currData: ViewShiftData | null = toViewShiftData(splitView);
 
-    if (!data) return <></>;
-    const { users, posts } = data;
+    // if curr data is same as prev data, don't send req
+    if (
+        prevViewShiftData.current != null &&
+        viewShiftDataEqual(prevViewShiftData.current, currData)
+    )   
+        currData = null;
+    else 
+        prevViewShiftData.current = currData;
+
+    const { data: fetchedMarkers, error, isLoading } = useMarkers(currData, prevMarkers.current);
+
+    if (!fetchedMarkers) return <></>;
+    prevMarkers.current = fetchedMarkers;
+    const { users, posts } = fetchedMarkers;
 
     function handlePostClicked(id: string) {
         router.replace("/posts/" + id, { scroll: false });
@@ -47,6 +70,7 @@ export default function Markers({ view }: Props) {
 
     return (
         <>
+            <TestDisplay view={splitView} viewShiftData={prevViewShiftData.current}  />
             {
                 users.map(user => 
                     <AdvancedMarker
@@ -61,16 +85,16 @@ export default function Markers({ view }: Props) {
                 )
             }
             {
-                posts.map(cluster => 
+                posts.map((cluster, i) => 
                     <AdvancedMarker
-                        key={cluster.id}
-                        position={{lng: cluster.y, lat: cluster.x}}
+                        key={i}
+                        position={{lng: cluster.pos[1], lat: cluster.pos[0]}}
                     >
                         {
                             cluster.blurb? 
                                 <div 
                                     className="post-marker" 
-                                    onClick={() => handlePostClicked(cluster.id)}
+                                    onClick={() => handlePostClicked(cluster.id!)}
                                 >
                                     post
                                     <p> {cluster.blurb} </p>
@@ -85,4 +109,22 @@ export default function Markers({ view }: Props) {
             }
         </>
     );
+}
+
+export type ViewShiftData = {
+    depth: number,
+    area: SplitRect
+};
+
+function viewShiftDataEqual(a: ViewShiftData, b: ViewShiftData) {
+    return a.depth == b.depth && splitRectsEqual(a.area, b.area);
+}
+
+function toViewShiftData(splitView: SplitRect): ViewShiftData {
+    let {depth, area} = toTileRegion(splitView[0]!); //TODO: remove !
+
+    return {
+        depth,
+        area: [area, splitView[1] && toTileRegion(splitView[1]).area]
+    };
 }

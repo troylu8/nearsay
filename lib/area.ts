@@ -27,9 +27,6 @@ export type TileRegion = {
     area: Rect;
 };
 
-export function splitTileRegionsEqual(a: SplitTileRegion, b: SplitTileRegion) {
-    return tileRegionsEqual(a[0], b[0]) && tileRegionsEqual(a[1], b[1]);
-}
 export function tileRegionsEqual(a: TileRegion | undefined, b: TileRegion | undefined) {
     if (!a && !b) return true;
     if (!a || !b) return false;
@@ -45,7 +42,7 @@ export function rectsEqual(a: Rect, b: Rect) {
     );
 }
 
-export function getTileRegion(view: Rect): TileRegion {
+export function toTileRegion(view: Rect): TileRegion {
     const viewSize =
         Math.max(view.right - view.left, view.top - view.bottom);
 
@@ -85,19 +82,67 @@ export function pxToMeters(map: google.maps.Map, px: number) {
 
 
 export type SplitRect = [Rect?, Rect?];
-export type SplitTileRegion = [TileRegion?, TileRegion?];
+export function splitRectsEqual(a: SplitRect, b: SplitRect) {
+    return (
+        ( !(a[0] || b[0]) ||  (a[0] && b[0] && rectsEqual(a[0], b[0])) ) &&
+        ( !(a[1] || b[1]) ||  (a[1] && b[1] && rectsEqual(a[1], b[1])) )
+    );
+}
 
-export function toSplitTileRegion(splitRect: SplitRect): SplitTileRegion {
-    return [
-        splitRect[0] && getTileRegion(splitRect[0]),
-        splitRect[1] && getTileRegion(splitRect[1]),
-    ];
-}
-export function toSplitRect(splitTileRegion: SplitTileRegion): SplitRect {
-    return [splitTileRegion[0]?.area, splitTileRegion[1]?.area];
-}
 export function isSplit(rect: SplitRect) {
     return rect[1] != undefined;
+}
+
+export function addGap(view: SplitRect) {
+    let gapW;
+    let gapH;
+    if (isSplit(view)) {
+        const [a, b] = view as [Rect, Rect];
+        gapW = (a.right - a.left + (b.right - b.left)) * 0.3;
+        gapH = (a.top - a.bottom) * 0.3;
+
+        if (a.right - a.left < gapW) {
+            view[0] = undefined;
+            b.top -= gapH;
+            b.bottom += gapH;
+
+            if (a.left == -180) {
+                b.right = 180 - (gapW - (a.right - a.left));
+                b.left += gapW;
+            } else {
+                b.left = -180 + (gapW - (a.right - a.left));
+                b.right -= gapW;
+            }
+        } else if (b.right - b.left < gapW) {
+            view[1] = undefined;
+            a.top -= gapH;
+            a.bottom += gapH;
+
+            if (b.left == -180) {
+                a.right = 180 - (gapW - (b.right - b.left));
+                a.left += gapW;
+            } else {
+                a.left = -180 + (gapW - (b.right - b.left));
+                a.right -= gapW;
+            }
+        } else {
+            a.top -= gapH;
+            b.top -= gapH;
+            a.bottom += gapH;
+            b.bottom += gapH;
+            if (a.left == -180) a.right -= gapW;
+            if (a.right == 180) a.left += gapW;
+            if (b.left == -180) b.right -= gapW;
+            if (b.right == 180) b.left += gapW;
+        }
+    } else {
+        gapW = (view[0]!.right - view[0]!.left) * 0.3;
+        gapH = (view[0]!.top - view[0]!.bottom) * 0.3;
+        view[0]!.top -= gapH;
+        view[0]!.bottom += gapH;
+        view[0]!.left += gapW;
+        view[0]!.right -= gapW;
+    }
 }
 
 export function split(rect: Rect): SplitRect {

@@ -6,59 +6,19 @@ import {
     MapCameraChangedEvent,
     useMap,
 } from "@vis.gl/react-google-maps";
-import { useEffect, useRef, useState } from "react";
-
-import {
-    split,
-    SplitRect,
-    SplitTileRegion,
-    toSplitTileRegion,
-    splitTileRegionsEqual,
-    isSplit,
-    Rect,
-} from "@/lib/area";
-import TestDisplay from "./test-display";
+import { useEffect, useState } from "react";
 import { usePostPos } from "../../contexts/post-pos-provider";
 import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
-import { emitAsync } from "@/lib/server";
-import { Cluster } from "@/lib/types";
-
 
 export default function Map() {
-    const [view, setView] = useState<SplitRect>([undefined, undefined]);
-
-    const tileRegion = useRef<SplitTileRegion>([undefined, undefined]);
+    const [bounds, setBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);
 
     const { userPos } = useGeolocation();
 
-    async function handleCameraChanged(e: MapCameraChangedEvent) {
-        const {
-            north: top,
-            south: bottom,
-            west: left,
-            east: right,
-        } = e.detail.bounds;
-
-        let view = split({ top, bottom, left, right });
-
-        addGap(view); //TODO: remove
-
-        const nextTileRegions = toSplitTileRegion(view);
-
-        // if tile region hasnt changed, then set view now.
-        if (splitTileRegionsEqual(nextTileRegions, tileRegion.current))
-            return setView(view);
-
-        // if tile region changed, the set view (to reload markers)
-        // after poi tree is populated with request data
-        
-        sendViewShiftEvent(nextTileRegions).then(
-            () => setView(view) // after a successful move request, load markers
-        );
-
-        tileRegion.current = nextTileRegions;
+    function handleCameraChanged(e: MapCameraChangedEvent) {
+        setBounds(e.detail.bounds);
     }
 
     return (
@@ -75,8 +35,7 @@ export default function Map() {
                     keyboardShortcuts={false}
                     onCameraChanged={handleCameraChanged}
                 >
-                    <Markers view={view} />
-                    <TestDisplay view={view} />
+                    {bounds && <Markers bounds={bounds} />}
                     <MapUI />
                 </GoogleMap>
 
@@ -108,54 +67,3 @@ function PanToActivePost() {
     return <></>;
 }
 
-function addGap(view: SplitRect) {
-    let gapW;
-    let gapH;
-    if (isSplit(view)) {
-        const [a, b] = view as [Rect, Rect];
-        gapW = (a.right - a.left + (b.right - b.left)) * 0.3;
-        gapH = (a.top - a.bottom) * 0.3;
-
-        if (a.right - a.left < gapW) {
-            view[0] = undefined;
-            b.top -= gapH;
-            b.bottom += gapH;
-
-            if (a.left == -180) {
-                b.right = 180 - (gapW - (a.right - a.left));
-                b.left += gapW;
-            } else {
-                b.left = -180 + (gapW - (a.right - a.left));
-                b.right -= gapW;
-            }
-        } else if (b.right - b.left < gapW) {
-            view[1] = undefined;
-            a.top -= gapH;
-            a.bottom += gapH;
-
-            if (b.left == -180) {
-                a.right = 180 - (gapW - (b.right - b.left));
-                a.left += gapW;
-            } else {
-                a.left = -180 + (gapW - (b.right - b.left));
-                a.right -= gapW;
-            }
-        } else {
-            a.top -= gapH;
-            b.top -= gapH;
-            a.bottom += gapH;
-            b.bottom += gapH;
-            if (a.left == -180) a.right -= gapW;
-            if (a.right == 180) a.left += gapW;
-            if (b.left == -180) b.right -= gapW;
-            if (b.right == 180) b.left += gapW;
-        }
-    } else {
-        gapW = (view[0]!.right - view[0]!.left) * 0.3;
-        gapH = (view[0]!.top - view[0]!.bottom) * 0.3;
-        view[0]!.top -= gapH;
-        view[0]!.bottom += gapH;
-        view[0]!.left += gapW;
-        view[0]!.right -= gapW;
-    }
-}
