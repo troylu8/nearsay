@@ -4,13 +4,8 @@ export type Rect = {
     left: number;
     right: number;
 };
-export function envelops(larger: Rect, smaller: Rect) {
-    return (
-        larger.top >= smaller.top &&
-        larger.bottom <= smaller.bottom &&
-        larger.left <= smaller.left &&
-        larger.right >= smaller.right
-    );
+export function within(rect: Rect, x: number, y: number) {
+    return x >= rect.left && x <= rect.right && y >= rect.bottom && y <= rect.top;
 }
 
 export const BOUND = 180;
@@ -22,17 +17,6 @@ export function roundDown(n: number, size: number) {
     return Math.floor(n / size) * size;
 }
 
-export type TileRegion = {
-    depth: number;
-    area: Rect;
-};
-
-export function tileRegionsEqual(a: TileRegion | undefined, b: TileRegion | undefined) {
-    if (!a && !b) return true;
-    if (!a || !b) return false;
-
-    return a.depth == b.depth && rectsEqual(a.area, b.area);
-}
 export function rectsEqual(a: Rect, b: Rect) {
     return (
         a.top == b.top &&
@@ -42,27 +26,34 @@ export function rectsEqual(a: Rect, b: Rect) {
     );
 }
 
-export function toTileRegion(view: Rect): TileRegion {
+export function alignToTiles(view: Rect): {layer: number, view: Rect} {
     const viewSize =
         Math.max(view.right - view.left, view.top - view.bottom);
 
-    let depth = 0;
+    let layer = 0;
     let tileSize = BOUND * 2;
-
     while (tileSize > viewSize) {
-        depth++;
+        layer++;
         tileSize /= 2;
     }
     
     return {
-        depth,
-        area: {
+        layer,
+        view: {
             top: roundUp(view.top, tileSize),
             bottom: roundDown(view.bottom, tileSize),
             left: roundDown(view.left, tileSize),
             right: roundUp(view.right, tileSize),
         },
     };
+}
+
+export function pxToDegrees(map: google.maps.Map, px: number) {
+    const mapWidthDegrees =
+        map.getBounds()!.getNorthEast().lng() -
+        map.getBounds()!.getSouthWest().lng();
+
+    return (px * mapWidthDegrees) / map.getDiv().clientWidth;
 }
 
 export function pxToMeters(map: google.maps.Map, px: number) {
@@ -81,7 +72,11 @@ export function pxToMeters(map: google.maps.Map, px: number) {
 }
 
 
-export type SplitRect = [Rect?, Rect?];
+export type SplitRect = [Rect | null, Rect | null];
+export function withinSplitRect(splitRect: SplitRect, x: number, y: number) {
+    return (splitRect[0] && within(splitRect[0], x, y)) || (splitRect[1] && within(splitRect[1], x, y));
+}
+
 export function splitRectsEqual(a: SplitRect, b: SplitRect) {
     return (
         ( !(a[0] || b[0]) ||  (a[0] && b[0] && rectsEqual(a[0], b[0])) ) &&
@@ -102,7 +97,7 @@ export function addGap(view: SplitRect) {
         gapH = (a.top - a.bottom) * 0.3;
 
         if (a.right - a.left < gapW) {
-            view[0] = undefined;
+            view[0] = null;
             b.top -= gapH;
             b.bottom += gapH;
 
@@ -114,7 +109,7 @@ export function addGap(view: SplitRect) {
                 b.right -= gapW;
             }
         } else if (b.right - b.left < gapW) {
-            view[1] = undefined;
+            view[1] = null;
             a.top -= gapH;
             a.bottom += gapH;
 
@@ -161,5 +156,5 @@ export function split(rect: Rect): SplitRect {
                   right: rect.right,
               },
           ]
-        : [rect, undefined];
+        : [rect, null];
 }

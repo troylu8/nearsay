@@ -11,6 +11,7 @@ import { usePostPos } from "../../contexts/post-pos-provider";
 import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
+import { pxToDegrees, pxToMeters } from "@/lib/area";
 
 export default function Map() {
     const [bounds, setBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);
@@ -30,6 +31,8 @@ export default function Map() {
                 <GoogleMap
                     mapId="4cd1599c3ca39378"
                     defaultZoom={17}
+                    maxZoom={18}
+                    minZoom={3}
                     defaultCenter={userPos}
                     disableDefaultUI
                     keyboardShortcuts={false}

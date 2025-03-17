@@ -1,14 +1,13 @@
 import { io } from "socket.io-client";
 
 
-export const SERVER_URL = "https://troy-book.tail2138e6.ts.net:8443/";
+export const SERVER_URL = "http://127.0.0.1:5000";
 
 export const clientSocket = io(SERVER_URL);
 
 function isOk(status: number) {
     return status >= 200 && status <= 299;
 }
-
 
 export async function emitAsync<ResolveType>(event: string, data: any) {
     return new Promise<ResolveType>(

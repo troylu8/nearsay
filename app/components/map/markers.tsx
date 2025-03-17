@@ -1,25 +1,32 @@
 "use client";
 
-import { addGap, Rect, rectsEqual, split, SplitRect, splitRectsEqual, toTileRegion } from "@/lib/area";
+import { addGap, Rect, rectsEqual, split, SplitRect, splitRectsEqual, alignToTiles, within, withinSplitRect } from "@/lib/area";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
-import { User } from "@/lib/types";
-import { useEffect, useReducer, useRef } from "react";
+import { Pos, User } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
 import useSWR from "swr";
 import { emitAsync } from "@/lib/server";
 import TestDisplay from "./test-display";
 
+type HasPos = ({pos: Pos} & any);
+
+type UserPOI = {
+    id: string,
+    pos: Pos
+    avatar: number,
+    username: string
+}
 type Cluster = {
     id?: string,
-    pos: [number, number],
+    pos: Pos,
     size: number,
     blurb?: string
 }
 
 type Markers = {
     posts: Cluster[];
-    users: User[]
+    users: UserPOI[]
 }
 
 type UseMarkersType = {
@@ -27,12 +34,8 @@ type UseMarkersType = {
     error?: Error;
     isLoading: boolean;
 }
-function useMarkers(data: ViewShiftData | null, prevMarkers: Markers): UseMarkersType {
-    return useSWR("view-shift", async () => 
-        data?
-            await emitAsync<Markers>("view-shift", data) :
-            prevMarkers
-    );
+function useMarkers(data: ViewShiftData): UseMarkersType {
+    return useSWR(data, data => emitAsync<Markers>("view-shift", data));
 }
 
 type Props = {
@@ -41,28 +44,16 @@ type Props = {
 export default function Markers({ bounds }: Props) {
     const router = useRouter();
 
-    const prevMarkers = useRef<Markers>({posts: [], users: []});
-    const prevViewShiftData = useRef<ViewShiftData | null>(null);
-
-    const { north: top, south: bottom, west: left, east: right } = bounds;
-    const splitView = split({top, bottom, left, right});
-    addGap(splitView); //TODO: remove
-    let currData: ViewShiftData | null = toViewShiftData(splitView);
-
-    // if curr data is same as prev data, don't send req
-    if (
-        prevViewShiftData.current != null &&
-        viewShiftDataEqual(prevViewShiftData.current, currData)
-    )   
-        currData = null;
-    else 
-        prevViewShiftData.current = currData;
-
-    const { data: fetchedMarkers, error, isLoading } = useMarkers(currData, prevMarkers.current);
-
-    if (!fetchedMarkers) return <></>;
-    prevMarkers.current = fetchedMarkers;
-    const { users, posts } = fetchedMarkers;
+    const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
+    addGap(splitView);
+    let currData = toViewShiftData(splitView);
+    
+    const { data, error, isLoading } = useMarkers(currData);
+    
+    if (!data) return <TestDisplay view={splitView} viewShiftData={currData}  />;
+    const { users, posts } = data;
+    
+    console.log(posts);
 
     function handlePostClicked(id: string) {
         router.replace("/posts/" + id, { scroll: false });
@@ -70,12 +61,14 @@ export default function Markers({ bounds }: Props) {
 
     return (
         <>
-            <TestDisplay view={splitView} viewShiftData={prevViewShiftData.current}  />
+            <TestDisplay key="test" view={splitView} viewShiftData={currData}  />
             {
-                users.map(user => 
+                users
+                .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
+                .map(user => 
                     <AdvancedMarker
-                        key={user._id}
-                        position={{lng: user.pos![1], lat: user.pos![0]}}
+                        key={user.id}
+                        position={{lng: user.pos![0], lat: user.pos![1]}}
                     >
                         <div className="avatar translate-y-1/2">
                             {EMOTICONS[user.avatar]}
@@ -85,10 +78,12 @@ export default function Markers({ bounds }: Props) {
                 )
             }
             {
-                posts.map((cluster, i) => 
+                posts
+                .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
+                .map((cluster, i) => 
                     <AdvancedMarker
                         key={i}
-                        position={{lng: cluster.pos[1], lat: cluster.pos[0]}}
+                        position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
                     >
                         {
                             cluster.blurb? 
@@ -112,19 +107,19 @@ export default function Markers({ bounds }: Props) {
 }
 
 export type ViewShiftData = {
-    depth: number,
-    area: SplitRect
+    layer: number,
+    view: SplitRect
 };
 
-function viewShiftDataEqual(a: ViewShiftData, b: ViewShiftData) {
-    return a.depth == b.depth && splitRectsEqual(a.area, b.area);
+function viewShiftDataEqual(a: ViewShiftData | null, b: ViewShiftData | null) {
+    return a != null && b != null && a.layer == b.layer && splitRectsEqual(a.view, b.view);
 }
 
 function toViewShiftData(splitView: SplitRect): ViewShiftData {
-    let {depth, area} = toTileRegion(splitView[0]!); //TODO: remove !
+    let {layer, view} = alignToTiles(splitView[0]!);
 
     return {
-        depth,
-        area: [area, splitView[1] && toTileRegion(splitView[1]).area]
+        layer,
+        view: [view, splitView[1] && alignToTiles(splitView[1]).view]
     };
 }

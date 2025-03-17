@@ -48,7 +48,7 @@ export default function TestDisplay({ view, viewShiftData }: TestProps) {
 
             {/* snapped view */}
             {viewShiftData &&
-                getPolygonsOfSplitRect(viewShiftData.area)}
+                getPolygonsOfSplitRect(viewShiftData.view)}
         </>
     );
 }
