@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { Pos, User } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
 import useSWR from "swr";
-import { emitAsync } from "@/lib/server";
+import { socketfetch } from "@/lib/server";
 import TestDisplay from "./test-display";
 
-type HasPos = ({pos: Pos} & any);
+//TODO test edit-user, exit-world, enter-world
 
 type UserPOI = {
     id: string,
@@ -35,7 +35,7 @@ type UseMarkersType = {
     isLoading: boolean;
 }
 function useMarkers(data: ViewShiftData): UseMarkersType {
-    return useSWR(data, data => emitAsync<Markers>("view-shift", data));
+    return useSWR(data, data => socketfetch<Markers>("view-shift", data));
 }
 
 type Props = {
@@ -53,8 +53,6 @@ export default function Markers({ bounds }: Props) {
     if (!data) return <TestDisplay view={splitView} viewShiftData={currData}  />;
     const { users, posts } = data;
     
-    console.log(posts);
-
     function handlePostClicked(id: string) {
         router.replace("/posts/" + id, { scroll: false });
     }

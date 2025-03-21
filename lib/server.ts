@@ -9,7 +9,7 @@ function isOk(status: number) {
     return status >= 200 && status <= 299;
 }
 
-export async function emitAsync<ResolveType>(event: string, data: any) {
+export async function socketfetch<ResolveType>(event: string, data: any) {
     return new Promise<ResolveType>(
         (resolve, reject) => clientSocket.emit(
             event, 
@@ -23,4 +23,3 @@ export async function emitAsync<ResolveType>(event: string, data: any) {
         )
     );
 }
-

@@ -6,7 +6,7 @@ import { toArrayCoords, useGeolocation } from "../../contexts/geolocation-provid
 import CreatePostModal from "../modal/create-post-modal";
 import { useAvatar, useJwt } from "@/app/contexts/account-providers";
 import BindedInput from "../text-input";
-import { emitAsync } from "@/lib/server";
+import { socketfetch } from "@/lib/server";
 
 export default function MapUI() {
     
@@ -39,7 +39,7 @@ function ChatButton() {
     if (jwt == null || !userPos) return;
     
     function handleSend() {
-        emitAsync("chat", {jwt, msg, pos: toArrayCoords(userPos!)})
+        socketfetch("chat", {jwt, msg, pos: toArrayCoords(userPos!)})
     }
 
     return (
@@ -73,7 +73,7 @@ type AvatarMarkerProps = {
 function AvatarMarker({ pos, avatar, username }: AvatarMarkerProps) {
     return (
         <>
-            <AdvancedMarker position={pos}>
+            <AdvancedMarker position={pos} zIndex={10}>
                 <div className="avatar translate-y-1/2 bg-red-600 ">
                     { avatar }
                     <p>{username}</p>

@@ -10,10 +10,10 @@ import { useAccountControls, useUsername } from "../contexts/account-providers";
 export default function HamburgerMenu() {
 
     const [username, _] = useUsername();
-    const signOut = useAccountControls()[2];
+    const exitWorld = useAccountControls()[3];
 
-    function handleSignOut() {
-        signOut();
+    async function handleSignOut() {
+        await exitWorld(true);
         sendNotification("signed out!");
     }
     
@@ -33,7 +33,7 @@ export default function HamburgerMenu() {
             onMouseDown={e => e.stopPropagation()}
             onClick={() => setShowDropdown(!showDropdown)}
         >
-            <p>{username ?? "[signed out]"}</p>
+            <p>{username ?? "[viewing as guest]"}</p>
             <div className="relative bg-slate-400 rounded-md p-2">
                 <ColoredSvg src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} width={20} height={20} color="white" />
                 

@@ -9,8 +9,6 @@ export default function TestKeybinds() {
     // const username = useUsername()[0];
     // const avatar = useAvatar()[0];
 
-    // const signOut = useAccountControls()[2];
-
     // useEffect(() => {
         
     //     function test(e: KeyboardEvent) {

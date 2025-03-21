@@ -11,7 +11,6 @@ import { usePostPos } from "../../contexts/post-pos-provider";
 import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
-import { pxToDegrees, pxToMeters } from "@/lib/area";
 
 export default function Map() {
     const [bounds, setBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);

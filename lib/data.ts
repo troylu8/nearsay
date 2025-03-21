@@ -1,5 +1,5 @@
 import path from "path";
-import { clientSocket, emitAsync, SERVER_URL } from "./server";
+import { clientSocket, socketfetch, SERVER_URL } from "./server";
 import { Vote } from "./types";
 
 clientSocket.on("new-poi", (poi: any) => {
