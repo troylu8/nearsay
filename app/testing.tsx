@@ -20,10 +20,12 @@ export default function Testing() {
     }
 
     return (
-        <div className="fixed left-3 top-3 flex flex-col bg-slate-400 p-3">
-            <p>uid: {jwt? parseJwt(jwt).uid : "null"}</p>
-            <p>username: {username ?? "null"}</p>
-            <p>avatar: {avatar}</p>
-        </div>
+        <>
+            <div className="fixed left-3 top-3 flex flex-col bg-slate-400 p-3">
+                <p>uid: {jwt? parseJwt(jwt).uid : "null"}</p>
+                <p>username: {username ?? "null"}</p>
+                <p>avatar: {avatar}</p>
+            </div>
+        </>
     );
 }

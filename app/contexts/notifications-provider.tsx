@@ -36,7 +36,6 @@ export function NotificationsContextProvider({ children }: Props) {
                     flex flex-col-reverse gap-3 m-3 pointer-events-none"
             >
                 { 
-                    // wrap notifs in a div with a key
                     notifs.map(([id, content]) => (
                         <div 
                             key={id} 

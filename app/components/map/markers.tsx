@@ -1,7 +1,7 @@
 "use client";
 
 import { addGap, Rect, rectsEqual, split, SplitRect, splitRectsEqual, alignToTiles, within, withinSplitRect } from "@/lib/area";
-import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
+import { AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import { Pos, User } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
@@ -66,7 +66,7 @@ export default function Markers({ bounds }: Props) {
     return (
         <>
             <TestDisplay key="test" view={splitView} viewShiftData={currData}  />
-            <SelfMarker />
+            <SelfMarker chatMsgs={chatMsgs["you"]} />
             {
                 users
                 .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
@@ -101,12 +101,16 @@ export default function Markers({ bounds }: Props) {
     );
 }
 
-function SelfMarker() {
+type SelfMarkerProps = {
+    chatMsgs?: [string, string][],
+}
+function SelfMarker({chatMsgs}: SelfMarkerProps) {
     const { userPos } = useGeolocation();
     const [_, avatar] = useAvatar();
     return userPos && (
         <UserMarker 
-            user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}} 
+            user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}}
+            chatMsgs={chatMsgs}
             className="bg-red-400"
         />
     );
@@ -118,22 +122,45 @@ type UserMarkerProps = {
     className?: string
 }
 function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
+    // return (
+    //     <AdvancedMarker
+    //         key={user.id}
+    //         position={{lng: user.pos[0], lat: user.pos[1]}}
+    //         zIndex={10}
+    //     >
+    //         <Pin/>
+    //     </AdvancedMarker>
+    // )
     return (
         <AdvancedMarker
             key={user.id}
             position={{lng: user.pos[0], lat: user.pos[1]}}
             zIndex={10}
         >
-            <div className={`avatar translate-y-1/2 ${className}`}>
-                {EMOTICONS[user.avatar]}
-                <p>{user.username}</p>
-                
-                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 flex flex-col-reverse">
-                    { chatMsgs && 
-                        chatMsgs.map(([id, msg]) => 
-                            <p key={id} className="p-1 bg-slate-400 rounded-md">{msg}</p>
+            <div className="flex flex-col items-center translate-y-3">
+                {   chatMsgs && 
+                    chatMsgs.map(([id, msg]) => {
+                        return (
+                            <p 
+                                key={id} 
+                                className="
+                                    p-1 bg-slate-400 rounded-md mb-2 
+                                    text-center w-fit max-w-[300px] break-words 
+                                    text-white text-[16px] px-[7px] py-[4px]
+                                "
+                            >
+                                {msg}  
+                            </p>
                         )
-                    }
+                    })
+                }
+            </div>
+            
+            {/* wrap avatar in flexbox to center it */}
+            <div className="flex flex-col"> 
+                <div className={`avatar-frame translate-y-1/2 ${className} self-center`}>
+                    {EMOTICONS[user.avatar]}
+                    <p className="absolute top-full left-1/2 -translate-x-1/2" >{user.username}</p>
                 </div>
             </div>
         </AdvancedMarker>

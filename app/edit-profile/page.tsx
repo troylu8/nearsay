@@ -54,7 +54,7 @@ function AvatarEditor() {
                         <div 
                             key={i} 
                             className={`
-                                avatar self-center cursor-pointer
+                                avatar-frame self-center cursor-pointer
                                 ${(avatar == e) && "border-red-600 border-4"}
                             `}
                             onClick={() => handleChangeAvatar(i)}

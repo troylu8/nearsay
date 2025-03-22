@@ -25,13 +25,11 @@ export default function ChatContextProvider({ children }: Props) {
     const { userPos } = useGeolocation();
     
     function appendChatMsg(uid: string, msg: string) {
-        console.log("appending chat msg", uid, msg);
         setChatMsgs(draft => {
             draft[uid] = draft[uid] ?? [];
             draft[uid].push([genID(), msg]);
         });
         
-        console.log("timeout"); 
         setTimeout(() => {
             setChatMsgs(draft => {
                 if (!draft[uid]) return;
@@ -49,6 +47,8 @@ export default function ChatContextProvider({ children }: Props) {
     }, []);
     
     function sendChatMsg(msg: string) {
+        if (msg == "") return;
+        
         if (userPos) {
             appendChatMsg("you", msg);
             socketfetch("chat", {jwt, msg, pos: toArrayCoords(userPos!)})
