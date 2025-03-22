@@ -7,6 +7,7 @@ import CreatePostModal from "../modal/create-post-modal";
 import { useJwt } from "@/app/contexts/account-providers";
 import BindedInput from "../text-input";
 import { socketfetch } from "@/lib/server";
+import { useChat } from "@/app/contexts/chat-provider";
 
 export default function MapUI() {
     return (
@@ -21,17 +22,10 @@ export default function MapUI() {
 }
 
 function ChatButton() {
-    const jwt = useJwt();
-    const { userPos } = useGeolocation();
+    const [_, sendChatMsg] = useChat();
 
     const [msg, setMsg] = useState("");
     const [chatboxVisible, setChatboxVisible] = useState(true);
-    
-    if (jwt == null || !userPos) return;
-    
-    function handleSend() {
-        socketfetch("chat", {jwt, msg, pos: toArrayCoords(userPos!)})
-    }
 
     return (
         <>
@@ -46,9 +40,9 @@ function ChatButton() {
                             bind={[msg, setMsg]}
                             className="flex-1 rounded-md" 
                             placeholder="shout to the world..."
-                            onSubmit={handleSend}
+                            onSubmit={() => sendChatMsg(msg)}
                         />
-                        <button onClick={handleSend}> send </button>
+                        <button onClick={() => sendChatMsg(msg)}> send </button>
                     </>
                 }
             </div>

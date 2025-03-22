@@ -22,7 +22,7 @@ type UserPOI = {
     username: string
 }
 type Cluster = {
-    id?: string,
+    id: string,
     pos: Pos,
     size: number,
     blurb?: string
@@ -70,21 +70,21 @@ export default function Markers({ bounds }: Props) {
             {
                 users
                 .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
-                .map(u => <UserMarker user={u} chatMsgs={chatMsgs[u.id]} />)
+                .map(u => <UserMarker key={u.id} user={u} chatMsgs={chatMsgs[u.id]} />)
             }
             {
                 posts
                 .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
-                .map((cluster, i) => 
+                .map(cluster => 
                     <AdvancedMarker
-                        key={i}
+                        key={cluster.id}
                         position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
                     >
                         {
                             cluster.blurb? 
                                 <div 
                                     className="post-marker" 
-                                    onClick={() => handlePostClicked(cluster.id!)}
+                                    onClick={() => handlePostClicked(cluster.id)}
                                 >
                                     post
                                     <p> {cluster.blurb} </p>
@@ -106,7 +106,7 @@ function SelfMarker() {
     const [_, avatar] = useAvatar();
     return userPos && (
         <UserMarker 
-            user={{id: "self", avatar, pos: toArrayCoords(userPos), username: "you"}} 
+            user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}} 
             className="bg-red-400"
         />
     );
@@ -114,7 +114,7 @@ function SelfMarker() {
 
 type UserMarkerProps = {
     user: UserPOI,
-    chatMsgs?: string[],
+    chatMsgs?: [string, string][],
     className?: string
 }
 function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
@@ -128,10 +128,10 @@ function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
                 {EMOTICONS[user.avatar]}
                 <p>{user.username}</p>
                 
-                <div className="relative bottom-full mb-3 left-1/2 -translate-x-1/2 flex flex-col-reverse">
+                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 flex flex-col-reverse">
                     { chatMsgs && 
-                        chatMsgs.map((msg, i) => 
-                            <p key={i} className="p-1 bg-slate-400 rounded-md">{msg}</p>
+                        chatMsgs.map(([id, msg]) => 
+                            <p key={id} className="p-1 bg-slate-400 rounded-md">{msg}</p>
                         )
                     }
                 </div>

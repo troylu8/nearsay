@@ -2,9 +2,10 @@
 
 import { createContext, ReactNode, useContext, useState } from "react";
 import ColoredSvg from "../components/colored-svg";
+import { genID } from "@/lib/data";
 
 
-const NotificationsContext = createContext<(notif: ReactNode) => any>(() => {});
+const NotificationsContext = createContext<(notif: ReactNode) => void>(() => {});
 
 
 export function useNotifications() {
@@ -14,15 +15,16 @@ export function useNotifications() {
 
 type Props = { children: ReactNode };
 export function NotificationsContextProvider({ children }: Props) {
-    const [notifs, setNotifs] = useState<ReactNode[]>([]);
+    const [notifs, setNotifs] = useState<[string, ReactNode][]>([]);
 
-    function removeNotif(notifContent: ReactNode) {
-        setNotifs(prevNotifs => prevNotifs.filter(n => n != notifContent));
+    function removeNotif(notifID: string) {
+        setNotifs(prevNotifs => prevNotifs.filter(([id]) => id != notifID));
     }
 
     function sendNotification(notifContent: ReactNode) {
-        setNotifs(prevNotifs => [...prevNotifs, notifContent]);
-        setTimeout(() => removeNotif(notifContent), 3000);
+        let id = genID();
+        setNotifs(prevNotifs => [...prevNotifs, [id, notifContent]]);
+        setTimeout(() => removeNotif(id), 3000);
     }
 
     return (
@@ -35,14 +37,14 @@ export function NotificationsContextProvider({ children }: Props) {
             >
                 { 
                     // wrap notifs in a div with a key
-                    notifs.map((content, i) => (
+                    notifs.map(([id, content]) => (
                         <div 
-                            key={i} 
+                            key={id} 
                             className="bg-slate-500 rounded-md p-2 pointer-events-auto self-start
                                         flex gap-3 items-center"
                             
                             // interacting with this notification removes it
-                            onClick={() => removeNotif(content)} 
+                            onClick={() => removeNotif(id)} 
                         >
                             {content}
                             
@@ -52,7 +54,7 @@ export function NotificationsContextProvider({ children }: Props) {
                                 height={20} 
                                 color="white" 
                                 className="cursor-pointer min-w-[20px]"
-                                onClick={() => removeNotif(content)}
+                                onClick={() => removeNotif(id)}
                             />
                         </div>
                     )) 

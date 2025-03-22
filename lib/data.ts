@@ -21,3 +21,14 @@ export function sendVoteRequest(jwt: string, post_id: string, vote: Vote) {
         body: vote,
     });
 }
+
+export function genID() {
+    const map = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-";
+    
+    let res = []; 
+    
+    for (let i = 0; i < 10; i++) 
+        res.push(map[ crypto.getRandomValues(new Uint8Array(1))[0] >> 2 ])
+    
+    return res.join("");
+}
