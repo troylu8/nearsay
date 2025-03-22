@@ -12,7 +12,7 @@ const UsernameContext = createContext<
     [string | null, (nextUsername: string) => Promise<void>] | null
 >(null);
 const AvatarContext = createContext<
-    [string | null, (nextAvatar: number) => Promise<void>] | null
+    [string | null, number, (nextAvatar: number) => Promise<void>] | null
 >(null);
 
 type SignUp = (username: string, password: string, avatar?: number) => Promise<void>
@@ -158,7 +158,7 @@ export default function AccountContextProvider({ children }: Props) {
     return (
         <JWTContext.Provider value={jwt}>
             <UsernameContext.Provider value={[username, changeUsername]}>
-                <AvatarContext.Provider value={[EMOTICONS[avatar], changeAvatar]}>
+                <AvatarContext.Provider value={[EMOTICONS[avatar], avatar, changeAvatar]}>
                     <AccountControlsContext.Provider value={[signUp, signIn, enterWorld, exitWorld]}>
                         {children}
                     </AccountControlsContext.Provider>

@@ -5,6 +5,7 @@ import "./globals.css";
 import Map from "./components/map/map";
 import AccountContextProvider from "./contexts/account-providers";
 import SettingsContextProvider from "./contexts/settings-provider";
+import ChatContextProvider from "./contexts/chat-provider";
 
 export default function RootLayout({
     children,
@@ -19,8 +20,10 @@ export default function RootLayout({
                         <NotificationsContextProvider>
                             <SettingsContextProvider>
                                 <AccountContextProvider>
-                                    <Map />
-                                    {children}
+                                    <ChatContextProvider>
+                                        <Map />
+                                        {children}
+                                    </ChatContextProvider>
                                 </AccountContextProvider>
                             </SettingsContextProvider>
                         </NotificationsContextProvider>

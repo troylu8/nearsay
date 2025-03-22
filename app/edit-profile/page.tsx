@@ -34,7 +34,7 @@ export default function EditProfile() {
 }
 
 function AvatarEditor() {
-    const [avatar, changeAvatar] = useAvatar();
+    const [avatar, _, changeAvatar] = useAvatar();
     const sendNotification = useNotifications();
 
     async function handleChangeAvatar(next: number) {

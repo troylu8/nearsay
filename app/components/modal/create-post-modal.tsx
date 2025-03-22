@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Modal from "./modal";
 import ResizingTextArea from "../resizing-text-area";
-import { sendPostEvent } from "@/lib/data";
+import { socketfetch } from "@/lib/server";
 
 type Props = {
     pos: google.maps.LatLng;
@@ -14,7 +14,7 @@ export default function CreatePostModal({ pos, onPost, onCancel }: Props) {
     const [body, setBody] = useState("");
 
     function handlePost() {
-        sendPostEvent([pos.lng(), pos.lat()], body);
+        socketfetch("post", {pos: [pos.lng(), pos.lat()], body})
         if (onPost) onPost();
     }
 

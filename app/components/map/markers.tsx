@@ -6,8 +6,12 @@ import { useRouter } from "next/navigation";
 import { Pos, User } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
 import useSWR from "swr";
-import { socketfetch } from "@/lib/server";
+import { socket, socketfetch } from "@/lib/server";
 import TestDisplay from "./test-display";
+import { useEffect, useState } from "react";
+import { useChat } from "@/app/contexts/chat-provider";
+import { useAvatar, useUsername } from "@/app/contexts/account-providers";
+import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
 
 //TODO test edit-user, exit-world, enter-world
 
@@ -47,8 +51,9 @@ export default function Markers({ bounds }: Props) {
     const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
     addGap(splitView);
     let currData = toViewShiftData(splitView);
-    
     const { data, error, isLoading } = useMarkers(currData);
+    
+    const [chatMsgs] = useChat();
     
     if (!data) return <TestDisplay view={splitView} viewShiftData={currData}  />;
     const { users, posts } = data;
@@ -56,24 +61,16 @@ export default function Markers({ bounds }: Props) {
     function handlePostClicked(id: string) {
         router.replace("/posts/" + id, { scroll: false });
     }
+    
 
     return (
         <>
             <TestDisplay key="test" view={splitView} viewShiftData={currData}  />
+            <SelfMarker />
             {
                 users
                 .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
-                .map(user => 
-                    <AdvancedMarker
-                        key={user.id}
-                        position={{lng: user.pos![0], lat: user.pos![1]}}
-                    >
-                        <div className="avatar translate-y-1/2">
-                            {EMOTICONS[user.avatar]}
-                            <p>{user.username}</p>
-                        </div>
-                    </AdvancedMarker>
-                )
+                .map(u => <UserMarker user={u} chatMsgs={chatMsgs[u.id]} />)
             }
             {
                 posts
@@ -104,14 +101,51 @@ export default function Markers({ bounds }: Props) {
     );
 }
 
+function SelfMarker() {
+    const { userPos } = useGeolocation();
+    const [_, avatar] = useAvatar();
+    return userPos && (
+        <UserMarker 
+            user={{id: "self", avatar, pos: toArrayCoords(userPos), username: "you"}} 
+            className="bg-red-400"
+        />
+    );
+}
+
+type UserMarkerProps = {
+    user: UserPOI,
+    chatMsgs?: string[],
+    className?: string
+}
+function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
+    return (
+        <AdvancedMarker
+            key={user.id}
+            position={{lng: user.pos[0], lat: user.pos[1]}}
+            zIndex={10}
+        >
+            <div className={`avatar translate-y-1/2 ${className}`}>
+                {EMOTICONS[user.avatar]}
+                <p>{user.username}</p>
+                
+                <div className="relative bottom-full mb-3 left-1/2 -translate-x-1/2 flex flex-col-reverse">
+                    { chatMsgs && 
+                        chatMsgs.map((msg, i) => 
+                            <p key={i} className="p-1 bg-slate-400 rounded-md">{msg}</p>
+                        )
+                    }
+                </div>
+            </div>
+        </AdvancedMarker>
+    )
+}
+
+
+
 export type ViewShiftData = {
     layer: number,
     view: SplitRect
 };
-
-function viewShiftDataEqual(a: ViewShiftData | null, b: ViewShiftData | null) {
-    return a != null && b != null && a.layer == b.layer && splitRectsEqual(a.view, b.view);
-}
 
 function toViewShiftData(splitView: SplitRect): ViewShiftData {
     let {layer, view} = alignToTiles(splitView[0]!);

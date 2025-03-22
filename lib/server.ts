@@ -3,7 +3,7 @@ import { io } from "socket.io-client";
 
 export const SERVER_URL = "http://127.0.0.1:5000";
 
-export const clientSocket = io(SERVER_URL);
+export const socket = io(SERVER_URL);
 
 function isOk(status: number) {
     return status >= 200 && status <= 299;
@@ -11,7 +11,7 @@ function isOk(status: number) {
 
 export async function socketfetch<ResolveType>(event: string, data: any) {
     return new Promise<ResolveType>(
-        (resolve, reject) => clientSocket.emit(
+        (resolve, reject) => socket.emit(
             event, 
             data, 
             (result: any) => {

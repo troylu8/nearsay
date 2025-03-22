@@ -1,27 +1,18 @@
-import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
+import { useMap } from "@vis.gl/react-google-maps";
 import ColoredSvg from "../colored-svg";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
 import { toArrayCoords, useGeolocation } from "../../contexts/geolocation-provider";
 import CreatePostModal from "../modal/create-post-modal";
-import { useAvatar, useJwt } from "@/app/contexts/account-providers";
+import { useJwt } from "@/app/contexts/account-providers";
 import BindedInput from "../text-input";
 import { socketfetch } from "@/lib/server";
 
 export default function MapUI() {
-    
-    const { userPos } = useGeolocation();
-    const avatar = useAvatar()[0];
-
-    
-
     return (
         <>
-            
-            {userPos && <AvatarMarker key="you are here" pos={userPos} avatar={avatar!} username="you" />}
-
             <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end">
-                {userPos && <PanToButton pos={userPos} />}
+                <PanToSelfButton />
                 <PlaceNoteButton />
                 <ChatButton />
             </div>
@@ -65,34 +56,16 @@ function ChatButton() {
     )
 }
 
-type AvatarMarkerProps = {
-    pos: google.maps.LatLngLiteral,
-    avatar: string,
-    username: string
-}
-function AvatarMarker({ pos, avatar, username }: AvatarMarkerProps) {
-    return (
-        <>
-            <AdvancedMarker position={pos} zIndex={10}>
-                <div className="avatar translate-y-1/2 bg-red-600 ">
-                    { avatar }
-                    <p>{username}</p>
-                </div>
-            </AdvancedMarker>
-        </>
-    )
-}
-
-function PanToButton({ pos }: { pos: google.maps.LatLngLiteral }) {
-
+function PanToSelfButton() {
+    const { userPos } = useGeolocation();
     const map = useMap();
 
     function panToUser() {
-        map?.setCenter(pos);
+        map?.setCenter(userPos!);
         map?.setZoom(17);
     }
 
-    return <button onClick={panToUser}> to me </button>;
+    return userPos && <button onClick={panToUser}> to me </button>;
 }
 
 function PlaceNoteButton() {
