@@ -1,5 +1,5 @@
 import HamburgerMenu from "./components/hamburger-menu";
-import TestKeybinds from "./test-keybinds";
+import Testing from "./testing";
 
 
 export default function App() {
@@ -7,7 +7,7 @@ export default function App() {
     return (
         <>
             <HamburgerMenu/>
-            <TestKeybinds/>
+            <Testing/>
         </>
     );
 }

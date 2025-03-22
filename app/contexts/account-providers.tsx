@@ -29,11 +29,7 @@ export function useAccountControls() { return useContext(AccountControlsContext)
 
 function bindToLocalStorage<T>(key: string, setter: (next: T) => any) {
     return (next: T) => {
-
-        console.log(key, next);
-
         setter(next);
-
         if (next == null)   localStorage.removeItem(key);
         else                localStorage.setItem(key, "" + next);
     }
@@ -102,19 +98,19 @@ export default function AccountContextProvider({ children }: Props) {
         }
         saveUsername(username);
     }
-    async function signIn(username: string, password: string) {
+    async function signIn(newUsername: string, password: string) {
         if (geolocation.err) throw geolocation.err;
-        
-        if (jwt != null) exitWorld(false);
+        if (username != null) throw new Error(`already signed in as {username}!`);
 
         const { jwt: nextJWT, avatar } = await socketfetch<{jwt: string, avatar: number}>("sign-in", {
-            username,
+            username: newUsername,
             password: hash(password),
-            pos: toArrayCoords(geolocation.userPos!)
+            pos: toArrayCoords(geolocation.userPos!),
+            guest_jwt: jwt
         });
 
         saveJWT(nextJWT);
-        saveUsername(username);
+        saveUsername(newUsername);
         saveAvatar(avatar);
     }
     async function enterWorld() {
@@ -154,7 +150,7 @@ export default function AccountContextProvider({ children }: Props) {
 
     // exit world upon closing tab
     useEffect(() => {
-        const onTabClose = () => exitWorld();
+        const onTabClose = () => exitWorld(false);
         window.addEventListener("beforeunload", onTabClose);
         return () => window.removeEventListener("beforeunload", onTabClose);
     }, [jwt, settings.present])

@@ -82,9 +82,11 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
                 onSuccess!();
             }
             catch (err: any) {
+                console.log(err);
                 if (err.code == 401)            setPasswordErr("wrong password");
                 else if (err.code == 404)       setUsernameErr("username doesnt exist");
-                else                            sendNotification("server error");
+                else if (err.code == 500)       sendNotification("server error");
+                else                            sendNotification(`unexpected! ${err}`);
             }
         }
 
