@@ -7,7 +7,7 @@ import { createHash } from "crypto";
 import { EMOTICONS } from "@/lib/emoticon";
 import { useSettings } from "./settings-provider";
 
-const JWTContext = createContext<string | null>(null);
+const SelfIdContext = createContext<[string, string] | null>(null);
 const UsernameContext = createContext<
     [string | null, (nextUsername: string) => Promise<void>] | null
 >(null);
@@ -21,7 +21,15 @@ type EnterWorld = () => Promise<void>
 type ExitWorld = (stayOnline?: boolean, deleteAccount?: boolean) => Promise<void>
 const AccountControlsContext = createContext<[SignUp, SignIn, EnterWorld, ExitWorld] | null>(null);
 
-export function useJwt() { return useContext(JWTContext); }
+export function useJWT() { 
+    const selfId = useContext(SelfIdContext);
+    return selfId? selfId[0] : undefined; 
+}
+export function useUid() { 
+    const selfId = useContext(SelfIdContext);
+    return selfId? selfId[1] : undefined; 
+}
+export function useSelfId() { return useContext(SelfIdContext); }
 export function useUsername() { return useContext(UsernameContext)!; }
 export function useAvatar() { return useContext(AvatarContext)!; }
 
@@ -34,6 +42,15 @@ function bindToLocalStorage<T>(key: string, setter: (next: T) => any) {
         else                localStorage.setItem(key, "" + next);
     }
 }
+function parseJwt(token: string) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+}
 
 type Props = {
     children: React.ReactNode;
@@ -41,19 +58,26 @@ type Props = {
 export default function AccountContextProvider({ children }: Props) {
     const settings = useSettings()[0];
 
-    const [jwt, setJWT] = useState<string | null>(null);
+    const [selfId, setSelfId] = useState<[string, string] | null>(null);
+    const jwt = selfId? selfId[0] : undefined;
+    function setJwt(jwt: string) {
+        setSelfId([jwt, parseJwt(jwt).uid]);
+    }
+    
     const [username, setUsername] = useState<string | null>(null);
     const [avatar, setAvatar] = useState<number>(0);
     
-    const saveJWT = bindToLocalStorage("jwt", setJWT);
+    const saveJWT = bindToLocalStorage("jwt", setJwt);
     const saveUsername = bindToLocalStorage("username", setUsername);
     const saveAvatar = bindToLocalStorage("avatar", setAvatar);
 
     async function changeUsername(username: string) {
+        if (!jwt) return;
         await socketfetch("edit-user", {jwt, update: { username } } );
         saveUsername(username);
     }
     async function changeAvatar(avatar: number) {
+        if (!jwt) return;
         await socketfetch("edit-user", {jwt, update: { avatar } } );
         saveAvatar(avatar);
     }
@@ -62,7 +86,7 @@ export default function AccountContextProvider({ children }: Props) {
 
     function clearAccountInfo() {
         console.log("clearing acc data");
-        setJWT(null);
+        setSelfId(null);
         setUsername(null);
         localStorage.removeItem("jwt");
         localStorage.removeItem("username");
@@ -115,7 +139,7 @@ export default function AccountContextProvider({ children }: Props) {
     }
     async function enterWorld() {
         if (geolocation.err) throw geolocation.err;
-        if (!jwt) return;
+        if (!selfId) return;
         await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation.userPos!) });
     }
     async function exitWorld(stayOnline: boolean = settings.present, deleteAccount?: boolean) {
@@ -140,13 +164,25 @@ export default function AccountContextProvider({ children }: Props) {
             console.log("signing in with existing data: ", accountInfo);
             const [jwt, username, avatar] = accountInfo;
             
-            setJWT(jwt);
+            setJwt(jwt);
             setUsername(username);
             setAvatar(avatar);
             
             enterWorld();
         }
     }, []);
+    
+    // send move event with jwt 
+    useEffect(() => {
+        const watchId = navigator.geolocation?.watchPosition(
+            ({coords}) => {
+                socketfetch("move", {jwt, pos: [coords.longitude, coords.latitude]});
+            },
+            () => {},
+            { enableHighAccuracy: true }
+        );
+        return () => navigator.geolocation?.clearWatch(watchId);
+    }, [jwt]);
 
     // exit world upon closing tab
     useEffect(() => {
@@ -156,7 +192,7 @@ export default function AccountContextProvider({ children }: Props) {
     }, [jwt, settings.present])
 
     return (
-        <JWTContext.Provider value={jwt}>
+        <SelfIdContext.Provider value={selfId}>
             <UsernameContext.Provider value={[username, changeUsername]}>
                 <AvatarContext.Provider value={[EMOTICONS[avatar], avatar, changeAvatar]}>
                     <AccountControlsContext.Provider value={[signUp, signIn, enterWorld, exitWorld]}>
@@ -164,7 +200,7 @@ export default function AccountContextProvider({ children }: Props) {
                     </AccountControlsContext.Provider>
                 </AvatarContext.Provider>
             </UsernameContext.Provider>
-        </JWTContext.Provider>
+        </SelfIdContext.Provider>
     );
 }
 

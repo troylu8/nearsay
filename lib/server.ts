@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 
 
-export const SERVER_URL = "http://127.0.0.1:5000";
+export const SERVER_URL = "https://troy-book.tail2138e6.ts.net:8443";
 
 export const socket = io(SERVER_URL);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { addGap, Rect, rectsEqual, split, SplitRect, splitRectsEqual, alignToTiles, within, withinSplitRect } from "@/lib/area";
+import { addGap, Rect, rectsEqual, split, SplitRect, splitRectsEqual, within, withinSplitRect, alignToTilesSplitRect } from "@/lib/area";
 import { AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import { Pos, User } from "@/lib/types";
@@ -8,10 +8,11 @@ import { EMOTICONS } from "@/lib/emoticon";
 import useSWR from "swr";
 import { socket, socketfetch } from "@/lib/server";
 import TestDisplay from "./test-display";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@/app/contexts/chat-provider";
-import { useAvatar, useUsername } from "@/app/contexts/account-providers";
+import { useAvatar, useUid, useUsername } from "@/app/contexts/account-providers";
 import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
+import { useNotifications } from "@/app/contexts/notifications-provider";
 
 //TODO test edit-user, exit-world, enter-world
 
@@ -33,47 +34,92 @@ type Markers = {
     users: UserPOI[]
 }
 
-type UseMarkersType = {
-    data?: Markers;
-    error?: Error;
-    isLoading: boolean;
+/** update the cached view shift data and return whether the cached data was changed */
+type UpdateViewShiftCache = (next: ViewShiftData) => boolean;
+
+function useViewShiftDataCache(): UpdateViewShiftCache {
+    const prevRef = useRef<ViewShiftData | null>(null);
+    
+    return (next: ViewShiftData) => {
+        const prev = prevRef.current;
+        
+        if (!prev || prev.zoom != next.zoom || !splitRectsEqual(prev.view, next.view)) {
+            prevRef.current = next;
+            return true;
+        }
+        
+        return false;
+    };
 }
-function useMarkers(data: ViewShiftData): UseMarkersType {
-    return useSWR(data, data => socketfetch<Markers>("view-shift", data));
+
+
+type UserEnterEvent = {
+    uid: string,
+    pos: Pos,
+    avatar: number,
+    username?: string
 }
 
 type Props = {
+    zoomLevel: number,
     bounds: google.maps.LatLngBoundsLiteral;
 }
-export default function Markers({ bounds }: Props) {
+export default function Markers({ zoomLevel, bounds }: Props) {
     const router = useRouter();
-
+    const uid = useUid();
+    const sendNotification = useNotifications();
+    
+    const [markers, setMarkers] = useState<Markers>({ posts: [], users: []});
+    const updateViewShiftCache = useViewShiftDataCache();
     const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
     addGap(splitView);
-    let currData = toViewShiftData(splitView);
-    const { data, error, isLoading } = useMarkers(currData);
+    let currData: ViewShiftData = { uid, zoom: zoomLevel, view: alignToTilesSplitRect(splitView) };
+    
+    // if zoom or bounds change, check that aligned bounds changed then update markers 
+    useEffect(() => {
+        
+        
+        if (updateViewShiftCache(currData)) {
+            socketfetch<Markers>("view-shift", currData)
+            .then(setMarkers)
+            .catch(() => sendNotification("error fetching map data from server"));
+        }
+    }, [uid, zoomLevel, bounds])
+    
     
     const [chatMsgs] = useChat();
     
-    if (!data) return <TestDisplay view={splitView} viewShiftData={currData}  />;
-    const { users, posts } = data;
+    useEffect(() => {
+        
+        function handleUserEnter(e: UserEnterEvent) {
+            
+        }
+        
+        socket.on("user-enter", handleUserEnter);
+        
+        return () => {
+            socket.removeListener("user-enter", handleUserEnter);
+        }
+    }, []);
+    
+    console.log("markers", markers);
+    
     
     function handlePostClicked(id: string) {
         router.replace("/posts/" + id, { scroll: false });
     }
-    
 
     return (
         <>
             <TestDisplay key="test" view={splitView} viewShiftData={currData}  />
             <SelfMarker chatMsgs={chatMsgs["you"]} />
             {
-                users
+                markers.users
                 .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
                 .map(u => <UserMarker key={u.id} user={u} chatMsgs={chatMsgs[u.id]} />)
             }
             {
-                posts
+                markers.posts
                 .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
                 .map(cluster => 
                     <AdvancedMarker
@@ -111,7 +157,7 @@ function SelfMarker({chatMsgs}: SelfMarkerProps) {
         <UserMarker 
             user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}}
             chatMsgs={chatMsgs}
-            className="bg-red-400"
+            className="bg-red-400 opacity-35"
         />
     );
 }
@@ -122,15 +168,6 @@ type UserMarkerProps = {
     className?: string
 }
 function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
-    // return (
-    //     <AdvancedMarker
-    //         key={user.id}
-    //         position={{lng: user.pos[0], lat: user.pos[1]}}
-    //         zIndex={10}
-    //     >
-    //         <Pin/>
-    //     </AdvancedMarker>
-    // )
     return (
         <AdvancedMarker
             key={user.id}
@@ -170,15 +207,7 @@ function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
 
 
 export type ViewShiftData = {
-    layer: number,
+    uid?: string,
+    zoom: number,
     view: SplitRect
 };
-
-function toViewShiftData(splitView: SplitRect): ViewShiftData {
-    let {layer, view} = alignToTiles(splitView[0]!);
-
-    return {
-        layer,
-        view: [view, splitView[1] && alignToTiles(splitView[1]).view]
-    };
-}

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
 import { toArrayCoords, useGeolocation } from "../../contexts/geolocation-provider";
 import CreatePostModal from "../modal/create-post-modal";
-import { useJwt } from "@/app/contexts/account-providers";
 import BindedInput from "../text-input";
 import { socketfetch } from "@/lib/server";
 import { useChat } from "@/app/contexts/chat-provider";

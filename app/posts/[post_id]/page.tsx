@@ -13,7 +13,7 @@ import Modal from "@/app/components/modal/modal";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useJwt, useUsername } from "@/app/contexts/account-providers";
+import { useJWT, useUsername } from "@/app/contexts/account-providers";
 
 
 const ACTION_NAME: Readonly<Record<Vote, string>> = {
@@ -41,7 +41,7 @@ type UsePostType = {
     error?: Error;
     isLoading: boolean;
 };
-function usePost(jwt: string | null, post_id: string): UsePostType {
+function usePost(jwt: string | undefined, post_id: string): UsePostType {
     return useSWR(post_id, () => fetchPost(jwt, post_id) );
 }
 
@@ -49,7 +49,7 @@ type Props = {
     params: Promise<{ post_id: string }>;
 };
 export default function Page({ params }: Props) {
-    const jwt = useJwt();
+    const jwt = useJWT();
     
     const username = useUsername()[0];
 

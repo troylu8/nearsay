@@ -26,26 +26,28 @@ export function rectsEqual(a: Rect, b: Rect) {
     );
 }
 
-export function alignToTiles(view: Rect): {layer: number, view: Rect} {
+function alignToTiles(view: Rect): Rect {
     const viewSize =
         Math.max(view.right - view.left, view.top - view.bottom);
 
-    let layer = 0;
     let tileSize = BOUND * 2;
+    
     while (tileSize > viewSize) {
-        layer++;
         tileSize /= 2;
     }
     
     return {
-        layer,
-        view: {
-            top: roundUp(view.top, tileSize),
-            bottom: roundDown(view.bottom, tileSize),
-            left: roundDown(view.left, tileSize),
-            right: roundUp(view.right, tileSize),
-        },
+        top: roundUp(view.top, tileSize),
+        bottom: roundDown(view.bottom, tileSize),
+        left: roundDown(view.left, tileSize),
+        right: roundUp(view.right, tileSize),
     };
+}
+export function alignToTilesSplitRect(splitRect: SplitRect): SplitRect {
+    return [
+        splitRect[0] ? alignToTiles(splitRect[0]) : null,
+        splitRect[1] ? alignToTiles(splitRect[1]) : null
+    ];
 }
 
 export function pxToDegrees(map: google.maps.Map, px: number) {

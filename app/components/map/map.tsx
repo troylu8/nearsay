@@ -12,12 +12,17 @@ import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
 
+const DEFAULT_ZOOM = 17;
+
 export default function Map() {
+    const [zoomLevel, setZoomLevel] = useState<number>(DEFAULT_ZOOM);
     const [bounds, setBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);
+    console.log(bounds);
 
     const { userPos } = useGeolocation();
 
     function handleCameraChanged(e: MapCameraChangedEvent) {
+        setZoomLevel(e.map.getZoom() ?? DEFAULT_ZOOM);
         setBounds(e.detail.bounds);
     }
 
@@ -29,7 +34,7 @@ export default function Map() {
             >
                 <GoogleMap
                     mapId="4cd1599c3ca39378"
-                    defaultZoom={17}
+                    defaultZoom={DEFAULT_ZOOM}
                     maxZoom={18}
                     minZoom={3}
                     defaultCenter={userPos}
@@ -37,7 +42,7 @@ export default function Map() {
                     keyboardShortcuts={false}
                     onCameraChanged={handleCameraChanged}
                 >
-                    {bounds && <Markers bounds={bounds} />}
+                    {bounds && <Markers zoomLevel={zoomLevel} bounds={bounds} />}
                     <MapUI />
                 </GoogleMap>
 

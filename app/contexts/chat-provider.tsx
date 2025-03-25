@@ -2,7 +2,7 @@
 
 import { socket, socketfetch } from "@/lib/server";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useJwt } from "./account-providers";
+import { useJWT } from "./account-providers";
 import { toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { genID } from "@/lib/data";
 import { useImmer } from "use-immer";
@@ -21,7 +21,7 @@ type Props = {
 };
 export default function ChatContextProvider({ children }: Props) {
     let [chatMsgs, setChatMsgs] = useImmer<ChatMsgs>({});
-    const jwt = useJwt();
+    const jwt = useJWT();
     const { userPos } = useGeolocation();
     
     function appendChatMsg(uid: string, msg: string) {

@@ -2,7 +2,7 @@ import path from "path";
 import { SERVER_URL } from "./server";
 import { Vote } from "./types";
 
-export async function fetchPost(jwt: string | null, post_id: string) {
+export async function fetchPost(jwt: string | undefined, post_id: string) {
     const headers: Record<string, string> = {};
 
     if (jwt) headers["Authorization"] = `Bearer ${jwt}`;

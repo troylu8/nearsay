@@ -6,7 +6,6 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint",
         "a": "netstat -ano | findstr :3000, taskkill /F /PID "
     },
     "dependencies": {
