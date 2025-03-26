@@ -73,36 +73,49 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     const updateViewShiftCache = useViewShiftDataCache();
     const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
     addGap(splitView);
-    let currData: ViewShiftData = { uid, zoom: zoomLevel, view: alignToTilesSplitRect(splitView) };
+    const currData: ViewShiftData = { uid, zoom: zoomLevel, view: alignToTilesSplitRect(splitView) };
+    
+    // keep track of the latest active request
+    const markersReq = useRef<Promise<Markers> | null>(null);
     
     // if zoom or bounds change, check that aligned bounds changed then update markers 
     useEffect(() => {
         
-        
         if (updateViewShiftCache(currData)) {
-            socketfetch<Markers>("view-shift", currData)
-            .then(setMarkers)
-            .catch(() => sendNotification("error fetching map data from server"));
+            let req = socketfetch<Markers>("view-shift", currData);
+            markersReq.current = req;
+            
+            req.then(markers => {
+                // if a new request has been made before this one finishes, ignore the results
+                if (markersReq.current == req) {    
+                    setMarkers(markers);
+                    markersReq.current = null;
+                }
+            })
+            .catch(e => {
+                sendNotification("error getting map data from server");
+                console.error(e);
+            });
         }
     }, [uid, zoomLevel, bounds])
     
     
     const [chatMsgs] = useChat();
     
-    useEffect(() => {
+    // useEffect(() => {
         
-        function handleUserEnter(e: UserEnterEvent) {
+    //     function handleUserEnter(e: UserEnterEvent) {
             
-        }
+    //     }
         
-        socket.on("user-enter", handleUserEnter);
+    //     socket.on("user-enter", handleUserEnter);
         
-        return () => {
-            socket.removeListener("user-enter", handleUserEnter);
-        }
-    }, []);
+    //     return () => {
+    //         socket.removeListener("user-enter", handleUserEnter);
+    //     }
+    // }, []);
     
-    console.log("markers", markers);
+    // console.log("markers", markers);
     
     
     function handlePostClicked(id: string) {

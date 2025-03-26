@@ -17,7 +17,6 @@ const DEFAULT_ZOOM = 17;
 export default function Map() {
     const [zoomLevel, setZoomLevel] = useState<number>(DEFAULT_ZOOM);
     const [bounds, setBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);
-    console.log(bounds);
 
     const { userPos } = useGeolocation();
 
