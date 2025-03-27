@@ -17,60 +17,29 @@ export function roundDown(n: number, size: number) {
     return Math.floor(n / size) * size;
 }
 
-export function rectsEqual(a: Rect, b: Rect) {
-    return (
-        a.top == b.top &&
-        a.bottom == b.bottom &&
-        a.left == b.left &&
-        a.right == b.right
-    );
-}
 
-function alignToTiles(view: Rect): Rect {
-    const viewSize =
-        Math.max(view.right - view.left, view.top - view.bottom);
-
+/** returns `[tile layer, aligned rect]` */
+function alignToTiles(view: Rect): [number, Rect] {
+    const viewSize = Math.max(view.right - view.left, view.top - view.bottom);
+    
+    let layer = 0;
     let tileSize = BOUND * 2;
     
     while (tileSize > viewSize) {
+        console.log(tileSize, viewSize);
+        layer++;
         tileSize /= 2;
     }
     
-    return {
-        top: roundUp(view.top, tileSize),
-        bottom: roundDown(view.bottom, tileSize),
-        left: roundDown(view.left, tileSize),
-        right: roundUp(view.right, tileSize),
-    };
-}
-export function alignToTilesSplitRect(splitRect: SplitRect): SplitRect {
     return [
-        splitRect[0] ? alignToTiles(splitRect[0]) : null,
-        splitRect[1] ? alignToTiles(splitRect[1]) : null
+        layer, 
+        {
+            top: roundUp(view.top, tileSize),
+            bottom: roundDown(view.bottom, tileSize),
+            left: roundDown(view.left, tileSize),
+            right: roundUp(view.right, tileSize),
+        }
     ];
-}
-
-export function pxToDegrees(map: google.maps.Map, px: number) {
-    const mapWidthDegrees =
-        map.getBounds()!.getNorthEast().lng() -
-        map.getBounds()!.getSouthWest().lng();
-
-    return (px * mapWidthDegrees) / map.getDiv().clientWidth;
-}
-
-export function pxToMeters(map: google.maps.Map, px: number) {
-
-    
-    const mapWidthDegrees =
-        map.getBounds()!.getNorthEast().lng() -
-        map.getBounds()!.getSouthWest().lng();
-    
-    const pxInDegrees = (px * mapWidthDegrees) / map.getDiv().clientWidth;
-
-    return google.maps.geometry.spherical.computeDistanceBetween(
-        { lat: 0, lng: 0 },
-        { lat: 0, lng: pxInDegrees },
-    );
 }
 
 
@@ -79,17 +48,44 @@ export function withinSplitRect(splitRect: SplitRect, x: number, y: number) {
     return (splitRect[0] && within(splitRect[0], x, y)) || (splitRect[1] && within(splitRect[1], x, y));
 }
 
-export function splitRectsEqual(a: SplitRect, b: SplitRect) {
+
+function rectsEqual(a: Rect, b: Rect) {
     return (
-        ( !(a[0] || b[0]) ||  (a[0] && b[0] && rectsEqual(a[0], b[0])) ) &&
-        ( !(a[1] || b[1]) ||  (a[1] && b[1] && rectsEqual(a[1], b[1])) )
+        a.top == b.top &&
+        a.bottom == b.bottom &&
+        a.left == b.left &&
+        a.right == b.right
     );
 }
+
+export function splitRectsEqual(a: SplitRect, b: SplitRect): boolean {
+    return (
+        ( !(a[0] || b[0]) ||  (a[0] != null && b[0] != null && rectsEqual(a[0], b[0])) ) &&
+        ( !(a[1] || b[1]) ||  (a[1] != null && b[1] != null && rectsEqual(a[1], b[1])) ) 
+    );
+}
+
+/** returns `[tile layer, aligned rects]` */
+export function getSplitTileRegion(splitView: SplitRect): [number, SplitRect] {
+    
+    let tileLayer;
+    const alignedRects: SplitRect = [null, null];
+    
+    splitView.forEach((rect, i) => {
+        if (rect) {
+            let [layer, aligned] = alignToTiles(rect);
+            tileLayer = layer;
+            alignedRects[i] = aligned;
+        }
+    });
+    
+    return [tileLayer!, alignedRects];
+}
+
 
 export function isSplit(rect: SplitRect) {
     return rect[1] != undefined;
 }
-
 export function addGap(view: SplitRect) {
     let gapW;
     let gapH;

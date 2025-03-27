@@ -1,6 +1,6 @@
 "use client";
 
-import { addGap, Rect, rectsEqual, split, SplitRect, splitRectsEqual, within, withinSplitRect, alignToTilesSplitRect } from "@/lib/area";
+import { addGap, Rect, split, SplitRect, within, withinSplitRect, BOUND, splitRectsEqual, getSplitTileRegion } from "@/lib/area";
 import { AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import { Pos, User } from "@/lib/types";
@@ -43,7 +43,7 @@ function useViewShiftDataCache(): UpdateViewShiftCache {
     return (next: ViewShiftData) => {
         const prev = prevRef.current;
         
-        if (!prev || prev.zoom != next.zoom || !splitRectsEqual(prev.view, next.view)) {
+        if (!prev || prev.zoom != next.zoom || prev.tile_layer != next.tile_layer || !splitRectsEqual(prev.view, next.view)) {
             prevRef.current = next;
             return true;
         }
@@ -71,9 +71,11 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     
     const [markers, setMarkers] = useState<Markers>({ posts: [], users: []});
     const updateViewShiftCache = useViewShiftDataCache();
+    
     const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
     addGap(splitView);
-    const currData: ViewShiftData = { uid, zoom: zoomLevel, view: alignToTilesSplitRect(splitView) };
+    const [tile_layer, view] = getSplitTileRegion(splitView);
+    const currData: ViewShiftData = { uid, zoom: zoomLevel, tile_layer, view };
     
     // keep track of the latest active request
     const markersReq = useRef<Promise<Markers> | null>(null);
@@ -219,8 +221,19 @@ function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
 
 
 
+
+
+export function roundUp(n: number, size: number) {
+    return Math.ceil(n / size) * size;
+}
+export function roundDown(n: number, size: number) {
+    return Math.floor(n / size) * size;
+}
+
+
 export type ViewShiftData = {
     uid?: string,
     zoom: number,
+    tile_layer: number,
     view: SplitRect
 };
