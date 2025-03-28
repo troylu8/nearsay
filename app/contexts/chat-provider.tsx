@@ -30,23 +30,32 @@ export default function ChatContextProvider({ children }: Props) {
             draft[uid].push([genID(), msg]);
         });
         
-        setTimeout(() => {
-            setChatMsgs(draft => {
-                if (!draft[uid]) return;
-                if (draft[uid].length == 1) delete draft[uid];
-                else                        draft[uid].shift();
-            });
-        }, 3000);
+        setTimeout(
+            () => {
+                setChatMsgs(draft => {
+                    if (!draft[uid]) return;
+                    if (draft[uid].length == 1) delete draft[uid];
+                    else                        draft[uid].shift();
+                });
+            }, 
+            5000
+        );
     }
     
     useEffect(() => {
-        socket.on("chat", ({uid, msg}) => appendChatMsg(uid, msg));
-        socket.on("user-leave", uid => setChatMsgs(draft => delete draft[uid]));
+        const handleChat = ({uid, msg}: {uid: string, msg: string}) => appendChatMsg(uid, msg);
+        const handleUserLeave = (uid: string) => setChatMsgs(draft => delete draft[uid]);
+        socket.on("chat", handleChat);
+        socket.on("user-leave", handleUserLeave);
         
-        return () => { socket.removeAllListeners(); }
+        return () => {
+            socket.removeListener("chat", handleChat);
+            socket.removeListener("user-leave", handleUserLeave);
+        }
     }, []);
     
     function sendChatMsg(msg: string) {
+        msg = msg.trim();
         if (msg == "") return;
         
         if (userPos) {

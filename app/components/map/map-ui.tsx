@@ -25,6 +25,11 @@ function ChatButton() {
 
     const [msg, setMsg] = useState("");
     const [chatboxVisible, setChatboxVisible] = useState(true);
+    
+    function handleSend() {
+        sendChatMsg(msg);
+        setMsg("");
+    }
 
     return (
         <>
@@ -39,9 +44,9 @@ function ChatButton() {
                             bind={[msg, setMsg]}
                             className="flex-1 rounded-md" 
                             placeholder="shout to the world..."
-                            onSubmit={() => sendChatMsg(msg)}
+                            onSubmit={handleSend}
                         />
-                        <button onClick={() => sendChatMsg(msg)}> send </button>
+                        <button onClick={handleSend}> send </button>
                     </>
                 }
             </div>

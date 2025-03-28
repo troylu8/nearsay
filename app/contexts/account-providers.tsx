@@ -2,7 +2,7 @@
 
 import { createContext, use, useContext, useEffect, useState } from "react";
 import { toArrayCoords, useGeolocation } from "./geolocation-provider";
-import { socketfetch } from "@/lib/server";
+import { socket, socketfetch } from "@/lib/server";
 import { createHash } from "crypto";
 import { EMOTICONS } from "@/lib/emoticon";
 import { useSettings } from "./settings-provider";
@@ -183,13 +183,6 @@ export default function AccountContextProvider({ children }: Props) {
         );
         return () => navigator.geolocation?.clearWatch(watchId);
     }, [jwt]);
-
-    // exit world upon closing tab
-    useEffect(() => {
-        const onTabClose = () => exitWorld(false);
-        window.addEventListener("beforeunload", onTabClose);
-        return () => window.removeEventListener("beforeunload", onTabClose);
-    }, [jwt, settings.present])
 
     return (
         <SelfIdContext.Provider value={selfId}>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useAvatar, useUid, useUsername } from "./contexts/account-providers";
+import { useNotifications } from "./contexts/notifications-provider";
 
 export default function Testing() {
 
@@ -8,10 +9,13 @@ export default function Testing() {
     const username = useUsername()[0];
     const avatar = useAvatar()[0];
     
+    const sendNotif = useNotifications();
+    
     return (
         <>
             <div 
                 className="fixed left-3 top-3 flex flex-col bg-slate-400 p-3"
+                onClick={() => sendNotif("asdaaaaaaaaaaaaaaa")}
             >
                 <p>uid: {uid ?? "null"}</p>
                 <p>username: {username ?? "null"}</p>

@@ -6,7 +6,6 @@ body {
     user-select: none;
 }
 
-
 .post-marker {
     background-color: #4285F4;
     border-radius: 8px;
@@ -50,6 +49,65 @@ body {
     text-align: center;
 
     font-family: 'Consolas', monospace;
+}
+
+.anim-slide-fade-in {
+    animation: slide-fade-in 0.15s ease-out forwards;
+}
+@keyframes slide-fade-in {
+    0% {
+        position: relative;
+        opacity: 0.5;
+        right: 30px;
+    }
+    
+    100% {
+        position: relative;
+        opacity: 1;
+        right: 0;
+    }
+}
+
+.anim-slide-fade-out {
+    animation: slide-fade-out 0.15s ease-out forwards;
+}
+@keyframes slide-fade-out {
+    0% {
+        position: relative;
+        opacity: 1;
+        right: 0;
+    }
+
+    100% {
+        position: relative;
+        opacity: 0;
+        right: 30px;
+    }
+}
+
+.anim-fade-in {
+    animation: fade-in 0.15s ease-out forwards;
+}
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.anim-fade-out {
+    animation: fade-out 0.15s ease-in forwards;
+}
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 
 @tailwind base;

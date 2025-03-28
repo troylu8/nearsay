@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import ColoredSvg from "../components/colored-svg";
 import { genID } from "@/lib/data";
 
@@ -16,6 +16,7 @@ export function useNotifications() {
 type Props = { children: ReactNode };
 export function NotificationsContextProvider({ children }: Props) {
     const [notifs, setNotifs] = useState<[string, ReactNode][]>([]);
+    
 
     function removeNotif(notifID: string) {
         setNotifs(prevNotifs => prevNotifs.filter(([id]) => id != notifID));
@@ -23,8 +24,7 @@ export function NotificationsContextProvider({ children }: Props) {
 
     function sendNotification(notifContent: ReactNode) {
         let id = genID();
-        setNotifs(prevNotifs => [...prevNotifs, [id, notifContent]]);
-        setTimeout(() => removeNotif(id), 3000);
+        setNotifs(prevNotifs => [[id, notifContent], ...prevNotifs]);
     }
 
     return (
@@ -37,28 +37,47 @@ export function NotificationsContextProvider({ children }: Props) {
             >
                 { 
                     notifs.map(([id, content]) => (
-                        <div 
-                            key={id} 
-                            className="bg-slate-500 rounded-md p-2 pointer-events-auto self-start
-                                        flex gap-3 items-center"
-                            
-                            // interacting with this notification removes it
-                            onClick={() => removeNotif(id)} 
-                        >
-                            {content}
-                            
-                            <ColoredSvg 
-                                src="/icons/x.svg" 
-                                width={20}
-                                height={20} 
-                                color="white" 
-                                className="cursor-pointer min-w-[20px]"
-                                onClick={() => removeNotif(id)}
-                            />
-                        </div>
+                        <Notification key={id} onClose={() => removeNotif(id)}> 
+                            {content} 
+                        </Notification>
                     )) 
                 }
             </div>
         </NotificationsContext.Provider>
     );
+}
+
+type NotificationProps = {
+    children: ReactNode,
+    onClose: () => void
+}
+function Notification({ children, onClose }: NotificationProps) {
+    const [slidingAway, setSlidingAway] = useState(false);
+    
+    useEffect(() => {
+        setTimeout(() => setSlidingAway(true), 3000)
+    }, []);
+    
+    return (
+        <div 
+            className={`
+                bg-slate-500 rounded-md p-2 pointer-events-auto self-start flex gap-3 items-center
+                ${slidingAway? "anim-slide-fade-out" : "anim-slide-fade-in"}
+            `}
+            onAnimationEnd={({animationName}) => {
+                if (animationName == "slide-fade-out") onClose()
+            }}
+        >
+            {children}
+            
+            <ColoredSvg 
+                src="/icons/x.svg" 
+                width={20}
+                height={20} 
+                color="white" 
+                className={`cursor-pointer min-w-[20px] ${slidingAway && "pointer-events-none"}`}
+                onClick={() => setSlidingAway(true)}
+            />
+        </div>
+    )
 }

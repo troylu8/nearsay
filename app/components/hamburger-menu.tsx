@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import ColoredSvg from "./colored-svg";
 import { useNotifications } from "../contexts/notifications-provider";
 import Link from "next/link";
-import { useAccountControls, useUsername } from "../contexts/account-providers";
+import { useAccountControls, useJWT, useUsername } from "../contexts/account-providers";
+import { useSettings } from "../contexts/settings-provider";
 
 
 export default function HamburgerMenu() {
-
+    
+    const viewOnlyMode = useJWT() == undefined;
+    const [settings] = useSettings();
+    const visibleToWorld = !viewOnlyMode && settings.present;
+    
     const [username, _] = useUsername();
     const exitWorld = useAccountControls()[3];
 
@@ -33,6 +38,7 @@ export default function HamburgerMenu() {
             onMouseDown={e => e.stopPropagation()}
             onClick={() => setShowDropdown(!showDropdown)}
         >
+            <div className={` w-3 h-3 rounded-full ${visibleToWorld? "bg-green-600" : "border-gray-300 border-[3px]"}`}></div>
             <p>{username ?? "[viewing as guest]"}</p>
             <div className="relative bg-slate-400 rounded-md p-2">
                 <ColoredSvg src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} width={20} height={20} color="white" />

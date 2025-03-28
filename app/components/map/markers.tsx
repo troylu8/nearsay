@@ -20,7 +20,7 @@ type UserPOI = {
     id: string,
     pos: Pos
     avatar: number,
-    username: string
+    username?: string
 }
 type Cluster = {
     id: string,
@@ -52,13 +52,12 @@ function useViewShiftDataCache(): UpdateViewShiftCache {
     };
 }
 
-
-type UserEnterEvent = {
-    uid: string,
-    pos: Pos,
-    avatar: number,
-    username?: string
-}
+export type ViewShiftData = {
+    uid?: string,
+    zoom: number,
+    tile_layer: number,
+    view: SplitRect
+};
 
 type Props = {
     zoomLevel: number,
@@ -104,20 +103,14 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     
     const [chatMsgs] = useChat();
     
-    // useEffect(() => {
+    useEffect(() => {
+        function handleUserEnter(newUser: UserPOI) {
+            setMarkers( prev => ({posts: prev.posts, users: [...prev.users, newUser]}) );
+        }
+        socket.on("user-enter", handleUserEnter);
         
-    //     function handleUserEnter(e: UserEnterEvent) {
-            
-    //     }
-        
-    //     socket.on("user-enter", handleUserEnter);
-        
-    //     return () => {
-    //         socket.removeListener("user-enter", handleUserEnter);
-    //     }
-    // }, []);
-    
-    // console.log("markers", markers);
+        return () => { socket.removeListener("user-enter", handleUserEnter); }
+    }, []);
     
     
     function handlePostClicked(id: string) {
@@ -199,6 +192,7 @@ function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
                                     p-1 bg-slate-400 rounded-md mb-2 
                                     text-center w-fit max-w-[300px] break-words 
                                     text-white text-[16px] px-[7px] py-[4px]
+                                    anim-fade-in
                                 "
                             >
                                 {msg}  
@@ -220,20 +214,3 @@ function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
 }
 
 
-
-
-
-export function roundUp(n: number, size: number) {
-    return Math.ceil(n / size) * size;
-}
-export function roundDown(n: number, size: number) {
-    return Math.floor(n / size) * size;
-}
-
-
-export type ViewShiftData = {
-    uid?: string,
-    zoom: number,
-    tile_layer: number,
-    view: SplitRect
-};

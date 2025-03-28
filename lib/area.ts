@@ -26,7 +26,6 @@ function alignToTiles(view: Rect): [number, Rect] {
     let tileSize = BOUND * 2;
     
     while (tileSize > viewSize) {
-        console.log(tileSize, viewSize);
         layer++;
         tileSize /= 2;
     }
