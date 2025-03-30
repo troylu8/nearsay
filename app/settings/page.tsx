@@ -1,7 +1,7 @@
 "use client"
 
 import Modal from "../components/modal/modal";
-import { Settings, useSettings } from "../contexts/settings-provider";
+import { Settings, useSettings } from "../contexts/present-provider";
 
 
 export default function SettingsPage() {

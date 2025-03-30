@@ -16,8 +16,8 @@ export default function EditProfile() {
     if (!signedIn) {
         return (
             <Modal title="edit profile">
-                <p> <Link href="/sign-in" scroll={false}> sign in </Link> to edit your profile ~ </p>
-                //TODO: emoticon here
+                <p> <Link href="/sign-in" scroll={false}> sign in </Link> to get a username ~ </p>
+                <AvatarEditor />
             </Modal>
         );
     }
