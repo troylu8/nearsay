@@ -55,7 +55,7 @@ function ChatButton() {
 }
 
 function PanToSelfButton() {
-    const { userPos } = useGeolocation();
+    const userPos = useGeolocation();
     const map = useMap();
 
     function panToUser() {
@@ -89,7 +89,7 @@ type PlacingOverlayProps = {
 const PLACE_NOTE_RANGE = 100;
 
 function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
-    const { userPos } = useGeolocation();
+    const userPos = useGeolocation();
     const map = useMap();
 
     const getInRange = useCallback(

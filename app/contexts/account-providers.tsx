@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, use, useContext, useEffect, useState } from "react";
-import { toArrayCoords, useGeolocation } from "./geolocation-provider";
+import { onNextGeolocation, toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { SERVER_URL, socket, socketfetch } from "@/lib/server";
 import { createHash } from "crypto";
 import { EMOTICONS } from "@/lib/emoticon";
@@ -21,7 +21,7 @@ type EnterWorld = () => Promise<void>
 type ExitWorld = (stayOnline?: boolean, deleteAccount?: boolean) => Promise<void>
 const AccountControlsContext = createContext<[SignUp, SignIn, EnterWorld, ExitWorld] | null>(null);
 
-export function useDesiredPresence() { return useContext(DesiredPresenceContext); }
+export function useDesiredPresence() { return useContext(DesiredPresenceContext)!; }
 export function useJWT() { 
     const selfId = useContext(SelfIdContext);
     return selfId? selfId[0] : undefined; 
@@ -66,9 +66,7 @@ export default function AccountContextProvider({ children }: Props) {
 
     const [selfId, setSelfId] = useState<[string, string] | null>(null);
     const jwt = selfId? selfId[0] : undefined;
-    const uid = selfId? selfId[1] : undefined;
     function setJWT(jwt: string) {
-        localStorage.setItem("jwt", jwt);
         setSelfId([jwt, parseJwt(jwt).uid]);
     }
     
@@ -98,37 +96,35 @@ export default function AccountContextProvider({ children }: Props) {
     
     /** if `newAvatar` is not given, sign up using guest jwt */
     async function signUp(username: string, password: string, avatar?: number) {
-        if (geolocation.err) throw geolocation.err;
-        
         password = hash(password);
         
         if (avatar == undefined) await socketfetch("sign-up-from-guest", {guest_jwt: jwt, username, password })
         else {
-            const nextJWT = await socketfetch<string>("sign-up", {username, password, avatar, pos: toArrayCoords(geolocation.userPos!)});
+            const nextJWT = await socketfetch<string>("sign-up", {username, password, avatar, pos: geolocation});
             setJWT(nextJWT);
+            localStorage.setItem("jwt", nextJWT);
             setAvatar(avatar);
         }
         setUsername(username);
     }
     async function signIn(newUsername: string, password: string) {
-        if (geolocation.err) throw geolocation.err;
         if (username != null) throw new Error(`already signed in as {username}!`);
 
         const { jwt: nextJWT, avatar } = await socketfetch<{jwt: string, avatar: number}>("sign-in", {
             username: newUsername,
             password: hash(password),
-            pos: toArrayCoords(geolocation.userPos!),
+            pos: geolocation,
             guest_jwt: jwt
         });
 
         setJWT(nextJWT);
+        localStorage.setItem("jwt", nextJWT);
         setUsername(newUsername);
         setAvatar(avatar);
     }
     async function enterWorld() {
-        if (geolocation.err) throw geolocation.err;
-        if (!selfId) return;
-        await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation.userPos!) });
+        if (!geolocation || !selfId) return;
+        await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation) });
     }
     async function exitWorld(stayOnline: boolean = desiredPresence, deleteAccount?: boolean) {
         if (!jwt) return;
@@ -162,7 +158,6 @@ export default function AccountContextProvider({ children }: Props) {
         const savedDesiredPresence = localStorage.getItem("invisible") == null;
         setDesiredPresenceState(savedDesiredPresence);
         
-        
         if (savedJWT == null) {
             
             const randomAvatar = Math.floor(Math.random() * 10);
@@ -171,25 +166,17 @@ export default function AccountContextProvider({ children }: Props) {
             if (savedDesiredPresence) {
                 clearAccountInfo();
                 
-                // wait until geolocation gets here
-                const watchId = navigator.geolocation?.watchPosition(
-                    ({coords}) => {
-                
-                        socketfetch<string>("sign-up-as-guest", { 
-                            pos: [coords.longitude, coords.latitude], 
-                            avatar: randomAvatar
-                        })
-                        .then(nextJWT => setJWT(nextJWT));
-                        
-                        navigator.geolocation?.clearWatch(watchId);
-                    },
-                    null,
-                    { enableHighAccuracy: true }
-                );
+                onNextGeolocation(coords => {
+                    socketfetch<string>("sign-up-as-guest", { 
+                        pos: [coords.longitude, coords.latitude], 
+                        avatar: randomAvatar
+                    })
+                    .then(nextJWT => setJWT(nextJWT));
+                });
             };
         }
         else {
-            fetch(`${SERVER_URL}/users/id/${uid}`)
+            fetch(`${SERVER_URL}/users/id/${parseJwt(savedJWT).uid}`)
             .then(res => res.json())
             .then((user: {avatar: number, username: string}) => {
                 setJWT(savedJWT);
@@ -198,7 +185,7 @@ export default function AccountContextProvider({ children }: Props) {
             });
         }
         
-            
+        
             
     }, []);
     

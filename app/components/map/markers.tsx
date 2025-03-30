@@ -159,7 +159,7 @@ type SelfMarkerProps = {
     chatMsgs?: [string, string][],
 }
 function SelfMarker({chatMsgs}: SelfMarkerProps) {
-    const { userPos } = useGeolocation();
+    const userPos = useGeolocation();
     const [_, avatar] = useAvatar();
     return userPos && (
         <UserMarker 

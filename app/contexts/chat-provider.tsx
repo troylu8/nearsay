@@ -22,7 +22,7 @@ type Props = {
 export default function ChatContextProvider({ children }: Props) {
     let [chatMsgs, setChatMsgs] = useImmer<ChatMsgs>({});
     const jwt = useJWT();
-    const { userPos } = useGeolocation();
+    const userPos = useGeolocation();
     
     function appendChatMsg(uid: string, msg: string) {
         setChatMsgs(draft => {

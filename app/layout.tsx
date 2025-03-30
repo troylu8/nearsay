@@ -4,9 +4,7 @@ import { NotificationsContextProvider } from "./contexts/notifications-provider"
 import "./globals.css";
 import Map from "./components/map/map";
 import AccountContextProvider from "./contexts/account-providers";
-import SettingsContextProvider from "./contexts/present-provider";
 import ChatContextProvider from "./contexts/chat-provider";
-import Initialize from "./components/initialize";
 
 export default function RootLayout({
     children,
@@ -19,15 +17,12 @@ export default function RootLayout({
                 <PostPosContextProvider>
                     <GeolocationContextProvider>
                         <NotificationsContextProvider>
-                            <SettingsContextProvider>
                                 <AccountContextProvider>
                                     <ChatContextProvider>
-                                        <Initialize/>
                                         <Map />
                                         {children}
                                     </ChatContextProvider>
                                 </AccountContextProvider>
-                            </SettingsContextProvider>
                         </NotificationsContextProvider>
                     </GeolocationContextProvider>
                 </PostPosContextProvider>

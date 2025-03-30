@@ -4,21 +4,21 @@ import { useEffect, useState } from "react";
 import ColoredSvg from "./colored-svg";
 import { useNotifications } from "../contexts/notifications-provider";
 import Link from "next/link";
-import { useAccountControls, useJWT, useUsername } from "../contexts/account-providers";
-import { useSettings } from "../contexts/present-provider";
+import { useAccountControls, useDesiredPresence, useJWT, useUsername } from "../contexts/account-providers";
 
 
 export default function HamburgerMenu() {
     
     const signedOut = useJWT() == undefined;
-    const [settings] = useSettings();
-    const invisible = !signedOut && settings.present;
+    const [desiredPresence, setDesiredPresence] = useDesiredPresence();
+    const invisible = !signedOut && desiredPresence;
     
     const [username, _] = useUsername();
     const exitWorld = useAccountControls()[3];
 
     async function handleSignOut() {
         await exitWorld(true);
+        localStorage.removeItem("jwt");
         sendNotification("signed out!");
     }
     
@@ -60,8 +60,8 @@ export default function HamburgerMenu() {
                             <button onClick={handleSignOut}> sign out </button>
                         </>)
                     }
-
-                    <Link href="/settings" scroll={false}> settings </Link>
+                    
+                    <button onClick={() => setDesiredPresence(!desiredPresence)}> {desiredPresence? "go invisible" : "become visible"} </button>
                     
                 </div>
             </div>
