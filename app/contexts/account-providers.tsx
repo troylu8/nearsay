@@ -1,12 +1,12 @@
 "use client";
 
 import { createContext, use, useContext, useEffect, useState } from "react";
-import { onNextGeolocation, toArrayCoords, useGeolocation } from "./geolocation-provider";
+import { onceGeolocationReady, toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { SERVER_URL, socket, socketfetch } from "@/lib/server";
 import { createHash } from "crypto";
 import { EMOTICONS } from "@/lib/emoticon";
 
-const DesiredPresenceContext = createContext<[boolean, (nextDesiredPresence: boolean) => void] | null>(null);
+const PresenceContext = createContext<[boolean, (nextPresence: boolean) => void] | null>(null);
 const SelfIdContext = createContext<[string, string] | null>(null);
 const UsernameContext = createContext<
     [string | null, (nextUsername: string) => Promise<void>] | null
@@ -21,7 +21,7 @@ type EnterWorld = () => Promise<void>
 type ExitWorld = (stayOnline?: boolean, deleteAccount?: boolean) => Promise<void>
 const AccountControlsContext = createContext<[SignUp, SignIn, EnterWorld, ExitWorld] | null>(null);
 
-export function useDesiredPresence() { return useContext(DesiredPresenceContext)!; }
+export function usePresence() { return useContext(PresenceContext)!; }
 export function useJWT() { 
     const selfId = useContext(SelfIdContext);
     return selfId? selfId[0] : undefined; 
@@ -49,18 +49,20 @@ type Props = {
     children: React.ReactNode;
 };
 export default function AccountContextProvider({ children }: Props) {
-    const [desiredPresence, setDesiredPresenceState] = useState(true);
+    const [presence, setPresenceState] = useState(true);
     
-    function setDesiredPresence(next: boolean) {
-        setDesiredPresenceState(next);
-        if (!next) {
-            localStorage.setItem("invisible", "");
-            exitWorld(false);
+    async function setPresence(visible: boolean) {
+        if (presence == visible) return;
+        
+        if (visible) {
+            localStorage.removeItem("invisible");
+            await enterWorld();
         } 
         else {
-            localStorage.removeItem("invisible");
-            enterWorld();
+            localStorage.setItem("invisible", "");
+            await exitWorld(false);
         }
+        setPresenceState(visible);
     }
     
 
@@ -123,10 +125,11 @@ export default function AccountContextProvider({ children }: Props) {
         setAvatar(avatar);
     }
     async function enterWorld() {
-        if (!geolocation || !selfId) return;
-        await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation) });
+        if (!geolocation) return;
+        if (jwt) await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation) });
+        else    enterWorldAsGuest(avatar);
     }
-    async function exitWorld(stayOnline: boolean = desiredPresence, deleteAccount?: boolean) {
+    async function exitWorld(stayOnline: boolean = presence, deleteAccount?: boolean) {
         if (!jwt) return;
 
         let guest_jwt = await socketfetch<string | null>("exit-world", { jwt, stay_online: stayOnline, delete_account: deleteAccount});
@@ -149,48 +152,58 @@ export default function AccountContextProvider({ children }: Props) {
         return () => navigator.geolocation?.clearWatch(watchId);
     }, [jwt]);
     
+    function enterWorldAsGuest(avatar: number) {
+        onceGeolocationReady(
+            geolocation, 
+            coords => {
+                console.log("signing in as guest");
+                socketfetch<string>("sign-up-as-guest", { 
+                    pos: toArrayCoords(coords), 
+                    avatar
+                })
+                .then(nextJWT => setJWT(nextJWT));
+            }
+        );
+    }
     
-    // initialize jwt, avatar, username, desiredPresence based on localStorage data
+    function signInAsGuest(enterWorld: boolean) {
+        clearAccountInfo();
+        const randomAvatar = Math.floor(Math.random() * 10);
+        setAvatar(randomAvatar);
+        
+        if (enterWorld) enterWorldAsGuest(randomAvatar);
+    }
+    
+    // initialize jwt, avatar, username, presencebased on localStorage data
     useEffect(() => {
         
         const savedJWT = localStorage.getItem("jwt");
         
-        const savedDesiredPresence = localStorage.getItem("invisible") == null;
-        setDesiredPresenceState(savedDesiredPresence);
+        const savedPresence = localStorage.getItem("invisible") == null;
+        setPresenceState(savedPresence);
         
-        if (savedJWT == null) {
-            
-            const randomAvatar = Math.floor(Math.random() * 10);
-            setAvatar(randomAvatar);
-            
-            if (savedDesiredPresence) {
-                clearAccountInfo();
-                
-                onNextGeolocation(coords => {
-                    socketfetch<string>("sign-up-as-guest", { 
-                        pos: [coords.longitude, coords.latitude], 
-                        avatar: randomAvatar
-                    })
-                    .then(nextJWT => setJWT(nextJWT));
-                });
-            };
-        }
+        
+        
+        if (savedJWT == null) signInAsGuest(savedPresence);
         else {
+            console.log("signing in as user");
             fetch(`${SERVER_URL}/users/id/${parseJwt(savedJWT).uid}`)
             .then(res => res.json())
             .then((user: {avatar: number, username: string}) => {
                 setJWT(savedJWT);
                 setAvatar(user.avatar);
                 setUsername(user.username);
+            })
+            .catch(() => {
+                console.log("err signing in as user, signing as guest instead");
+                signInAsGuest(savedPresence);
             });
         }
-        
-        
             
     }, []);
     
     return (
-        <DesiredPresenceContext.Provider value={[desiredPresence, setDesiredPresence]}>
+        <PresenceContext.Provider value={[presence, setPresence]}>
             <SelfIdContext.Provider value={selfId}>
                 <UsernameContext.Provider value={[username, changeUsername]}>
                     <AvatarContext.Provider value={[EMOTICONS[avatar], avatar, changeAvatar]}>
@@ -200,7 +213,7 @@ export default function AccountContextProvider({ children }: Props) {
                     </AvatarContext.Provider>
                 </UsernameContext.Provider>
             </SelfIdContext.Provider>
-        </DesiredPresenceContext.Provider>
+        </PresenceContext.Provider>
     );
 }
 

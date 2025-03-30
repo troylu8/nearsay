@@ -36,7 +36,7 @@ export default function Map() {
                     defaultZoom={DEFAULT_ZOOM}
                     maxZoom={18}
                     minZoom={3}
-                    defaultCenter={userPos}
+                    defaultCenter={{lng: -0.12574, lat: 51.50853}}
                     disableDefaultUI
                     keyboardShortcuts={false}
                     onCameraChanged={handleCameraChanged}

@@ -40,13 +40,16 @@ export default function GeolocationContextProvider({ children }: Props) {
     );
 }
 
-export function onNextGeolocation(action: (pos: GeolocationCoordinates) => any) {
-    const watchId = navigator.geolocation?.watchPosition(
-        ({coords}) => {
-            action(coords)
-            navigator.geolocation?.clearWatch(watchId);
-        },
-        null,
-        { enableHighAccuracy: true }
-    );
+export function onceGeolocationReady(currPos: google.maps.LatLngLiteral | null, action: (pos: google.maps.LatLngLiteral) => any) {
+    if (currPos) action(currPos);
+    else {
+        const watchId = navigator.geolocation?.watchPosition(
+            ({coords}) => {
+                action({lng: coords.longitude, lat: coords.latitude})
+                navigator.geolocation?.clearWatch(watchId);
+            },
+            null,
+            { enableHighAccuracy: true }
+        );
+    }
 }

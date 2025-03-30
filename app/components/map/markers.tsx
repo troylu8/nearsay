@@ -10,7 +10,7 @@ import { socket, socketfetch } from "@/lib/server";
 import TestDisplay from "./test-display";
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "@/app/contexts/chat-provider";
-import { useAvatar, useUid, useUsername } from "@/app/contexts/account-providers";
+import { useAvatar, usePresence, useUid, useUsername } from "@/app/contexts/account-providers";
 import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 
@@ -159,13 +159,14 @@ type SelfMarkerProps = {
     chatMsgs?: [string, string][],
 }
 function SelfMarker({chatMsgs}: SelfMarkerProps) {
+    const [present] = usePresence();
     const userPos = useGeolocation();
     const [_, avatar] = useAvatar();
     return userPos && (
         <UserMarker 
             user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}}
             chatMsgs={chatMsgs}
-            className="bg-red-400 opacity-35"
+            className={`bg-red-400 ${!present && "opacity-35"}`}
         />
     );
 }
