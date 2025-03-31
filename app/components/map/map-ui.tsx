@@ -33,7 +33,7 @@ function ChatButton() {
 
     return (
         <>
-            <div className="w-full max-w-screen-sm flex gap-3 items-end justify-end">
+            <div className="w-full max-w-(--breakpoint-sm) flex gap-3 items-end justify-end">
                 <button onClick={() => setChatboxVisible(!chatboxVisible)}> 
                     {chatboxVisible? "hide chat" : "show chat"} 
                 </button>

@@ -25,7 +25,7 @@ export default function ResizingTextArea({
             className="
                     m-5 p-3 rounded-md 
                     resize-none overflow-y-hidden
-                    focus:outline-none focus:outline-solid focus:outline-2 focus:outline-black"
+                    focus:outline-hidden focus:outline-solid focus:outline-2 focus:outline-black"
             value={value}
         />
     );

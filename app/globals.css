@@ -1,115 +1,129 @@
-body {
-    user-select: none;
+@import "tailwindcss";
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
 }
 
-.post-marker {
-    background-color: #4285F4;
-    border-radius: 8px;
-    color: #FFFFFF;
-    font-size: 14px;
-    padding: 10px 15px;
-    position: relative;
-    bottom: 8px;
-}
-  
-.post-marker::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 100%;
-    transform: translate(-50%, 0);
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 8px solid #4285F4;
-}
+@layer base {
+    body {
+        user-select: none;
+    }
 
-/* blurbs */
-.post-marker > p {
-    position: absolute;
-    left: calc(100% + 3px);
-    top: 0;
-    max-width: 50px;
-}
-
-.avatar-frame {
-    background-color: #408085;
-    border-radius: 999px;
-
-    color: #FFFFFF;
-    font-size: 16px;
-    padding: 4px 7px;
-    position: relative;
-
-    text-align: center;
-
-    font-family: 'Consolas', monospace;
-}
-
-.anim-slide-fade-in {
-    animation: slide-fade-in 0.15s ease-out forwards;
-}
-@keyframes slide-fade-in {
-    0% {
+    .post-marker {
+        background-color: #4285f4;
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 14px;
+        padding: 10px 15px;
         position: relative;
-        opacity: 0.5;
-        right: 30px;
+        bottom: 8px;
     }
-    
-    100% {
+
+    .post-marker::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        transform: translate(-50%, 0);
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 8px solid #4285f4;
+    }
+
+    /* blurbs */
+    .post-marker > p {
+        position: absolute;
+        left: calc(100% + 3px);
+        top: 0;
+        max-width: 50px;
+    }
+
+    .avatar-frame {
+        background-color: #408085;
+        border-radius: 999px;
+
+        color: #ffffff;
+        font-size: 16px;
+        padding: 4px 7px;
         position: relative;
-        opacity: 1;
-        right: 0;
-    }
-}
 
-.anim-slide-fade-out {
-    animation: slide-fade-out 0.15s ease-out forwards;
-}
-@keyframes slide-fade-out {
-    0% {
-        position: relative;
-        opacity: 1;
-        right: 0;
+        text-align: center;
+
+        font-family: "Consolas", monospace;
     }
 
-    100% {
-        position: relative;
-        opacity: 0;
-        right: 30px;
+    .anim-slide-fade-in {
+        animation: slide-fade-in 0.15s ease-out forwards;
     }
-}
+    @keyframes slide-fade-in {
+        0% {
+            position: relative;
+            opacity: 0.5;
+            right: 30px;
+        }
 
-.anim-fade-in {
-    animation: fade-in 0.15s ease-out forwards;
-}
-@keyframes fade-in {
-    0% {
-        opacity: 0;
+        100% {
+            position: relative;
+            opacity: 1;
+            right: 0;
+        }
     }
 
-    100% {
-        opacity: 1;
+    .anim-slide-fade-out {
+        animation: slide-fade-out 0.15s ease-out forwards;
     }
-}
+    @keyframes slide-fade-out {
+        0% {
+            position: relative;
+            opacity: 1;
+            right: 0;
+        }
 
-.anim-fade-out {
-    animation: fade-out 0.15s ease-in forwards;
-}
-@keyframes fade-out {
-    0% {
-        opacity: 1;
+        100% {
+            position: relative;
+            opacity: 0;
+            right: 30px;
+        }
     }
-    100% {
-        opacity: 0;
+
+    .anim-fade-in {
+        animation: fade-in 0.15s ease-out forwards;
     }
-}
+    @keyframes fade-in {
+        0% {
+            opacity: 0;
+        }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+        100% {
+            opacity: 1;
+        }
+    }
 
-@theme {
-    --color-midnight: #121063;
+    .anim-fade-out {
+        animation: fade-out 0.15s ease-in forwards;
+    }
+    @keyframes fade-out {
+        0% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+        }
+    }
 }
