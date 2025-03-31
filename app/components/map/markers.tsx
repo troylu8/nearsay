@@ -5,7 +5,6 @@ import { AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
 import { Pos, User } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
-import useSWR from "swr";
 import { socket, socketfetch } from "@/lib/server";
 import TestDisplay from "./test-display";
 import { useEffect, useRef, useState } from "react";
@@ -160,7 +159,7 @@ type SelfMarkerProps = {
 }
 function SelfMarker({chatMsgs}: SelfMarkerProps) {
     const [present] = usePresence();
-    const userPos = useGeolocation();
+    const [userPos] = useGeolocation();
     const [_, avatar] = useAvatar();
     return userPos && (
         <UserMarker 

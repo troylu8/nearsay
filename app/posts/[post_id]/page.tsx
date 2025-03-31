@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import useSWR from "swr";
 
 import { fetchPost, sendVoteRequest } from "@/lib/data";
-import { Pos, Post, Vote } from "@/lib/types";
+import { Pos, Vote } from "@/lib/types";
 
 import NotFound from "@/app/not-found";
 import ColoredSvg from "@/app/components/colored-svg";
@@ -14,6 +14,7 @@ import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useJWT, useUsername } from "@/app/contexts/account-providers";
+import { randomEmoticon } from "@/lib/emoticon";
 
 
 const ACTION_NAME: Readonly<Record<Vote, string>> = {
@@ -27,14 +28,24 @@ const LIFETIME_WEIGHT: Readonly<Record<Vote, number>> = {
     [Vote.DISLIKE]: -1,
 };
 const COLOR: Readonly<Record<Vote, string>> = {
-    [Vote.NONE]: "var(--foreground)",
+    [Vote.NONE]: "#000",
     [Vote.LIKE]: "#00ff00",
     [Vote.DISLIKE]: "#ff0000",
 };
 
+export type Post = {
+    authorAvatar?: number,
+    authorName?: string,
+    pos: [number, number],
+    body: string;
+    likes: number;
+    dislikes: number;
+    expiry: number;
+    views: number;
+};
+
 type UsePostType = {
     data?: {
-        pos: Pos;
         vote?: Vote;
         post: Post;
     };
@@ -71,7 +82,7 @@ export default function Page({ params }: Props) {
     // update vote, expiry, map position once data comes in
     useEffect(() => {
         if (data) {
-            updatePostPos(post_id, data.pos);
+            updatePostPos(post_id, data.post.pos);
             setVote(data.vote ?? Vote.NONE);
         }
         return () => updatePostPos(null);
@@ -81,7 +92,6 @@ export default function Page({ params }: Props) {
     if (error) return <NotFound />;
     if (!data || isLoading) return <></>; //TODO: loading
     const { post } = data;
-    console.log(post);
 
     function handleVote(nextVote: Vote) {
 
@@ -112,7 +122,12 @@ export default function Page({ params }: Props) {
     return (
         <Modal title="post">
             <div className="h-full m-5 mb-7 overflow-y-auto">
-                <p className="my-3 select-all"> {post.authorName ?? "[anonymous]"} </p>
+                <div className="flex items-center gap-3">
+                    <div className={`avatar-frame ${post.authorAvatar? "" : ""}`}> 
+                        {post.authorAvatar ?? randomEmoticon()} 
+                    </div>
+                    <p className="my-3 select-all"> {post.authorName ?? "[anonymous writer]"} </p>
+                </div>
                 <p className="my-3 select-all"> {post.body} </p>
 
                 {/* property icons row */}
@@ -169,7 +184,7 @@ type PropertyIconProps = {
     value: number | string;
     onClick?: () => any;
 };
-function PropertyIcon({ src, color = "var(--foreground)", value, onClick }: PropertyIconProps) {
+function PropertyIcon({ src, color = "#fff", value, onClick }: PropertyIconProps) {
     return (
         <div 
             className={`flex items-center gap-1 ${onClick ? "cursor-pointer" : "cursor-default"}`} 

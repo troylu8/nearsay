@@ -1,10 +1,10 @@
 "use client";
 
 import { createContext, use, useContext, useEffect, useState } from "react";
-import { onceGeolocationReady, toArrayCoords, useGeolocation } from "./geolocation-provider";
+import { toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { SERVER_URL, socket, socketfetch } from "@/lib/server";
 import { createHash } from "crypto";
-import { EMOTICONS } from "@/lib/emoticon";
+import { EMOTICONS, randomEmoticonIndex } from "@/lib/emoticon";
 
 const PresenceContext = createContext<[boolean, (nextPresence: boolean) => void] | null>(null);
 const SelfIdContext = createContext<[string, string] | null>(null);
@@ -86,7 +86,7 @@ export default function AccountContextProvider({ children }: Props) {
         setAvatar(avatar);
     }
 
-    const geolocation = useGeolocation();
+    const [geolocation, onceGeolocationReady] = useGeolocation();
 
     function clearAccountInfo() {
         console.log("clearing acc data");
@@ -153,25 +153,20 @@ export default function AccountContextProvider({ children }: Props) {
     }, [jwt]);
     
     function enterWorldAsGuest(avatar: number) {
-        onceGeolocationReady(
-            geolocation, 
-            coords => {
-                console.log("signing in as guest");
-                socketfetch<string>("sign-up-as-guest", { 
-                    pos: toArrayCoords(coords), 
-                    avatar
-                })
-                .then(nextJWT => setJWT(nextJWT));
-            }
-        );
+        onceGeolocationReady(coords => {
+            console.log("signing in as guest");
+            socketfetch<string>("sign-up-as-guest", { 
+                pos: toArrayCoords(coords), 
+                avatar
+            })
+            .then(nextJWT => setJWT(nextJWT));
+        });
     }
     
     function signInAsGuest(enterWorld: boolean) {
         clearAccountInfo();
-        const randomAvatar = Math.floor(Math.random() * 10);
-        setAvatar(randomAvatar);
         
-        if (enterWorld) enterWorldAsGuest(randomAvatar);
+        if (enterWorld) enterWorldAsGuest(randomEmoticonIndex());
     }
     
     // initialize jwt, avatar, username, presencebased on localStorage data

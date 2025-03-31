@@ -10,15 +10,7 @@ export type Cluster = {
     blurb?: string,
 }
 
-export type Post = {
-    authorId?: string;
-    authorName?: string,
-    body: string;
-    likes: number;
-    dislikes: number;
-    expiry: number;
-    views: number;
-};
+
 
 export type User = {
     _id: string,

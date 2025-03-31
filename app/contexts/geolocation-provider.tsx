@@ -1,12 +1,12 @@
 "use client";
 
-import { socketfetch } from "@/lib/server";
 import { createContext, useContext, useEffect, useState } from "react";
 
-const GeolocationContext = createContext<google.maps.LatLngLiteral | null>(null);
+type OnceGeolocationReady = (action: (pos: google.maps.LatLngLiteral) => any) => any;
+const GeolocationContext = createContext<[google.maps.LatLngLiteral | null, OnceGeolocationReady] | null>(null);
 
 export function useGeolocation() {
-    return useContext(GeolocationContext);
+    return useContext(GeolocationContext)!;
 }
 export function toArrayCoords(latlng: google.maps.LatLngLiteral): [number, number] {
     return [latlng.lng, latlng.lat];
@@ -32,24 +32,24 @@ export default function GeolocationContextProvider({ children }: Props) {
 
         return () => navigator.geolocation?.clearWatch(watchId);
     }, []);
+    
+    function onceGeolocationReady(action: (pos: google.maps.LatLngLiteral) => any) {
+        if (geolocation) action(geolocation);
+        else {
+            const watchId = navigator.geolocation?.watchPosition(
+                ({coords}) => {
+                    action({lng: coords.longitude, lat: coords.latitude})
+                    navigator.geolocation?.clearWatch(watchId);
+                },
+                null,
+                { enableHighAccuracy: true }
+            );
+        }
+    }
 
     return (
-        <GeolocationContext.Provider value={geolocation}>
+        <GeolocationContext.Provider value={[geolocation, onceGeolocationReady]}>
             {children}
         </GeolocationContext.Provider>
     );
-}
-
-export function onceGeolocationReady(currPos: google.maps.LatLngLiteral | null, action: (pos: google.maps.LatLngLiteral) => any) {
-    if (currPos) action(currPos);
-    else {
-        const watchId = navigator.geolocation?.watchPosition(
-            ({coords}) => {
-                action({lng: coords.longitude, lat: coords.latitude})
-                navigator.geolocation?.clearWatch(watchId);
-            },
-            null,
-            { enableHighAccuracy: true }
-        );
-    }
 }

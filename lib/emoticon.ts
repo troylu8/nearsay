@@ -18,3 +18,9 @@ export const EMOTICONS: Readonly<string[]> = [
     "(>ᴗ<)",
     "(╹ᴗ╹)",
 ];
+export function randomEmoticonIndex() {
+    return Math.floor(Math.random() * EMOTICONS.length);
+}
+export function randomEmoticon() {
+    return EMOTICONS[randomEmoticonIndex()];
+}
