@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+@theme inline {
+    --color-primary: #964f63;
+    --color-background: #f7f0ed;
+
+    --color-success: var(--color-green-700);
+    --color-failure: var(--color-red-700);
+
+    --color-self-avatar: var(--color-red-400);
+    --color-others-avatar: #408085;
+    --color-anonymous-avatar: #793682;
+
+    --color-post: #4285f4;
+    --color-cluster: var(--color-red-400);
+
+    --color-star: var(--color-yellow-400);
+    --color-dislike: var(--color-failure);
+}
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still

@@ -143,7 +143,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
                                     <p> {cluster.blurb} </p>
                                 </div> 
                                 :
-                                <div className="post-marker bg-red-400 after:border-t-red-400">
+                                <div className="post-marker bg-cluster after:border-t-cluster">
                                     {cluster.size}x
                                 </div>
                         }
@@ -165,7 +165,7 @@ function SelfMarker({chatMsgs}: SelfMarkerProps) {
         <UserMarker 
             user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}}
             chatMsgs={chatMsgs}
-            className={`bg-red-400 ${!present && "opacity-35"}`}
+            className={`bg-self-avatar ${!present && "opacity-35"}`}
         />
     );
 }
@@ -189,9 +189,9 @@ function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
                             <p 
                                 key={id} 
                                 className="
-                                    p-1 bg-slate-400 rounded-md mb-2 
+                                    p-1 bg-primary rounded-md mb-2 
                                     text-center w-fit max-w-[300px] break-words 
-                                    text-white text-[16px] px-[7px] py-[4px]
+                                    text-background text-[16px] px-[7px] py-[4px]
                                     anim-fade-in
                                 "
                             >

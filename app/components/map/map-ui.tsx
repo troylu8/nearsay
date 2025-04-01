@@ -1,23 +1,48 @@
 import { useMap } from "@vis.gl/react-google-maps";
 import ColoredSvg from "../colored-svg";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
 import { toArrayCoords, useGeolocation } from "../../contexts/geolocation-provider";
 import CreatePostModal from "../modal/create-post-modal";
 import BindedInput from "../text-input";
-import { socketfetch } from "@/lib/server";
 import { useChat } from "@/app/contexts/chat-provider";
 
 export default function MapUI() {
     return (
         <>
-            <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end">
+            <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto">
                 <PanToSelfButton />
                 <PlaceNoteButton />
                 <ChatButton />
             </div>
         </>
     );
+}
+
+
+type UIButtonProps = {
+    src: string,
+    iconSize: number,
+    background?: string,
+    onClick: () => any,
+    children?: ReactNode,
+}
+function UIButton({ src, iconSize, background = "var(--color-primary)", onClick, children }: UIButtonProps) {
+    return (
+        <div 
+            className={`flex items-center gap-2 p-2 rounded-md bg-[${background}] cursor-pointer self-end`}
+            onClick={onClick}
+        >
+            <ColoredSvg 
+                src={src} 
+                width={iconSize} 
+                height={iconSize} 
+                color="var(--color-background)"
+            />
+            
+            {children && <label className="cursor-pointer text-background"> { children } </label> }
+        </div>
+    )
 }
 
 function ChatButton() {
@@ -33,20 +58,29 @@ function ChatButton() {
 
     return (
         <>
-            <div className="w-full max-w-(--breakpoint-sm) flex gap-3 items-end justify-end">
-                <button onClick={() => setChatboxVisible(!chatboxVisible)}> 
-                    {chatboxVisible? "hide chat" : "show chat"} 
-                </button>
+            <div className="w-full max-w-(--breakpoint-sm) flex gap-3 items-center justify-end">
+                <UIButton
+                    src={chatboxVisible? "/icons/collapse.svg" : "/icons/chat.svg"}
+                    iconSize={20}
+                    onClick={() => setChatboxVisible(!chatboxVisible)}
+                >
+                    {!chatboxVisible && "chat"}
+                </UIButton>
+                
                 {
                     chatboxVisible && 
                     <>
                         <BindedInput
                             bind={[msg, setMsg]}
-                            className="flex-1 rounded-md" 
+                            className="flex-1 rounded-md border-2 border-primary p-1 bg-background" 
                             placeholder="shout to the world..."
                             onSubmit={handleSend}
                         />
-                        <button onClick={handleSend}> send </button>
+                        <UIButton
+                            src="/icons/send.svg"
+                            iconSize={20}
+                            onClick={handleSend}
+                        />
                     </>
                 }
             </div>
@@ -63,7 +97,13 @@ function PanToSelfButton() {
         map?.setZoom(17);
     }
 
-    return userPos && <button onClick={panToUser}> to me </button>;
+    return userPos && (
+        <UIButton
+            src="/icons/location.svg"
+            iconSize={20}
+            onClick={panToUser}
+        />
+    );
 }
 
 function PlaceNoteButton() {
@@ -71,23 +111,27 @@ function PlaceNoteButton() {
 
     return (
         <>
-            {placing && <PlacingOverlay setPlacing={setPlacing} />}
-
-            <button onClick={() => setPlacing(!placing)}>
-                {placing ? "cancel" : "place note"}
-            </button>
+            {placing? 
+                <PlacingOverlay setPlacing={setPlacing} /> :
+                    <UIButton
+                    src="/icons/new-post.svg"
+                    iconSize={20}
+                    onClick={() => setPlacing(!placing)}
+                >
+                    place note
+                </UIButton>
+            }
         </>
     )
 }
+
+/** allowed to place notes within this distance from current location */
+const PLACE_NOTE_RANGE_METERS = 100;
 
 
 type PlacingOverlayProps = {
     setPlacing: (nextPlacing: boolean) => any;
 };
-
-// range in meters where you can place notes
-const PLACE_NOTE_RANGE = 100;
-
 function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
     const [userPos] = useGeolocation();
     const map = useMap();
@@ -98,7 +142,7 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
             google.maps.geometry.spherical.computeDistanceBetween(
                 map.getCenter()!,
                 userPos!
-            ) < PLACE_NOTE_RANGE,
+            ) < PLACE_NOTE_RANGE_METERS,
         []
     );
 
@@ -124,7 +168,7 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
                 />
             ) : (
                 <>
-                    <Circle center={userPos} radius={PLACE_NOTE_RANGE} />
+                    <Circle center={userPos} radius={PLACE_NOTE_RANGE_METERS} />
 
                     <ColoredSvg
                         src="/icons/star.svg"
@@ -133,17 +177,25 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
                         color={inRange ? "green" : "red"}
                         className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
                     />
-
-                    <button
-                        className={`fixed left-1/2 -translate-x-1/2 bottom-[10%] rounded-md px-3 py-1 ${
-                            inRange ? "bg-green-500" : "bg-red-300"
-                        }`}
-                        onClick={() => inRange && setDrafting(true)}
-                    >
-                        {inRange
-                            ? "place note"
-                            : "can't place note this far away"}
-                    </button>
+                    
+                    <div className="fixed left-1/2 -translate-x-1/2 bottom-[10%] flex items-center justify-center gap-3">
+                        <button
+                            className={`px-3 py-1 ${inRange ? "bg-success" : "bg-failure"}`}
+                            onClick={() => inRange && setDrafting(true)}
+                        >
+                            {inRange
+                                ? "place note"
+                                : "can't place note this far away"}
+                        </button>
+                        
+                        <UIButton
+                            src="/icons/x.svg"
+                            iconSize={20}
+                            background="var(--color-failure)"
+                            onClick={() => setDrafting(false)}
+                        />
+                            
+                    </div>
                 </>
             )}
         </>

@@ -14,7 +14,7 @@ export default function Testing() {
     return (
         <>
             <div 
-                className="fixed left-3 top-3 flex flex-col bg-midnight p-3"
+                className="fixed left-3 top-3 flex flex-col bg-primary p-3"
                 onClick={() => sendNotif("asdaaaaaaaaaaaaaaa")}
             >
                 <p>uid: {uid ?? "null"}</p>

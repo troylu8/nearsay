@@ -61,7 +61,7 @@ function Notification({ children, onClose }: NotificationProps) {
     return (
         <div 
             className={`
-                bg-slate-500 rounded-md p-2 pointer-events-auto self-start flex gap-3 items-center
+                bg-primary text-background rounded-md p-2 pointer-events-auto self-start flex gap-3 items-center
                 ${slidingAway? "anim-slide-fade-out" : "anim-slide-fade-in"}
             `}
             onAnimationEnd={({animationName}) => {

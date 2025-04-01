@@ -13,7 +13,7 @@ import Modal from "@/app/components/modal/modal";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useJWT, useUsername } from "@/app/contexts/account-providers";
+import { useJWT, useUid, useUsername } from "@/app/contexts/account-providers";
 import { randomEmoticon } from "@/lib/emoticon";
 
 
@@ -29,8 +29,8 @@ const LIFETIME_WEIGHT: Readonly<Record<Vote, number>> = {
 };
 const COLOR: Readonly<Record<Vote, string>> = {
     [Vote.NONE]: "#000",
-    [Vote.LIKE]: "#00ff00",
-    [Vote.DISLIKE]: "#ff0000",
+    [Vote.LIKE]: "var(--color-star)",
+    [Vote.DISLIKE]: "var(--color-dislike)",
 };
 
 export type Post = {
@@ -118,12 +118,17 @@ export default function Page({ params }: Props) {
     const priorVote = data.vote ?? Vote.NONE;
     const baseLikes = priorVote == Vote.LIKE ? likes - 1 : likes;
     const baseDislikes = priorVote == Vote.DISLIKE ? dislikes - 1 : dislikes;
+    
+    const avatarColor = 
+        !post.authorAvatar ? "bg-anonymous-avatar" :
+        post.authorName == username?  "bg-self-avatar" :
+        "bg-others-avatar"; 
 
     return (
         <Modal title="post">
             <div className="h-full m-5 mb-7 overflow-y-auto">
                 <div className="flex items-center gap-3">
-                    <div className={`avatar-frame ${post.authorAvatar? "" : ""}`}> 
+                    <div className={`avatar-frame ${avatarColor}`}> 
                         {post.authorAvatar ?? randomEmoticon()} 
                     </div>
                     <p className="my-3 select-all"> {post.authorName ?? "[anonymous writer]"} </p>

@@ -1,4 +1,4 @@
-import "./globals.css";
+import "./app.css";
 import GeolocationContextProvider from "./contexts/geolocation-provider";
 import PostPosContextProvider from "./contexts/post-pos-provider";
 import { NotificationsContextProvider } from "./contexts/notifications-provider";

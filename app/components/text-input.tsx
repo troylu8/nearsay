@@ -29,8 +29,8 @@ export default function BindedInput({
             onInput={(e) => setText(e.currentTarget.value)}
             className={
                 className + (
-                    valid == true ? "text-red-400" : 
-                    valid == false? "text-green-300" : 
+                    valid == true ? "text-success" : 
+                    valid == false? "text-failure" : 
                     ""  // if valid == undefined, apply neither
                 )
             } 
