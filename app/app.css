@@ -4,8 +4,8 @@
     --color-primary: #964f63;
     --color-background: #f7f0ed;
 
-    --color-success: var(--color-green-700);
-    --color-failure: var(--color-red-700);
+    --color-success: #658d9f;
+    --color-failure: #bc5461;
 
     --color-self-avatar: var(--color-red-400);
     --color-others-avatar: #408085;
@@ -16,6 +16,9 @@
 
     --color-star: var(--color-yellow-400);
     --color-dislike: var(--color-failure);
+}
+:root {
+    /* color: #bc5461; */
 }
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
@@ -38,6 +41,21 @@
 @layer base {
     body {
         user-select: none;
+    }
+    button {
+        cursor: pointer;
+    }
+
+    /* click through containers (flexbox of clickables) allow mouse events to pass through its gaps */
+    .click-through-container {
+        pointer-events: none !important; /* !important allows nesting click through containers */
+    }
+    .click-through-container > * {
+        pointer-events: auto;
+    }
+
+    .text-outline-light {
+        text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
     }
 
     .post-marker {

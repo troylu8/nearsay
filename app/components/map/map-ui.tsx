@@ -10,7 +10,7 @@ import { useChat } from "@/app/contexts/chat-provider";
 export default function MapUI() {
     return (
         <>
-            <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto">
+            <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end gap-2 click-through-container">
                 <PanToSelfButton />
                 <PlaceNoteButton />
                 <ChatButton />
@@ -23,14 +23,13 @@ export default function MapUI() {
 type UIButtonProps = {
     src: string,
     iconSize: number,
-    background?: string,
     onClick: () => any,
     children?: ReactNode,
 }
-function UIButton({ src, iconSize, background = "var(--color-primary)", onClick, children }: UIButtonProps) {
+function UIButton({ src, iconSize, onClick, children }: UIButtonProps) {
     return (
         <div 
-            className={`flex items-center gap-2 p-2 rounded-md bg-[${background}] cursor-pointer self-end`}
+            className={`flex items-center bg-primary gap-2 p-2 rounded-md cursor-pointer`}
             onClick={onClick}
         >
             <ColoredSvg 
@@ -58,7 +57,7 @@ function ChatButton() {
 
     return (
         <>
-            <div className="w-full max-w-(--breakpoint-sm) flex gap-3 items-center justify-end">
+            <div className="w-full max-w-(--breakpoint-sm) flex gap-3 items-center justify-end click-through-container">
                 <UIButton
                     src={chatboxVisible? "/icons/collapse.svg" : "/icons/chat.svg"}
                     iconSize={20}
@@ -169,35 +168,53 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
             ) : (
                 <>
                     <Circle center={userPos} radius={PLACE_NOTE_RANGE_METERS} />
-
-                    <ColoredSvg
-                        src="/icons/star.svg"
-                        width={40}
-                        height={40}
-                        color={inRange ? "green" : "red"}
-                        className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none"
-                    />
+                
+                    <Crosshair color={inRange? "success" : "failure"}/>
                     
-                    <div className="fixed left-1/2 -translate-x-1/2 bottom-[10%] flex items-center justify-center gap-3">
+                    <div className="fixed left-1/2 -translate-x-1/2 bottom-1/4 flex items-center justify-center gap-3 click-through-container">
                         <button
-                            className={`px-3 py-1 ${inRange ? "bg-success" : "bg-failure"}`}
+                            className={`px-3 py-1 rounded-md text-background ${inRange ? "bg-success" : "bg-failure"}`}
                             onClick={() => inRange && setDrafting(true)}
                         >
                             {inRange
                                 ? "place note"
-                                : "can't place note this far away"}
+                                : "you're too far away!"}
                         </button>
                         
                         <UIButton
                             src="/icons/x.svg"
-                            iconSize={20}
-                            background="var(--color-failure)"
-                            onClick={() => setDrafting(false)}
+                            iconSize={15}
+                            onClick={() => setPlacing(false)}
                         />
-                            
+                        
+                        {!inRange && 
+                            <p className="
+                                absolute top-full mt-1 left-1/2 -translate-x-1/2 
+                                text-sm text-center w-max  text-outline-light
+                                
+                            "> 
+                                * get within {PLACE_NOTE_RANGE_METERS}m to leave a note here
+                            </p>
+                        }
                     </div>
                 </>
             )}
         </>
+    );
+}
+
+type CrosshairProps = {
+    color: string
+}
+function Crosshair({ color }: CrosshairProps) {
+    
+    const dimensions = "absolute w-0.5 h-2.5 rounded-[1px] outline-[1.5px] outline-white"
+    return (
+        <div className="fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className={`${dimensions} bg-${color} translate-y-[10px]`}></div>
+            <div className={`${dimensions} bg-${color} -translate-y-[10px]`}></div>
+            <div className={`${dimensions} bg-${color} translate-x-[10px] rotate-90`}></div>
+            <div className={`${dimensions} bg-${color} -translate-x-[10px] rotate-90`}></div>
+        </div>
     );
 }
