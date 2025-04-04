@@ -40,13 +40,17 @@ export default function HamburgerMenu() {
         >
             <div className={` w-3 h-3 rounded-full ${invisible? "bg-green-600" : "border-gray-300 border-[3px]"}`}></div>
             <p> {signedOut? "[signed out]" : username ?? "[signed in as guest]"} </p>
-            <div className="relative bg-slate-400 rounded-md p-2">
-                <ColoredSvg src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} width={20} height={20} color="white" />
+            <div className="relative bg-primary rounded-md p-2">
+                <ColoredSvg src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} width={20} height={20} color="var(--color-background)" />
                 
                 <div 
                     className={`
-                        absolute top-full mt-3 right-0 ${showDropdown? "flex" : "hidden"} flex-col items-center
-                        rounded-md bg-slate-400 p-3 whitespace-nowrap
+                        absolute top-full mt-3 right-0 ${showDropdown? "flex" : "hidden"} 
+                        flex-col items-end click-through-container min-w-[140px]
+                        whitespace-nowrap bg-primary rounded-md p-2 text-center text-background
+                        [&>*]:rounded-md [&>*]:w-full
+                        [&>*]:hover:underline [&>*]:decoration-2! underline-offset-4
+                        [&>*]:hover:italic 
                     `}
                     onClick={e => e.stopPropagation()}
                 >
@@ -60,7 +64,6 @@ export default function HamburgerMenu() {
                             <button onClick={handleSignOut}> sign out </button>
                         </>)
                     }
-                    
                     <button onClick={() => setPresence(!presence)}> {presence? "go invisible" : "become visible"} </button>
                     
                 </div>

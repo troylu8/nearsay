@@ -131,9 +131,9 @@ export default function Page({ params }: Props) {
                     <div className={`avatar-frame ${avatarColor}`}> 
                         {post.authorAvatar ?? randomEmoticon()} 
                     </div>
-                    <p className="my-3 select-all"> {post.authorName ?? "[anonymous writer]"} </p>
+                    <p className="my-3 select-auto"> {post.authorName ?? "[anonymous writer]"} </p>
                 </div>
-                <p className="my-3 select-all"> {post.body} </p>
+                <p className="my-3 select-auto"> {post.body} </p>
 
                 {/* property icons row */}
                 <div className="flex justify-between mt-6">

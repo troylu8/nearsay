@@ -33,6 +33,7 @@ function MapInner() {
     const map = useMap();
 
     function handleCameraChanged(e: MapCameraChangedEvent) {
+        console.log("zoom", e.map.getZoom());
         setZoomLevel(e.map.getZoom() ?? DEFAULT_ZOOM);
         setBounds(e.detail.bounds);
     }

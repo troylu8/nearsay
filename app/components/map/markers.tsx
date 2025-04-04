@@ -139,8 +139,8 @@ export default function Markers({ zoomLevel, bounds }: Props) {
                                     className="post-marker" 
                                     onClick={() => handlePostClicked(cluster.id)}
                                 >
-                                    post
-                                    <p> {cluster.blurb} </p>
+                                    !?
+                                    <p className="[--outline-color:var(--color-post)] text-outline"> "no fucking way..." </p>
                                 </div> 
                                 :
                                 <div className="post-marker bg-cluster after:border-t-cluster">
@@ -165,7 +165,7 @@ function SelfMarker({chatMsgs}: SelfMarkerProps) {
         <UserMarker 
             user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}}
             chatMsgs={chatMsgs}
-            className={`bg-self-avatar ${!present && "opacity-35"}`}
+            className={`bg-self-avatar [--outline-color:var(--color-self-avatar)] ${!present && "opacity-35"}`}
         />
     );
 }
@@ -204,9 +204,11 @@ function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
             
             {/* wrap avatar in flexbox to center it */}
             <div className="flex flex-col"> 
-                <div className={`avatar-frame translate-y-1/2 ${className} self-center`}>
+                <div className={`avatar-frame translate-y-1/2 [--outline-color:var(--color-others-avatar)] ${className} self-center`}>
                     {EMOTICONS[user.avatar]}
-                    <p className="absolute top-full left-1/2 -translate-x-1/2" >{user.username}</p>
+                    <p className="absolute top-full left-1/2 -translate-x-1/2 text-outline">
+                        {user.username}
+                    </p>
                 </div>
             </div>
         </AdvancedMarker>

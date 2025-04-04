@@ -39,7 +39,7 @@ function UIButton({ src, iconSize, onClick, children }: UIButtonProps) {
                 color="var(--color-background)"
             />
             
-            {children && <label className="cursor-pointer text-background"> { children } </label> }
+            {children && <label className="cursor-pointer text-background" style={{lineHeight: iconSize + "px"}}> { children } </label> }
         </div>
     )
 }
@@ -59,7 +59,7 @@ function ChatButton() {
         <>
             <div className="w-full max-w-(--breakpoint-sm) flex gap-3 items-center justify-end click-through-container">
                 <UIButton
-                    src={chatboxVisible? "/icons/collapse.svg" : "/icons/chat.svg"}
+                    src={chatboxVisible? "/icons/x.svg" : "/icons/chat.svg"}
                     iconSize={20}
                     onClick={() => setChatboxVisible(!chatboxVisible)}
                 >
@@ -106,7 +106,22 @@ function PanToSelfButton() {
 }
 
 function PlaceNoteButton() {
+    const [userPos] = useGeolocation();
+    const map = useMap();
     const [placing, setPlacing] = useState(false);
+    
+    function handlePlaceNote() {
+        if (!userPos || !map) return;
+        
+        // if user is offscreen OR too zoomed out
+        if (!map.getBounds()?.contains(userPos) || map.getZoom()! < 15) {
+            console.log("panning to user");
+            map.panTo(userPos);
+            map.setZoom(17);
+        }
+        
+        setPlacing(true);
+    }
 
     return (
         <>
@@ -115,7 +130,7 @@ function PlaceNoteButton() {
                     <UIButton
                     src="/icons/new-post.svg"
                     iconSize={20}
-                    onClick={() => setPlacing(!placing)}
+                    onClick={handlePlaceNote}
                 >
                     place note
                 </UIButton>
@@ -134,7 +149,7 @@ type PlacingOverlayProps = {
 function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
     const [userPos] = useGeolocation();
     const map = useMap();
-
+    
     const getInRange = useCallback(
         () =>
             map != null &&
@@ -156,7 +171,7 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
     }, [map]);
 
     const [drafting, setDrafting] = useState(false);
-
+    
     return (
         <>
             {drafting ? (
@@ -167,7 +182,13 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
                 />
             ) : (
                 <>
-                    <Circle center={userPos} radius={PLACE_NOTE_RANGE_METERS} />
+                    <Circle 
+                        center={userPos} 
+                        radius={PLACE_NOTE_RANGE_METERS} 
+                        strokeColor="#658d9f" 
+                        fillColor="#658d9f" 
+                        fillOpacity={0.15}
+                    />
                 
                     <Crosshair color={inRange? "success" : "failure"}/>
                     
@@ -190,7 +211,7 @@ function PlacingOverlay({ setPlacing }: PlacingOverlayProps) {
                         {!inRange && 
                             <p className="
                                 absolute top-full mt-1 left-1/2 -translate-x-1/2 
-                                text-sm text-center w-max  text-outline-light
+                                text-sm text-center w-max [--outline-color:white] text-outline
                                 
                             "> 
                                 * get within {PLACE_NOTE_RANGE_METERS}m to leave a note here

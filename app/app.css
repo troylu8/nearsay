@@ -7,12 +7,12 @@
     --color-success: #658d9f;
     --color-failure: #bc5461;
 
-    --color-self-avatar: var(--color-red-400);
-    --color-others-avatar: #408085;
+    --color-self-avatar: #cc3e47;
+    --color-others-avatar: #4a7f60;
     --color-anonymous-avatar: #793682;
 
-    --color-post: #4285f4;
-    --color-cluster: var(--color-red-400);
+    --color-post: #518ab3;
+    --color-cluster: #7d539b;
 
     --color-star: var(--color-yellow-400);
     --color-dislike: var(--color-failure);
@@ -41,6 +41,7 @@
 @layer base {
     body {
         user-select: none;
+        font-family: "Cascadia", monospace;
     }
     button {
         cursor: pointer;
@@ -54,18 +55,21 @@
         pointer-events: auto;
     }
 
-    .text-outline-light {
-        text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+    .text-outline {
+        text-shadow: -1px -1px 0 var(--outline-color), 1px -1px 0 var(--outline-color), -1px 1px 0 var(--outline-color), 1px 1px 0 var(--outline-color);
     }
 
     .post-marker {
-        background-color: #4285f4;
+        background-color: var(--color-post);
         border-radius: 8px;
         color: #ffffff;
-        font-size: 14px;
-        padding: 10px 15px;
+        padding: 8px;
         position: relative;
         bottom: 8px;
+
+        font-family: "Cascadia", monospace;
+        font-size: 16px;
+        font-weight: bold;
     }
 
     .post-marker::after {
@@ -78,7 +82,7 @@
         height: 0;
         border-left: 8px solid transparent;
         border-right: 8px solid transparent;
-        border-top: 8px solid #4285f4;
+        border-top: 8px solid var(--color-post);
     }
 
     /* blurbs */
@@ -86,21 +90,23 @@
         position: absolute;
         left: calc(100% + 3px);
         top: 0;
-        max-width: 50px;
+        max-width: 160px;
+
+        width: max-content;
+        font-weight: normal;
     }
 
     .avatar-frame {
-        background-color: #408085;
+        font-family: "Cascadia", monospace;
+        text-align: center;
+        font-size: 16px;
+
+        background-color: var(--color-others-avatar);
         border-radius: 999px;
 
         color: #ffffff;
-        font-size: 16px;
         padding: 4px 7px;
         position: relative;
-
-        text-align: center;
-
-        font-family: "Consolas", monospace;
     }
 
     .anim-slide-fade-in {
