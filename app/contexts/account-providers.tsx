@@ -126,7 +126,10 @@ export default function AccountContextProvider({ children }: Props) {
     }
     async function enterWorld() {
         if (!geolocation) return;
-        if (jwt) await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation) });
+        if (jwt) {
+            console.log("enter-world", jwt);
+            await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation) });
+        }
         else    enterWorldAsGuest(avatar);
     }
     async function exitWorld(stayOnline: boolean = presence, deleteAccount?: boolean) {

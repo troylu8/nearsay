@@ -8,13 +8,16 @@ import BindedInput from "../text-input";
 import { useChat } from "@/app/contexts/chat-provider";
 
 export default function MapUI() {
+    const userPosAvailable = useGeolocation()[0] != null;
     return (
         <>
-            <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end gap-2 click-through-container">
-                <PanToSelfButton />
-                <PlaceNoteButton />
-                <ChatButton />
-            </div>
+            { userPosAvailable &&
+                <div className="fixed left-3 right-3 bottom-3 flex flex-col items-end gap-2 click-through-container">
+                    <PanToSelfButton />
+                    <PlaceNoteButton />
+                    <ChatButton />
+                </div>
+            }
         </>
     );
 }
@@ -127,7 +130,7 @@ function PlaceNoteButton() {
         <>
             {placing? 
                 <PlacingOverlay setPlacing={setPlacing} /> :
-                    <UIButton
+                <UIButton
                     src="/icons/new-post.svg"
                     iconSize={20}
                     onClick={handlePlaceNote}

@@ -13,8 +13,6 @@ import { useAvatar, usePresence, useUid, useUsername } from "@/app/contexts/acco
 import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 
-//TODO test edit-user, exit-world, enter-world
-
 type UserPOI = {
     id: string,
     pos: Pos
@@ -24,7 +22,7 @@ type UserPOI = {
 type Cluster = {
     id: string,
     pos: Pos,
-    size: number,
+    size?: number,
     blurb?: string
 }
 
@@ -104,18 +102,32 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     
     useEffect(() => {
         function handleUserEnter(newUser: UserPOI) {
+            console.log("user joined", newUser);
             setMarkers( prev => ({posts: prev.posts, users: [...prev.users, newUser]}) );
         }
+        function handleUserLeave(uid: string) {
+            console.log("user left", uid);
+            setMarkers( prev => ({posts: prev.posts, users: prev.users.filter(u => u.id != uid)}) );
+        }
+        function handleNewPost(newPost: Cluster) {
+            setMarkers( prev => ({users: prev.users, posts: [...prev.posts, newPost]}) );
+        }
         socket.on("user-enter", handleUserEnter);
+        socket.on("user-leave", handleUserLeave);
+        socket.on("new-post", handleNewPost);
         
-        return () => { socket.removeListener("user-enter", handleUserEnter); }
+        return () => { 
+            socket.removeListener("user-enter", handleUserEnter); 
+            socket.removeListener("user-leave", handleUserLeave); 
+            socket.removeListener("new-post", handleNewPost); 
+        }
     }, []);
     
     
     function handlePostClicked(id: string) {
         router.replace("/posts/" + id, { scroll: false });
     }
-
+    
     return (
         <>
             <TestDisplay key="test" view={splitView} viewShiftData={currData}  />

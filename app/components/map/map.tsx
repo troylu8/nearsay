@@ -11,6 +11,8 @@ import { usePostPos } from "../../contexts/post-pos-provider";
 import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
+import { useNotifications } from "@/app/contexts/notifications-provider";
+import ColoredSvg from "../colored-svg";
 
 const DEFAULT_ZOOM = 17;
 
@@ -55,18 +57,6 @@ function MapInner() {
         }
     }, [map, postPos]);
     
-    const [_, onceGeolocationReady] = useGeolocation();
-    
-    // pan to user location is found
-    useEffect(() => {
-        if (map) {
-            onceGeolocationReady(userPos => {
-                console.log("user pos ready, panning");
-                map.panTo(userPos);
-            });
-        }
-    }, [map]);
-    
     return (
         <GoogleMap
             mapId="d52f7c6d2453d540"
@@ -80,6 +70,67 @@ function MapInner() {
         >
             {bounds && <Markers zoomLevel={zoomLevel} bounds={bounds} />}
             <MapUI />
+            <PanToUserOnceGeolocationReady />
         </GoogleMap>
     )
+}
+
+
+function PanToUserOnceGeolocationReady() {
+    const map = useMap();
+    const [_, onGeolocationOrErr] = useGeolocation();
+    const [text, setText] = useState<string | null>("finding your location..");
+    const [isError, setIsError] = useState(false);
+    const [fading, setFading] = useState<boolean>(false);
+    
+    const ERROR_MESSAGES: Record<number, string> = {
+        [GeolocationPositionError.PERMISSION_DENIED]: "you've denied access to your location",
+        [GeolocationPositionError.POSITION_UNAVAILABLE]: "your location is unavailable",
+        [GeolocationPositionError.TIMEOUT]: "timed out trying to find your location",
+    };
+    
+    // pan to user location is found
+    useEffect(() => {
+        if (!map) return; 
+        
+        onGeolocationOrErr(
+            userPos => {
+                map.panTo(userPos);
+                setText("found your location!");
+                setTimeout(() => setFading(true), 750);
+            },
+            err => {
+                setText(ERROR_MESSAGES[err.code] ?? err.message);
+                setIsError(true);
+            }
+        );
+    }, [map]);
+    
+    return text && (
+        <div
+            className={`
+                fixed top-[10%] left-1/2 -translate-x-1/2 
+                flex items-center w-max gap-3
+                rounded-full bg-primary px-3 py-1 text-sm text-background
+                ${fading && "anim-fade-out"}
+            `}
+            onAnimationEnd={e => {
+                if (e.animationName == "fade-out") setText(null);
+            }}
+        > 
+            {isError && <p> (;°Д°) </p>}
+            
+            <p> { text } </p>
+            
+            {    isError && 
+                <ColoredSvg 
+                    src="/icons/x.svg" 
+                    width={15} 
+                    height={15} 
+                    color="var(--color-background)"
+                    onClick={() => setFading(true)}
+                />
+            }
+        </div>
+    );
 }
