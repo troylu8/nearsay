@@ -25,8 +25,6 @@ export default function ChatContextProvider({ children }: Props) {
     const jwt = useJWT();
     const [userPos] = useGeolocation();
     
-    useEffect(() => console.log("chat", chatMsgs), [chatMsgs]);
-    
     function appendChatMsg(uid: string, msg: string) {
         setChatMsgs(draft => {
             draft[uid] = draft[uid] ?? [];

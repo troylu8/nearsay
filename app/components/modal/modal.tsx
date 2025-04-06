@@ -27,7 +27,7 @@ export default function Modal({ title, children, onClose }: Prop) {
             onMouseDown={e => { if (e.target === e.currentTarget) mousePressed = true }}
             onMouseUp={(e) => { if (e.target === e.currentTarget && mousePressed) handleClose() }}
         >
-            <div className="w-[80%] max-h-[80%] bg-background rounded-md flex flex-col">
+            <div className="w-[calc(100%-30px)] max-w-md max-h-[80%] bg-background rounded-md flex flex-col">
                 <div className="p-3 flex justify-end relative">
                     <Link href="/" scroll={false}>
                         <ColoredSvg
@@ -39,9 +39,9 @@ export default function Modal({ title, children, onClose }: Prop) {
                         />
                     </Link>
 
-                    <h2 className="absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]">
+                    <h1 className="absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%]">
                         {title}
-                    </h2>
+                    </h1>
                 </div>
                 
                 <div className="p-3 flex flex-col overflow-y-auto">

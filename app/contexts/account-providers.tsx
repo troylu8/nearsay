@@ -77,12 +77,12 @@ export default function AccountContextProvider({ children }: Props) {
     
     async function changeUsername(username: string) {
         if (!jwt) return;
-        await socketfetch("edit-user", {jwt, update: { username } } );
+        await socketfetch("edit-user", {jwt, username } );
         setUsername(username);
     }
     async function changeAvatar(avatar: number) {
         if (!jwt) return;
-        await socketfetch("edit-user", {jwt, update: { avatar } } );
+        await socketfetch("edit-user", {jwt, avatar } );
         setAvatar(avatar);
     }
 

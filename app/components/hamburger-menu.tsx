@@ -52,23 +52,26 @@ export default function HamburgerMenu() {
                     className={`
                         absolute top-full mt-3 right-0 ${showDropdown? "flex" : "hidden"} 
                         flex-col items-end click-through-container min-w-[140px]
-                        whitespace-nowrap bg-primary rounded-md p-2 text-center text-background
+                        whitespace-nowrap bg-primary rounded-md text-center 
+                        p-5 gap-4 text-xl md:p-3 md:gap-0 md:text-base
+                        [&>*]:text-background [&>*]:no-underline
                         [&>*]:rounded-md [&>*]:w-full
                         [&>*]:hover:underline [&>*]:decoration-2! underline-offset-4
                         [&>*]:hover:italic 
                     `}
                     onClick={e => e.stopPropagation()}
                 >
-                    { username == null ?
+                    {   
+                        username == null ?
                         (<>
                             <Link href="/sign-up" scroll={false}> create account </Link>
                             <Link href="/sign-in" scroll={false}> sign in </Link>
                         </>) :
                         (<>
-                            <Link href="/edit-profile" scroll={false}> edit profile </Link>
                             <button onClick={handleSignOut}> sign out </button>
                         </>)
                     }
+                    <Link href="/edit-appearance" scroll={false}> edit appearance </Link>
                     <button onClick={() => setPresence(!presence)}> {presence? "go invisible" : "become visible"} </button>
                     
                 </div>

@@ -11,19 +11,8 @@ import { EMOTICONS } from "@/lib/emoticon";
 
 
 export default function EditProfile() {
-    const signedIn = useUsername()[0] != null;
-
-    if (!signedIn) {
-        return (
-            <Modal title="edit profile">
-                <p> <Link href="/sign-in" scroll={false}> sign in </Link> to get a username ~ </p>
-                <AvatarEditor />
-            </Modal>
-        );
-    }
-
     return (
-        <Modal title="edit profile">
+        <Modal title="appearance">
             <div className="flex flex-col gap-3">
                 <UsernameEditor/>
                 <AvatarEditor/>
@@ -41,24 +30,35 @@ function AvatarEditor() {
         try {
             await changeAvatar(next);
         }
-        catch (_) {
+        catch (e) {
+            console.log(e);
             sendNotification("server error when changing avatar");
         }
     }
     return (
         <>
-            <h2>select avatar</h2>
-            <div className="flex flex-wrap justify-center gap-1 ">
+            <h2>emoticon</h2>
+            <div className="flex flex-wrap justify-center gap-1 mb-[30px]">
                 {
                     EMOTICONS.map((e, i) => 
                         <div 
                             key={i} 
                             className={`
                                 avatar-frame self-center cursor-pointer
-                                ${(avatar == e) && "border-red-600 border-4"}
+                                ${(avatar == e) && "bg-success"}
                             `}
                             onClick={() => handleChangeAvatar(i)}
-                        >{e}</div>
+                        >
+                            {e}
+                            {avatar == e && (
+                                <p className="
+                                    absolute top-full mt-3 left-1/2 -translate-x-1/2 
+                                    text-success text-sm
+                                ">
+                                    [selected]
+                                </p>
+                            )}
+                        </div>
                     )
                 }
             </div>
@@ -89,7 +89,7 @@ function DeleteAccount() {
         }
     }
 
-    return (
+    return username && (
         <>
             <p>type "{username}" to confirm</p>
             <BindedInput 
@@ -142,18 +142,24 @@ function UsernameEditor() {
 
     return (
         <>
-            <label>username</label>
-            <div className="flex gap-3">
-                <BindedInput 
-                    bind={[newUsername ?? "", username => {
-                        setNewUsername(username);
-                        verifyUsernameInput(username);
-                    }]} 
-                    valid={usernameErr == null}
-                />
-                <button onClick={handleChangeUsername}>apply</button>
-            </div>
-            <p>{usernameErr}</p>
+            <h2>username</h2>
+            {
+                username == null ?
+                <p> (✧ω✧)☞ <Link href="/sign-in" scroll={false}>sign in</Link> to edit your username </p> :
+                <>
+                    <div className="flex gap-3">
+                        <BindedInput 
+                            bind={[newUsername ?? "", username => {
+                                setNewUsername(username);
+                                verifyUsernameInput(username);
+                            }]} 
+                            valid={usernameErr == null}
+                        />
+                        <button onClick={handleChangeUsername}>apply</button>
+                    </div>
+                    <p>{usernameErr}</p>
+                </>
+            }
         </>
     );
 }

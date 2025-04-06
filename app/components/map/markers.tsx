@@ -105,19 +105,14 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     
     const [chatMsgs] = useChat();
     
-    useEffect(() => console.log(markers), [markers]);
-    
     useEffect(() => {
         function handleUserEnter(newUser: UserPOI) {
             setMarkers( draft => {
-                console.log("adding user");
                 insertUserOrPost(draft.users, newUser);
             } );
         }
         function handleUserLeave(uid: string) {
             setMarkers( draft => {
-                console.log("removing user");
-                
                 return {
                     posts: draft.posts,
                     users: draft.users.filter(u => u.id != uid)
@@ -130,14 +125,25 @@ export default function Markers({ zoomLevel, bounds }: Props) {
                 insertUserOrPost(draft.posts, newPost);
             });
         }
+        function handleUserEdit(update: {id: string, avatar?: number, username?: string}) {
+            setMarkers(draft => {
+                const user = draft.users.find(u => u.id == update.id);
+                if (!user) return;
+                console.log(update);
+                if (update.avatar != null) user.avatar = update.avatar;
+                if (update.username != null) user.username = update.username;
+            });
+        }
         socket.on("user-enter", handleUserEnter);
         socket.on("user-leave", handleUserLeave);
         socket.on("new-post", handleNewPost);
+        socket.on("user-edit", handleUserEdit);
         
         return () => { 
             socket.removeListener("user-enter", handleUserEnter); 
             socket.removeListener("user-leave", handleUserLeave); 
             socket.removeListener("new-post", handleNewPost); 
+            socket.removeListener("user-edit", handleUserEdit);
         }
     }, []);
     

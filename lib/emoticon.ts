@@ -1,4 +1,4 @@
-import seedrandom from "seedrandom";
+
 
 
 
@@ -12,14 +12,17 @@ export const EMOTICONS: Readonly<string[]> = [
     "(-3-)",
     "(>ᴗ<)",
     "(╹ᴗ╹)",
-    "(T^T)",
-    "(^▽^)",
-    "(-3-)",
-    "(>ᴗ<)",
-    "(╹ᴗ╹)",
 ];
 export function randomEmoticonIndex(seed?: string) {
-    return Math.floor(seedrandom(seed)() * EMOTICONS.length);
+    if (seed) {
+        let total = 0;
+        for (const ch of seed) {
+            total += ch.charCodeAt(0);
+        }
+        return total % EMOTICONS.length;
+    }
+    
+    return Math.floor(Math.random() * EMOTICONS.length);
 }
 
 export function randomEmoticon(seed?: string) {
