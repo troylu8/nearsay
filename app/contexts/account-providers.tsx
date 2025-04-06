@@ -199,6 +199,12 @@ export default function AccountContextProvider({ children }: Props) {
             
     }, []);
     
+    useEffect(() => {
+        const onExit = () => exitWorld(false);
+        window.addEventListener("beforeunload", onExit);
+        return () => window.removeEventListener("beforeunload", onExit);
+    }, []);
+    
     return (
         <PresenceContext.Provider value={[presence, setPresence]}>
             <SelfIdContext.Provider value={selfId}>

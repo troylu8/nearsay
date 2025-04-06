@@ -13,6 +13,7 @@ import { useAvatar, usePresence, useUid, useUsername } from "@/app/contexts/acco
 import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import ColoredSvg from "../colored-svg";
+import { useImmer } from "use-immer";
 
 type UserPOI = {
     id: string,
@@ -41,7 +42,7 @@ function useViewShiftDataCache(): UpdateViewShiftCache {
     return (next: ViewShiftData) => {
         const prev = prevRef.current;
         
-        if (!prev || prev.zoom != next.zoom || prev.tile_layer != next.tile_layer || !splitRectsEqual(prev.view, next.view)) {
+        if (!prev || prev.uid != next.uid || prev.zoom != next.zoom || prev.tile_layer != next.tile_layer || !splitRectsEqual(prev.view, next.view)) {
             prevRef.current = next;
             return true;
         }
@@ -66,54 +67,68 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     const uid = useUid();
     const sendNotification = useNotifications();
     
-    const [markers, setMarkers] = useState<Markers>({ posts: [], users: []});
+    const [markers, setMarkers] = useImmer<Markers>({ posts: [], users: []});
     const updateViewShiftCache = useViewShiftDataCache();
     
     const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
     addGap(splitView);
     const [tile_layer, view] = getSplitTileRegion(splitView);
-    const currData: ViewShiftData = { uid, zoom: zoomLevel, tile_layer, view };
+    const currViewData: ViewShiftData = { uid, zoom: zoomLevel, tile_layer, view };
     
     // keep track of the latest active request
     const markersReq = useRef<Promise<Markers> | null>(null);
     
-    // if zoom or bounds change, check that aligned bounds changed then update markers 
+    // if view data, check that aligned bounds changed then update markers 
     useEffect(() => {
+        if (!updateViewShiftCache(currViewData)) return;
         
-        if (updateViewShiftCache(currData)) {
-            let req = socketfetch<Markers>("view-shift", currData);
-            markersReq.current = req;
+        let req = socketfetch<Markers>("view-shift", currViewData);
+        markersReq.current = req;
+        
+        req.then(markers => {
+            // if a new request has been made before this one finishes, ignore the results
+            if (markersReq.current != req) return; 
             
-            req.then(markers => {
-                // if a new request has been made before this one finishes, ignore the results
-                if (markersReq.current != req) return; 
-                
-                // sort users and posts by id, so that receiving the same items in a different order won't trigger rerender
-                markers.posts.sort((a, b) => a.id < b.id? -1 : 1);
-                markers.users.sort((a, b) => a.id < b.id? -1 : 1);
-                
-                setMarkers(markers);
-                markersReq.current = null;
-                
-            })
-            .catch(e => {
-                sendNotification("error getting map data from server");
-                console.error(e);
-            });
-        }
+            // sort users and posts by id, so that receiving the same items in a different order won't trigger rerender
+            markers.posts.sort((a, b) => a.id < b.id? -1 : 1);
+            markers.users.sort((a, b) => a.id < b.id? -1 : 1);
+            
+            setMarkers(markers);
+            markersReq.current = null;
+        })
+        .catch(e => {
+            sendNotification("error getting map data from server");
+            console.error(e);
+        });
+        
     }, [uid, zoomLevel, bounds])
     
     const [chatMsgs] = useChat();
     
+    useEffect(() => console.log(markers), [markers]);
+    
     useEffect(() => {
         function handleUserEnter(newUser: UserPOI) {
-            setMarkers( prev => ({posts: prev.posts, users: [...prev.users, newUser]}) );
+            setMarkers( draft => {
+                console.log("adding user");
+                insertUserOrPost(draft.users, newUser);
+            } );
         }
         function handleUserLeave(uid: string) {
-            setMarkers( prev => ({posts: prev.posts, users: prev.users.filter(u => u.id != uid)}) );
+            setMarkers( draft => {
+                console.log("removing user");
+                
+                return {
+                    posts: draft.posts,
+                    users: draft.users.filter(u => u.id != uid)
+                };
+            });
         }
         function handleNewPost(newPost: Cluster) {
-            setMarkers( prev => ({users: prev.users, posts: [...prev.posts, newPost]}) );
+            setMarkers( draft => {
+                console.log("adding post");
+                insertUserOrPost(draft.posts, newPost);
+            });
         }
         socket.on("user-enter", handleUserEnter);
         socket.on("user-leave", handleUserLeave);
@@ -142,6 +157,25 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             }
         </>
     );
+}
+
+/** 
+ * insert item into array such that the array is still sorted by id 
+ * @param arr array of users or posts sorted by id
+ * @param item new item to insert
+ */
+function insertUserOrPost<T extends UserPOI | Cluster>(arr: T[], item: T) {
+    let lo = 0;
+    let hi = arr.length-1;
+    
+    while (lo <= hi) {
+        const mid = Math.floor((lo + hi) / 2);
+        
+        if (arr[mid].id <= item.id) lo = mid + 1;
+        else                        hi = mid - 1;
+    }
+    
+    arr.splice(lo, 0, item);
 }
 
 type SelfMarkerProps = {
@@ -217,14 +251,14 @@ const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => {
     }
     
     function handleMouseUp(upX: number, upY: number) {
-        
+        if (!mouseDownPosRef.current) return;
         /** 
          * max mouse drag distance in either axis between mousedown and mouseup
          * for it to count as clicking on the post instead of panning the map
          */
         const MAX_MOUSE_DELTA_PX = 5;
         
-        const [downX, downY] = mouseDownPosRef.current!;
+        const [downX, downY] = mouseDownPosRef.current;
         if (Math.abs(downX - upX) < MAX_MOUSE_DELTA_PX && Math.abs(downY - upY) < MAX_MOUSE_DELTA_PX) 
             onClick(cluster.id);
     }

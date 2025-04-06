@@ -6,6 +6,7 @@ import { useJWT } from "./account-providers";
 import { toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { genID } from "@/lib/data";
 import { useImmer } from "use-immer";
+import { useNotifications } from "./notifications-provider";
 
 
 type ChatMsgs = Record<string, [string, string][]>;
@@ -24,9 +25,10 @@ export default function ChatContextProvider({ children }: Props) {
     const jwt = useJWT();
     const [userPos] = useGeolocation();
     
+    useEffect(() => console.log("chat", chatMsgs), [chatMsgs]);
+    
     function appendChatMsg(uid: string, msg: string) {
         setChatMsgs(draft => {
-            
             draft[uid] = draft[uid] ?? [];
             draft[uid].push([genID(), msg]);
         });
@@ -45,7 +47,7 @@ export default function ChatContextProvider({ children }: Props) {
     
     useEffect(() => {
         const handleChat = ({uid, msg}: {uid: string, msg: string}) => appendChatMsg(uid, msg);
-        const handleUserLeave = (uid: string) => setChatMsgs(draft => delete draft[uid]);
+        const handleUserLeave = (uid: string) => setChatMsgs(draft => { delete draft[uid] });
         socket.on("chat", handleChat);
         socket.on("user-leave", handleUserLeave);
         

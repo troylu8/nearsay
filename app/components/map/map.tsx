@@ -82,12 +82,6 @@ function PanToUserOnceGeolocationReady() {
     const [isError, setIsError] = useState(false);
     const [fading, setFading] = useState<boolean>(false);
     
-    const ERROR_MESSAGES: Record<number, string> = {
-        [GeolocationPositionError.PERMISSION_DENIED]: "you've denied access to your location",
-        [GeolocationPositionError.POSITION_UNAVAILABLE]: "your location is unavailable",
-        [GeolocationPositionError.TIMEOUT]: "timed out trying to find your location",
-    };
-    
     // pan to user location is found
     useEffect(() => {
         if (!map) return; 
@@ -99,7 +93,22 @@ function PanToUserOnceGeolocationReady() {
                 setTimeout(() => setFading(true), 750);
             },
             err => {
-                setText(ERROR_MESSAGES[err.code] ?? err.message);
+                switch (err.code) {
+                    case GeolocationPositionError.PERMISSION_DENIED: 
+                        setText("you've denied access to your location");
+                        break;
+                        
+                    case GeolocationPositionError.POSITION_UNAVAILABLE: 
+                        setText("your location is unavailable");
+                        break;
+                        
+                    case GeolocationPositionError.TIMEOUT: 
+                        setText("timed out trying to find your location");
+                        break;
+                        
+                    default: 
+                        setText(err.message);
+                }
                 setIsError(true);
             }
         );
