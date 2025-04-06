@@ -7,11 +7,12 @@ import { Pos, User } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
 import { socket, socketfetch } from "@/lib/server";
 import TestDisplay from "./test-display";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, memo } from "react";
 import { useChat } from "@/app/contexts/chat-provider";
 import { useAvatar, usePresence, useUid, useUsername } from "@/app/contexts/account-providers";
 import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
 import { useNotifications } from "@/app/contexts/notifications-provider";
+import ColoredSvg from "../colored-svg";
 
 type UserPOI = {
     id: string,
@@ -85,10 +86,15 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             
             req.then(markers => {
                 // if a new request has been made before this one finishes, ignore the results
-                if (markersReq.current == req) {    
-                    setMarkers(markers);
-                    markersReq.current = null;
-                }
+                if (markersReq.current != req) return; 
+                
+                // sort users and posts by id, so that receiving the same items in a different order won't trigger rerender
+                markers.posts.sort((a, b) => a.id < b.id? -1 : 1);
+                markers.users.sort((a, b) => a.id < b.id? -1 : 1);
+                
+                setMarkers(markers);
+                markersReq.current = null;
+                
             })
             .catch(e => {
                 sendNotification("error getting map data from server");
@@ -97,16 +103,13 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         }
     }, [uid, zoomLevel, bounds])
     
-    
     const [chatMsgs] = useChat();
     
     useEffect(() => {
         function handleUserEnter(newUser: UserPOI) {
-            console.log("user joined", newUser);
             setMarkers( prev => ({posts: prev.posts, users: [...prev.users, newUser]}) );
         }
         function handleUserLeave(uid: string) {
-            console.log("user left", uid);
             setMarkers( prev => ({posts: prev.posts, users: prev.users.filter(u => u.id != uid)}) );
         }
         function handleNewPost(newPost: Cluster) {
@@ -123,15 +126,10 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         }
     }, []);
     
-    
-    function handlePostClicked(id: string) {
-        router.replace("/posts/" + id, { scroll: false });
-    }
-    
     return (
         <>
             <TestDisplay key="test" view={splitView} viewShiftData={currData}  />
-            <SelfMarker chatMsgs={chatMsgs["you"]} />
+            <SelfMarker key="you" chatMsgs={chatMsgs["you"]} />
             {
                 markers.users
                 .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
@@ -140,27 +138,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             {
                 markers.posts
                 .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
-                .map(cluster => 
-                    <AdvancedMarker
-                        key={cluster.id}
-                        position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
-                    >
-                        {
-                            cluster.blurb? 
-                                <div 
-                                    className="post-marker" 
-                                    onClick={() => handlePostClicked(cluster.id)}
-                                >
-                                    !?
-                                    <p className="[--outline-color:var(--color-post)] text-outline"> "no fucking way..." </p>
-                                </div> 
-                                :
-                                <div className="post-marker bg-cluster after:border-t-cluster">
-                                    {cluster.size}x
-                                </div>
-                        }
-                    </AdvancedMarker>
-                )
+                .map(cluster => <ClusterMarker key={cluster.id} cluster={cluster} onClick={id => router.replace("/posts/" + id, { scroll: false })} />)
             }
         </>
     );
@@ -174,10 +152,11 @@ function SelfMarker({chatMsgs}: SelfMarkerProps) {
     const [userPos] = useGeolocation();
     const [_, avatar] = useAvatar();
     return userPos && (
-        <UserMarker 
+        <UserMarker
             user={{id: "you", avatar, pos: toArrayCoords(userPos), username: "you"}}
             chatMsgs={chatMsgs}
             className={`bg-self-avatar [--outline-color:var(--color-self-avatar)] ${!present && "opacity-35"}`}
+            zIndex={20}
         />
     );
 }
@@ -185,46 +164,74 @@ function SelfMarker({chatMsgs}: SelfMarkerProps) {
 type UserMarkerProps = {
     user: UserPOI,
     chatMsgs?: [string, string][],
+    zIndex?: number,
     className?: string
 }
-function UserMarker({ user, chatMsgs, className }: UserMarkerProps) {
-    return (
-        <AdvancedMarker
-            key={user.id}
-            position={{lng: user.pos[0], lat: user.pos[1]}}
-            zIndex={10}
-        >
-            <div className="flex flex-col items-center translate-y-3">
-                {   chatMsgs && 
-                    chatMsgs.map(([id, msg]) => {
-                        return (
-                            <p 
-                                key={id} 
-                                className="
-                                    p-1 bg-primary rounded-md mb-2 
-                                    text-center w-fit max-w-[300px] break-words 
-                                    text-background text-[16px] px-[7px] py-[4px]
-                                    anim-fade-in
-                                "
-                            >
-                                {msg}  
-                            </p>
-                        )
-                    })
-                }
+const UserMarker = memo( ({ user, chatMsgs, zIndex = 10, className }: UserMarkerProps) => 
+    <AdvancedMarker
+        key={user.id}
+        position={{lng: user.pos[0], lat: user.pos[1]}}
+        zIndex={zIndex}
+    >
+        <div className="flex flex-col items-center translate-y-3">
+            {   chatMsgs && 
+                chatMsgs.map(([id, msg]) => {
+                    return (
+                        <p 
+                            key={id} 
+                            className="
+                                p-1 bg-primary rounded-md mb-2 
+                                text-center w-fit max-w-[300px] break-words 
+                                text-background text-[16px] px-[7px] py-[4px]
+                                anim-fade-in
+                            "
+                        >
+                            {msg}  
+                        </p>
+                    )
+                })
+            }
+        </div>
+        
+        {/* wrap avatar in flexbox to center it */}
+        <div className="flex flex-col"> 
+            <div className={`avatar-frame translate-y-1/2 [--outline-color:var(--color-others-avatar)] ${className} self-center`}>
+                {EMOTICONS[user.avatar]}
+                <p className="absolute top-full left-1/2 -translate-x-1/2 text-outline">
+                    {user.username}
+                </p>
             </div>
-            
-            {/* wrap avatar in flexbox to center it */}
-            <div className="flex flex-col"> 
-                <div className={`avatar-frame translate-y-1/2 [--outline-color:var(--color-others-avatar)] ${className} self-center`}>
-                    {EMOTICONS[user.avatar]}
-                    <p className="absolute top-full left-1/2 -translate-x-1/2 text-outline">
-                        {user.username}
-                    </p>
-                </div>
-            </div>
-        </AdvancedMarker>
-    )
+        </div>
+    </AdvancedMarker>
+);
+
+type ClusterMarkerProps = {
+    cluster: Cluster,
+    onClick: (id: string) => any
 }
-
-
+const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => 
+    <AdvancedMarker
+        key={cluster.id}
+        position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
+    >
+        {
+            cluster.blurb? 
+                <div 
+                    className="post-marker p-[6px]" 
+                    onClick={() => onClick(cluster.id)}
+                >
+                    <ColoredSvg 
+                        src="/icons/message-dots.svg"
+                        width={25} 
+                        height={25} 
+                        color="white"
+                    />
+                    <p className="[--outline-color:var(--color-post)] text-outline"> "{cluster.blurb}" </p>
+                </div> 
+                :
+                <div className="post-marker bg-cluster after:border-t-cluster">
+                    {cluster.size}x
+                </div>
+        }
+    </AdvancedMarker>
+);

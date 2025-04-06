@@ -172,14 +172,13 @@ export default function AccountContextProvider({ children }: Props) {
         if (enterWorld) enterWorldAsGuest(randomEmoticonIndex());
     }
     
-    // initialize jwt, avatar, username, presencebased on localStorage data
+    // initialize jwt, avatar, username, presence based on localStorage data
     useEffect(() => {
         
         const savedJWT = localStorage.getItem("jwt");
         
         const savedPresence = localStorage.getItem("invisible") == null;
         setPresenceState(savedPresence);
-        
         
         
         if (savedJWT == null) signInAsGuest(savedPresence);

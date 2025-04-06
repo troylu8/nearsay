@@ -11,7 +11,6 @@ import { usePostPos } from "../../contexts/post-pos-provider";
 import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
-import { useNotifications } from "@/app/contexts/notifications-provider";
 import ColoredSvg from "../colored-svg";
 
 const DEFAULT_ZOOM = 17;
@@ -35,7 +34,6 @@ function MapInner() {
     const map = useMap();
 
     function handleCameraChanged(e: MapCameraChangedEvent) {
-        console.log("zoom", e.map.getZoom());
         setZoomLevel(e.map.getZoom() ?? DEFAULT_ZOOM);
         setBounds(e.detail.bounds);
     }
@@ -44,7 +42,6 @@ function MapInner() {
     
     // center map on opened post if it was offscreen (can happen if post was opened via navigating to link)
     useEffect(() => {
-        console.log("postpos", postPos);
         if (postPos) {
             const postPosLatLng: google.maps.LatLngLiteral = {
                 lng: postPos![0],

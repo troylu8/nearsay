@@ -26,6 +26,7 @@ export default function ChatContextProvider({ children }: Props) {
     
     function appendChatMsg(uid: string, msg: string) {
         setChatMsgs(draft => {
+            
             draft[uid] = draft[uid] ?? [];
             draft[uid].push([genID(), msg]);
         });
