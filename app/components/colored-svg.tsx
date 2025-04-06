@@ -26,7 +26,7 @@ export default function ColoredSvg({
                 maskImage: `url(${src})`,
                 WebkitMaskImage: `url(${src})`,
                 backgroundColor: color,
-                cursor: onClick? "pointer" : "auto"
+                cursor: onClick? "pointer" : "inherit"
             }}
             onClick={onClick}
             className={className}

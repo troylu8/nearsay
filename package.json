@@ -10,12 +10,14 @@
     },
     "dependencies": {
         "@types/bcryptjs": "^2.4.6",
+        "@types/seedrandom": "^3.0.8",
         "@vis.gl/react-google-maps": "^1.4.2",
         "bcryptjs": "^2.4.3",
         "immer": "^10.1.1",
         "next": "^15.2.4",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
+        "seedrandom": "^3.0.5",
         "socket.io-client": "^4.8.1",
         "swr": "^2.3.2",
         "use-immer": "^0.11.0"

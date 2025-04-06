@@ -55,20 +55,22 @@ function MapInner() {
     }, [map, postPos]);
     
     return (
-        <GoogleMap
-            mapId="d52f7c6d2453d540"
-            defaultZoom={DEFAULT_ZOOM}
-            maxZoom={18}
-            minZoom={3}
-            defaultCenter={{lng: -0.12574, lat: 51.50853}}
-            disableDefaultUI
-            keyboardShortcuts={false}
-            onCameraChanged={handleCameraChanged}
-        >
-            {bounds && <Markers zoomLevel={zoomLevel} bounds={bounds} />}
+        <>
+            <GoogleMap
+                mapId="d52f7c6d2453d540"
+                defaultZoom={DEFAULT_ZOOM}
+                maxZoom={18}
+                minZoom={3}
+                defaultCenter={{lng: -0.12574, lat: 51.50853}}
+                disableDefaultUI
+                keyboardShortcuts={false}
+                onCameraChanged={handleCameraChanged}
+            >
+                {bounds && <Markers zoomLevel={zoomLevel} bounds={bounds} />}
+            </GoogleMap>
             <MapUI />
             <PanToUserOnceGeolocationReady />
-        </GoogleMap>
+        </>
     )
 }
 

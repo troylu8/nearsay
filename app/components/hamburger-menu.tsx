@@ -41,7 +41,12 @@ export default function HamburgerMenu() {
             <div className={` w-3 h-3 rounded-full ${invisible? "bg-green-600" : "border-gray-300 border-[3px]"}`}></div>
             <p> {signedOut? "[signed out]" : username ?? "[signed in as guest]"} </p>
             <div className="relative bg-primary rounded-md p-2">
-                <ColoredSvg src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} width={20} height={20} color="var(--color-background)" />
+                <ColoredSvg 
+                    src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} 
+                    width={20} 
+                    height={20} 
+                    color="var(--color-background)" 
+                />
                 
                 <div 
                     className={`

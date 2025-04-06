@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import useSWR from "swr";
 
 import { fetchPost, sendVoteRequest } from "@/lib/data";
@@ -87,7 +87,7 @@ export default function Page({ params }: Props) {
         }
         return () => updatePostPos(null);
     }, [data]);
-
+    
     //TODO: error page instead of not found page
     if (error) return <NotFound />;
     if (!data || isLoading) return <></>; //TODO: loading
@@ -122,14 +122,14 @@ export default function Page({ params }: Props) {
     const avatarColor = 
         !post.authorAvatar ? "bg-anonymous-avatar" :
         post.authorName == username?  "bg-self-avatar" :
-        "bg-others-avatar"; 
-
+        "bg-others-avatar";
+    
     return (
         <Modal title="post">
             <div className="h-full m-5 mb-7 overflow-y-auto">
                 <div className="flex items-center gap-3">
                     <div className={`avatar-frame ${avatarColor}`}> 
-                        {post.authorAvatar ?? randomEmoticon()} 
+                        {post.authorAvatar ?? randomEmoticon(post_id)} 
                     </div>
                     <p className="my-3 select-auto"> {post.authorName ?? "[anonymous writer]"} </p>
                 </div>
@@ -189,7 +189,7 @@ type PropertyIconProps = {
     value: number | string;
     onClick?: () => any;
 };
-function PropertyIcon({ src, color = "#fff", value, onClick }: PropertyIconProps) {
+function PropertyIcon({ src, color = "#000", value, onClick }: PropertyIconProps) {
     return (
         <div 
             className={`flex items-center gap-1 ${onClick ? "cursor-pointer" : "cursor-default"}`} 

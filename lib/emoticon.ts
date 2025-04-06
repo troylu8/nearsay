@@ -1,4 +1,4 @@
-
+import seedrandom from "seedrandom";
 
 
 
@@ -18,9 +18,10 @@ export const EMOTICONS: Readonly<string[]> = [
     "(>ᴗ<)",
     "(╹ᴗ╹)",
 ];
-export function randomEmoticonIndex() {
-    return Math.floor(Math.random() * EMOTICONS.length);
+export function randomEmoticonIndex(seed?: string) {
+    return Math.floor(seedrandom(seed)() * EMOTICONS.length);
 }
-export function randomEmoticon() {
-    return EMOTICONS[randomEmoticonIndex()];
+
+export function randomEmoticon(seed?: string) {
+    return EMOTICONS[randomEmoticonIndex(seed)];
 }

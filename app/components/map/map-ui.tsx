@@ -93,10 +93,10 @@ function ChatButton() {
 function PanToSelfButton() {
     const [userPos] = useGeolocation();
     const map = useMap();
-
+    
     function panToUser() {
-        map?.setCenter(userPos!);
-        map?.setZoom(17);
+        map!.setCenter(userPos!);
+        map!.setZoom(Math.max(17, map!.getZoom()!)); // zoom in if map is zoomed out more than 17
     }
 
     return userPos && (

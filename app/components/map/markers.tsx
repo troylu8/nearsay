@@ -128,7 +128,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     
     return (
         <>
-            <TestDisplay key="test" view={splitView} viewShiftData={currData}  />
+            {/* <TestDisplay key="test" view={splitView} viewShiftData={currData}  /> */}
             <SelfMarker key="you" chatMsgs={chatMsgs["you"]} />
             {
                 markers.users
@@ -209,29 +209,52 @@ type ClusterMarkerProps = {
     cluster: Cluster,
     onClick: (id: string) => any
 }
-const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => 
-    <AdvancedMarker
-        key={cluster.id}
-        position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
-    >
-        {
-            cluster.blurb? 
-                <div 
-                    className="post-marker p-[6px]" 
-                    onClick={() => onClick(cluster.id)}
-                >
-                    <ColoredSvg 
-                        src="/icons/message-dots.svg"
-                        width={25} 
-                        height={25} 
-                        color="white"
-                    />
-                    <p className="[--outline-color:var(--color-post)] text-outline"> "{cluster.blurb}" </p>
-                </div> 
-                :
-                <div className="post-marker bg-cluster after:border-t-cluster">
-                    {cluster.size}x
-                </div>
-        }
-    </AdvancedMarker>
-);
+const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => {
+    const mouseDownPosRef = useRef<[number, number] | null>(null);
+    
+    function handleMouseDown(x: number, y: number) {
+        mouseDownPosRef.current = [x, y];
+    }
+    
+    function handleMouseUp(upX: number, upY: number) {
+        
+        /** 
+         * max mouse drag distance in either axis between mousedown and mouseup
+         * for it to count as clicking on the post instead of panning the map
+         */
+        const MAX_MOUSE_DELTA_PX = 5;
+        
+        const [downX, downY] = mouseDownPosRef.current!;
+        if (Math.abs(downX - upX) < MAX_MOUSE_DELTA_PX && Math.abs(downY - upY) < MAX_MOUSE_DELTA_PX) 
+            onClick(cluster.id);
+    }
+    
+    return (
+        <AdvancedMarker
+            key={cluster.id}
+            position={{lng: cluster.pos[0], lat: cluster.pos[1]}}
+        >
+            {
+                cluster.blurb? 
+                    <div 
+                        className="post-marker p-[6px] cursor-pointer" 
+                        onMouseDown={e => handleMouseDown(e.clientX, e.clientY)}
+                        onMouseUp={e => handleMouseUp(e.clientX, e.clientY)}
+                        onClickCapture={e => e.stopPropagation()}
+                    >
+                        <ColoredSvg 
+                            src="/icons/message-dots.svg"
+                            width={25} 
+                            height={25} 
+                            color="white"
+                        />
+                        <p className="[--outline-color:var(--color-post)] text-outline"> "{cluster.blurb}" </p>
+                    </div> 
+                    :
+                    <div className="post-marker bg-cluster after:border-t-cluster">
+                        {cluster.size}x
+                    </div>
+            }
+        </AdvancedMarker>
+    );
+});
