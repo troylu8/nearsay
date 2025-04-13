@@ -5,6 +5,7 @@ import Modal from "./modal";
 import ResizingTextArea from "../resizing-text-area";
 import { socketfetch } from "@/lib/server";
 import { UIButton } from "../colored-svg";
+import { useJWT } from "@/app/contexts/account-providers";
 
 type Props = {
     pos: google.maps.LatLng;
@@ -12,10 +13,11 @@ type Props = {
     onCancel?: () => any;
 };
 export default function CreatePostModal({ pos, onPost, onCancel }: Props) {
+    const jwt = useJWT();
     const [body, setBody] = useState("");
 
     function handlePost() {
-        socketfetch("post", {pos: [pos.lng(), pos.lat()], body})
+        socketfetch("post", {jwt, pos: [pos.lng(), pos.lat()], body})
         if (onPost && body.length <= 500) onPost();
     }
 

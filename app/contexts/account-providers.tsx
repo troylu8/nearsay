@@ -199,12 +199,17 @@ export default function AccountContextProvider({ children }: Props) {
                 signInAsGuest(savedPresence);
             });
         }
-        
-        
-        const onExit = () => exitWorld(false);
+    }, []);
+    
+    // exit world and save geolocation before closing
+    useEffect(() => {
+        const onExit = () => {
+            exitWorld(false);
+            localStorage.setItem("geolocation", JSON.stringify(geolocation));
+        };
         window.addEventListener("beforeunload", onExit);
         return () => window.removeEventListener("beforeunload", onExit);
-    }, []);
+    }, [geolocation]);
     
     return (
         <PresenceContext.Provider value={[presence, setPresence]}>

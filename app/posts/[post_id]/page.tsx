@@ -7,14 +7,15 @@ import { fetchPost, sendVoteRequest } from "@/lib/data";
 import { Pos, Vote } from "@/lib/types";
 
 import NotFound from "@/app/not-found";
-import ColoredSvg from "@/app/components/colored-svg";
+import ColoredSvg, { UIButton } from "@/app/components/colored-svg";
 import { usePostPos } from "../../contexts/post-pos-provider";
 import Modal from "@/app/components/modal/modal";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useJWT, useUid, useUsername } from "@/app/contexts/account-providers";
-import { randomEmoticon } from "@/lib/emoticon";
+import { EMOTICONS, randomEmoticon } from "@/lib/emoticon";
+import { socketfetch } from "@/lib/server";
 
 
 const ACTION_NAME: Readonly<Record<Vote, string>> = {
@@ -60,6 +61,8 @@ type Props = {
     params: Promise<{ post_id: string }>;
 };
 export default function Page({ params }: Props) {
+    const router = useRouter();
+    
     const jwt = useJWT();
     
     const username = useUsername()[0];
@@ -115,6 +118,12 @@ export default function Page({ params }: Props) {
             );
         }
     }
+    
+    async function handleDeletePost() {
+        await socketfetch("delete-post", {jwt, post_id});
+        router.replace("/", {scroll: false});
+        sendNotification("post deleted");
+    }
 
     const { likes, dislikes } = data.post;
 
@@ -133,9 +142,20 @@ export default function Page({ params }: Props) {
             <div className="mx-5">
                 <div className="flex items-center gap-3">
                     <div className={`avatar-frame ${avatarColor}`}> 
-                        {post.authorAvatar ?? randomEmoticon(post_id)} 
+                        {post.authorAvatar? EMOTICONS[post.authorAvatar] : randomEmoticon(post_id)} 
                     </div>
-                    <p className="my-3 select-text"> {post.authorName ?? "[anonymous writer]"} </p>
+                    <p className="my-3 select-text"> {post.authorName ?? "[anonymous]"} </p>
+                    
+                    {username != null && post.authorName === username &&
+                        <div className="grow flex flex-row-reverse">
+                            <UIButton
+                                src="/icons/trash.svg"
+                                iconSize={16}
+                                onClick={handleDeletePost}
+                                className="justify-self-end p-1!"
+                            />
+                        </div>
+                    }
                 </div>
                 <p className="my-3 select-text"> {post.body} </p>
 

@@ -125,15 +125,21 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         }
         function handleNewPost(newPost: Cluster) {
             setMarkers( draft => {
-                console.log("adding post");
                 insertUserOrPost(draft.posts, newPost);
+            });
+        }
+        function handlePostDelete(post_id: string) {
+            setMarkers( draft => {
+                return {
+                    posts: draft.posts.filter(p => p.id != post_id),
+                    users: draft.users,
+                };
             });
         }
         function handleUserUpdate(update: {id: string, avatar?: number, username?: string}) {
             setMarkers(draft => {
                 const user = draft.users.find(u => u.id == update.id);
                 if (!user) return;
-                console.log(update);
                 if (update.avatar != null) user.avatar = update.avatar;
                 if (update.username != null) user.username = update.username;
             });
@@ -141,12 +147,14 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         socket.on("user-enter", handleUserEnter);
         socket.on("user-leave", handleUserLeave);
         socket.on("new-post", handleNewPost);
+        socket.on("post-delete", handlePostDelete);
         socket.on("user-update", handleUserUpdate);
         
         return () => { 
             socket.removeListener("user-enter", handleUserEnter); 
             socket.removeListener("user-leave", handleUserLeave); 
             socket.removeListener("new-post", handleNewPost); 
+            socket.removeListener("post-delete", handlePostDelete); 
             socket.removeListener("user-update", handleUserUpdate);
         }
     }, []);

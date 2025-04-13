@@ -13,7 +13,7 @@ import Markers from "./markers";
 import MapUI from "./map-ui";
 import ColoredSvg from "../colored-svg";
 
-const DEFAULT_ZOOM = 17;
+const DEFAULT_ZOOM = 9;
 
 export default function Map() {
     return (
@@ -29,12 +29,10 @@ export default function Map() {
 }
 
 function MapInner() {
-    const [zoomLevel, setZoomLevel] = useState<number>(DEFAULT_ZOOM);
     const [bounds, setBounds] = useState<google.maps.LatLngBoundsLiteral | null>(null);
     const map = useMap();
 
     function handleCameraChanged(e: MapCameraChangedEvent) {
-        setZoomLevel(e.map.getZoom() ?? DEFAULT_ZOOM);
         setBounds(e.detail.bounds);
     }
     
@@ -61,12 +59,12 @@ function MapInner() {
                 defaultZoom={DEFAULT_ZOOM}
                 maxZoom={18}
                 minZoom={3}
-                defaultCenter={{lng: -0.12574, lat: 51.50853}}
+                defaultCenter={{lng: -73.935242, lat: 40.730610}}
                 disableDefaultUI
                 keyboardShortcuts={false}
                 onCameraChanged={handleCameraChanged}
             >
-                {bounds && <Markers zoomLevel={zoomLevel} bounds={bounds} />}
+                {bounds && map && <Markers zoomLevel={map.getZoom()!} bounds={bounds} />}
                 <MapUI />
             </GoogleMap>
             <PanToUserOnceGeolocationReady />
@@ -82,10 +80,22 @@ function PanToUserOnceGeolocationReady() {
     const [isError, setIsError] = useState(false);
     const [fading, setFading] = useState<boolean>(false);
     
-    // pan to user location is found
     useEffect(() => {
         if (!map) return; 
         
+        // pan to saved geolocation for now 
+        const savedGeolocation = localStorage.getItem("geolocation");
+        if (savedGeolocation) {
+            try {
+                map.panTo(JSON.parse(savedGeolocation));
+                map.setZoom(17);
+            }
+            catch {
+                localStorage.removeItem("geolocation");
+            }
+        }
+        
+        // pan to user once their location is found
         onGeolocationOrErr(
             userPos => {
                 map.panTo(userPos);

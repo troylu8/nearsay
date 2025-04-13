@@ -44,7 +44,7 @@ type UIButtonProps = {
 export function UIButton({ src, iconSize, onClick, className, children }: UIButtonProps) {
     return (
         <div 
-            className={` ${className} flex items-center bg-primary gap-2 p-2 rounded-md cursor-pointer`}
+            className={` flex items-center bg-primary gap-2 p-2 rounded-md cursor-pointer ${className}`}
             onClick={onClick}
         >
             <ColoredSvg 
