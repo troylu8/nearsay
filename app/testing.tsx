@@ -13,16 +13,14 @@ export default function Testing() {
     
     return (
         <>
-            {/* <div 
+            <div 
                 className="fixed left-3 top-1/2 flex flex-col bg-primary p-3 text-xs"
                 onClick={() => sendNotif("asdaaaaaaaaaaaaaaa")}
             >
                 <p>uid: {uid ?? "null"}</p>
                 <p>username: {username ?? "null"}</p>
                 <p>avatar: {avatar} {avatarNum}</p>
-            </div> */}
+            </div>
         </>
     );
 }
-// cache loc for reloads/newtabs
-// vertical gap in avatar selector

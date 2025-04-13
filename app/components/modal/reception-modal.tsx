@@ -30,6 +30,8 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
 
     const [usernameErr, setUsernameErr] = useState<string | null>(null);
     const [passwordErr, setPasswordErr] = useState<string | null>(null);
+    
+    const [submitClicked, setSubmitClicked] = useState(false);
 
     function verifyUsernameInput(newUsername: string) {
         if (newUsername.length == 0) {
@@ -74,10 +76,11 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
 
 
     async function handleSubmit() {
+        if (submitClicked) return;
+        setSubmitClicked(true);
         
         // submit was clicked when signing in
         if (currentlySigningIn && verifyUsernameInput(username)) {
-            //TODO: loading
 
             try {
                 await signIn(username, password);
@@ -111,6 +114,8 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
                 else                        sendNotification("server error");
             }
         }
+        
+        setSubmitClicked(false);
     }
 
     return (
@@ -156,7 +161,7 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
                 {(usernameErr || passwordErr) && <p className="text-failure"> (;°Д°) {usernameErr ?? passwordErr}</p>}
                 
                 <button onClick={handleSubmit} className="self-center px-10 text-lg">
-                    {currentlySigningIn ? "sign in" : "create"}
+                    {submitClicked? "..." : currentlySigningIn ? "sign in" : "create"}
                 </button>
                 <button onClick={switchModes} className="bg-background text-primary underline">
                     {currentlySigningIn ? "create an account" : "i already have an account"}

@@ -70,8 +70,7 @@ function AvatarEditor() {
 function DeleteAccount() {
     const username = useUsername()[0];
     const sendNotification = useNotifications();
-    const exitWorld = useAccountControls()[3];
-    const presence = usePresence()[0];
+    const deleteAccount = () => useAccountControls()[2](true);
     const router = useRouter();
 
     const [confirmation, setConfirmation] = useState("");
@@ -82,7 +81,7 @@ function DeleteAccount() {
         if (confirmation != CONFIRM_MESSAGE) return;
 
         try {
-            await exitWorld(presence, true);
+            await deleteAccount();
             sendNotification("account successfully deleted");
             router.replace("/", {scroll: false});
         }

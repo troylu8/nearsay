@@ -30,8 +30,8 @@ const LIFETIME_WEIGHT: Readonly<Record<Vote, number>> = {
 };
 const COLOR: Readonly<Record<Vote, string>> = {
     [Vote.NONE]: "#000",
-    [Vote.LIKE]: "var(--color-star)",
-    [Vote.DISLIKE]: "var(--color-dislike)",
+    [Vote.LIKE]: "var(--color-success)",
+    [Vote.DISLIKE]: "var(--color-failure)",
 };
 
 export type Post = {
@@ -61,22 +61,26 @@ type Props = {
     params: Promise<{ post_id: string }>;
 };
 export default function Page({ params }: Props) {
-    const router = useRouter();
     
     const jwt = useJWT();
     
     const username = useUsername()[0];
-
+    
     const sendNotification = useNotifications();
-
+    
     const { post_id } = use(params);
     const { data, error, isLoading } = usePost(jwt, post_id);
-
+    
     const [_, updatePostPos] = usePostPos();
-
+    
     const requestedVote = useSearchParams().get("set-vote") as Vote;
     const [vote, setVote] = useState(Vote.NONE);
-
+    const voteReqInProgressRef = useRef(false);
+    
+    const router = useRouter();
+    const [clicksToDel, setClicksToDel] = useState(0);
+    const resetClicksRef = useRef<NodeJS.Timeout | null>(null);
+    
     // if a vote was requested, act as if the user did that vote immediately
     useEffect(() => {
         if (requestedVote) handleVote(requestedVote);
@@ -93,17 +97,14 @@ export default function Page({ params }: Props) {
     
     //TODO: error page instead of not found page
     if (error) return <NotFound />;
-    if (!data || isLoading) return <></>; //TODO: loading
+    if (!data || isLoading) return <></>; //TODO: loading page
     const { post } = data;
 
-    function handleVote(nextVote: Vote) {
+    async function handleVote(nextVote: Vote) {
 
         if (nextVote == vote) return;
-
-        if (jwt && username) {
-            sendVoteRequest(jwt, post_id, nextVote);
-            setVote(nextVote);
-        } else {
+        
+        if (!jwt || !username) {
             sendNotification(
                 <p>
                     <Link 
@@ -116,13 +117,40 @@ export default function Page({ params }: Props) {
                     &nbsp; to {ACTION_NAME[nextVote]} this post.
                 </p>
             );
+            return;
         }
+        
+        if (voteReqInProgressRef.current) return;
+            
+        voteReqInProgressRef.current = true;
+        
+        const resp = await sendVoteRequest(jwt, post_id, nextVote)
+        
+        if (resp.ok)    setVote(nextVote);
+        else            sendNotification("server error");
+        
+        voteReqInProgressRef.current = false;
     }
     
+    
     async function handleDeletePost() {
-        await socketfetch("delete-post", {jwt, post_id});
-        router.replace("/", {scroll: false});
-        sendNotification("post deleted");
+        if (clicksToDel == 4) {
+            await socketfetch("delete-post", {jwt, post_id});
+            router.replace("/", {scroll: false});
+            sendNotification("post deleted");
+        }
+        else {
+            setClicksToDel(x => x + 1);
+            
+            if (resetClicksRef.current) 
+                clearTimeout(resetClicksRef.current);
+            
+            resetClicksRef.current = setTimeout(() => {
+                setClicksToDel(0);
+                resetClicksRef.current = null;
+            }, 3000);
+        }
+        
     }
 
     const { likes, dislikes } = data.post;
@@ -147,13 +175,18 @@ export default function Page({ params }: Props) {
                     <p className="my-3 select-text"> {post.authorName ?? "[anonymous]"} </p>
                     
                     {username != null && post.authorName === username &&
-                        <div className="grow flex flex-row-reverse">
+                        <div className="grow flex flex-row-reverse gap-3 items-center">
                             <UIButton
                                 src="/icons/trash.svg"
                                 iconSize={16}
                                 onClick={handleDeletePost}
-                                className="justify-self-end p-1!"
+                                className="justify-self-end p-1! bg-failure!"
                             />
+                            { resetClicksRef.current != null &&
+                                <p className="text-failure text-sm text-right"> 
+                                    {clicksToDel}/5
+                                </p>
+                            }
                         </div>
                     }
                 </div>
@@ -238,7 +271,7 @@ function ExpiryIcon({ baseExpiry = 0, vote }: ExpiryIconProps) {
             <PropertyIcon src="/icons/clock.svg" value={toTimeDisplay(msTilDay(baseExpiry + LIFETIME_WEIGHT[vote])) + " left"} />
             {note && (
                 <p 
-                    className="absolute bottom-full left-1/2 -translate-x-1/2" 
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 text-nowrap" 
                     style={{ color: COLOR[vote] }}
                 >
                     {note}

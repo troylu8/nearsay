@@ -17,9 +17,8 @@ const AvatarContext = createContext<
 
 type SignUp = (username: string, password: string, avatar?: number) => Promise<void>
 type SignIn = (username: string, password: string) => Promise<void>
-type EnterWorld = () => Promise<void>
-type ExitWorld = (stayOnline?: boolean, deleteAccount?: boolean) => Promise<void>
-const AccountControlsContext = createContext<[SignUp, SignIn, EnterWorld, ExitWorld] | null>(null);
+type SignOut = (deleteAccount?: boolean) => Promise<void>
+const AccountControlsContext = createContext<[SignUp, SignIn, SignOut] | null>(null);
 
 export function usePresence() { return useContext(PresenceContext)!; }
 export function useJWT() { 
@@ -100,7 +99,10 @@ export default function AccountContextProvider({ children }: Props) {
     async function signUp(username: string, password: string, avatar?: number) {
         password = hash(password);
         
-        if (avatar == undefined) await socketfetch("sign-up-from-guest", {guest_jwt: jwt, username, password })
+        if (avatar == undefined) {
+            await socketfetch("sign-up-from-guest", {guest_jwt: jwt, username, password });
+            localStorage.setItem("jwt", jwt!);
+        }
         else {
             const nextJWT = await socketfetch<string>("sign-up", {username, password, avatar, pos: geolocation});
             setJWT(nextJWT);
@@ -127,7 +129,6 @@ export default function AccountContextProvider({ children }: Props) {
     async function enterWorld() {
         if (!geolocation) return;
         if (jwt) {
-            console.log("enter-world", jwt);
             await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation) });
         }
         else    enterWorldAsGuest(avatar);
@@ -136,11 +137,17 @@ export default function AccountContextProvider({ children }: Props) {
         if (!jwt) return;
 
         let guest_jwt = await socketfetch<string | null>("exit-world", { jwt, stay_online: stayOnline, delete_account: deleteAccount});
+        
+        // stayed online as guest
         if (guest_jwt) {
             setUsername(null);
             setJWT(guest_jwt);
+            localStorage.removeItem("jwt");
         }
-        else clearAccountInfo();
+    }
+    async function signOut(deleteAccount?: boolean) {
+        await exitWorld(undefined, deleteAccount);
+        clearAccountInfo();
     }
     
     // send move event with jwt 
@@ -182,22 +189,35 @@ export default function AccountContextProvider({ children }: Props) {
         const savedPresence = localStorage.getItem("invisible") == null;
         setPresenceState(savedPresence);
         
-        
-        
         if (savedJWT == null) signInAsGuest(savedPresence);
         else {
-            console.log("signing in as user");
-            fetch(`${SERVER_URL}/users/id/${parseJwt(savedJWT).uid}`)
-            .then(res => res.json())
-            .then((user: {avatar: number, username: string}) => {
-                setJWT(savedJWT);
-                setAvatar(user.avatar);
-                setUsername(user.username);
-            })
-            .catch(() => {
+            console.log("signing in from jwt");
+            
+            type SignInFromJWTResp = {username: string, avatar: number};
+            
+            function initAccInfo({username, avatar}: SignInFromJWTResp) {
+                setJWT(savedJWT!);
+                setUsername(username);
+                setAvatar(avatar);
+            }
+             
+            try {
+                if (savedPresence) {
+                    onceGeolocationReady(async pos => {
+                        await socketfetch<SignInFromJWTResp>("sign-in-from-jwt", {jwt: savedJWT, pos: toArrayCoords(pos)})
+                        .then(initAccInfo);
+                    });
+                }
+                else {
+                    socketfetch<SignInFromJWTResp>("sign-in-from-jwt", {jwt: savedJWT})
+                    .then(initAccInfo)
+                }
+            }
+            catch (e) {
                 console.log("err signing in as user, signing as guest instead");
+                console.error(e);
                 signInAsGuest(savedPresence);
-            });
+            }
         }
     }, []);
     
@@ -216,7 +236,7 @@ export default function AccountContextProvider({ children }: Props) {
             <SelfIdContext.Provider value={selfId}>
                 <UsernameContext.Provider value={[username, changeUsername]}>
                     <AvatarContext.Provider value={[EMOTICONS[avatar], avatar, changeAvatar]}>
-                        <AccountControlsContext.Provider value={[signUp, signIn, enterWorld, exitWorld]}>
+                        <AccountControlsContext.Provider value={[signUp, signIn, signOut]}>
                             {children}
                         </AccountControlsContext.Provider>
                     </AvatarContext.Provider>

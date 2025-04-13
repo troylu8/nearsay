@@ -14,9 +14,6 @@
 
     --color-post: #518ab3;
     --color-cluster: #7d539b;
-
-    --color-star: var(--color-yellow-400);
-    --color-dislike: var(--color-failure);
 }
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,

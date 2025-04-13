@@ -14,11 +14,10 @@ export default function HamburgerMenu() {
     const invisible = !signedOut && presence;
     
     const [username, _] = useUsername();
-    const exitWorld = useAccountControls()[3];
+    const signOut = useAccountControls()[2];
 
     async function handleSignOut() {
-        await exitWorld(true);
-        localStorage.removeItem("jwt");
+        await signOut();
         sendNotification("signed out!");
     }
     
