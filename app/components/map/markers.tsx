@@ -85,6 +85,8 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         let req = socketfetch<Markers>("view-shift", currViewData);
         markersReq.current = req;
         
+        console.log("req", currViewData);
+        
         req.then(markers => {
             // if a new request has been made before this one finishes, ignore the results
             if (markersReq.current != req) return; 
@@ -92,6 +94,8 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             // sort users and posts by id, so that receiving the same items in a different order won't trigger rerender
             markers.posts.sort((a, b) => a.id < b.id? -1 : 1);
             markers.users.sort((a, b) => a.id < b.id? -1 : 1);
+            
+            console.log("recv", markers);
             
             setMarkers(markers);
             markersReq.current = null;
@@ -125,7 +129,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
                 insertUserOrPost(draft.posts, newPost);
             });
         }
-        function handleUserEdit(update: {id: string, avatar?: number, username?: string}) {
+        function handleUserUpdate(update: {id: string, avatar?: number, username?: string}) {
             setMarkers(draft => {
                 const user = draft.users.find(u => u.id == update.id);
                 if (!user) return;
@@ -137,13 +141,13 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         socket.on("user-enter", handleUserEnter);
         socket.on("user-leave", handleUserLeave);
         socket.on("new-post", handleNewPost);
-        socket.on("user-edit", handleUserEdit);
+        socket.on("user-update", handleUserUpdate);
         
         return () => { 
             socket.removeListener("user-enter", handleUserEnter); 
             socket.removeListener("user-leave", handleUserLeave); 
             socket.removeListener("new-post", handleNewPost); 
-            socket.removeListener("user-edit", handleUserEdit);
+            socket.removeListener("user-update", handleUserUpdate);
         }
     }, []);
     

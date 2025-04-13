@@ -32,8 +32,12 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
     const [passwordErr, setPasswordErr] = useState<string | null>(null);
 
     function verifyUsernameInput(newUsername: string) {
-        if (newUsername == "") {
-            setUsernameErr("username cannot be empty");
+        if (newUsername.length == 0) {
+            setUsernameErr("username can't be empty");
+            return false;
+        }
+        else if (newUsername.length > 50) {
+            setUsernameErr("username too long");
             return false;
         }
         else {
@@ -82,11 +86,13 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
                 onSuccess!();
             }
             catch (err: any) {
-                console.error(err);
                 if (err.code == 401)            setPasswordErr("wrong password");
                 else if (err.code == 404)       setUsernameErr("username doesnt exist");
                 else if (err.code == 500)       sendNotification("server error");
-                else                            sendNotification(`unexpected error: ${err}`);
+                else {
+                    console.error(err);
+                    sendNotification(`unexpected error: ${err}`);
+                }
             }
         }
 
@@ -109,49 +115,53 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
 
     return (
         <Modal title={currentlySigningIn ? "sign in" : "create an account"}>
-            <BindedInput
-                bind={[username, username => {
-                    setUsername(username);
-                    verifyUsernameInput(username);
-                }]}
-                placeholder="username"
-                valid={usernameErr == null}
-            />
-            <BindedInput
-                //TODO: type="password"
-                bind={[
-                    password,
-                    password => {
-                        setPassword(password);
-                        if (!currentlySigningIn) verifyPasswordsInput(password, passwordRepeated);
-                    },
-                ]}
-                placeholder="password"
-                valid={passwordErr == null}
-            />
+            <div className="flex flex-col gap-3">
+                <div>
+                    <h3> username </h3>
+                    <BindedInput
+                        bind={[username, username => {
+                            setUsername(username);
+                            verifyUsernameInput(username);
+                        }]}
+                        placeholder="username"
+                        valid={usernameErr == null}
+                        className="w-full"
+                        maxChars={50}
+                        onSubmit={handleSubmit}
+                    />
+                </div>
+                <div>
+                    <h3> password </h3>
+                    <BindedInput
+                        type="password"
+                        bind={[password,setPassword]}
+                        placeholder="password"
+                        valid={passwordErr == null}
+                        className="w-full"
+                        onSubmit={handleSubmit}
+                    />
+                </div>
 
-            {!currentlySigningIn && 
-                <BindedInput
-                    //TODO: type="password"
-                    bind={[
-                        passwordRepeated,
-                        (repeated) => {
-                            setPasswordRepeated(repeated);
-                            verifyPasswordsInput(password, repeated);
-                        },
-                    ]}
-                    placeholder="repeat password"
-                    valid={passwordErr == null}
-                />
-            }
-
-            <p>{usernameErr ?? passwordErr}</p>
-            <button onClick={handleSubmit}>
-                {currentlySigningIn ? "sign in" : "create"}
-            </button>
-            <button onClick={switchModes}>
-                {currentlySigningIn ? "create an account" : "i already have an account"}
-            </button>
+                {!currentlySigningIn && 
+                    <BindedInput
+                        type="password"
+                        bind={[passwordRepeated,setPasswordRepeated]}
+                        placeholder="repeat password"
+                        valid={passwordErr == null}
+                        className="w-full"
+                        onSubmit={handleSubmit}
+                    />
+                }
+        
+                {(usernameErr || passwordErr) && <p className="text-failure"> (;°Д°) {usernameErr ?? passwordErr}</p>}
+                
+                <button onClick={handleSubmit} className="self-center px-10 text-lg">
+                    {currentlySigningIn ? "sign in" : "create"}
+                </button>
+                <button onClick={switchModes} className="bg-background text-primary underline">
+                    {currentlySigningIn ? "create an account" : "i already have an account"}
+                </button>
+            </div>
         </Modal>
     );
 }

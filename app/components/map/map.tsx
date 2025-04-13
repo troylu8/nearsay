@@ -67,8 +67,8 @@ function MapInner() {
                 onCameraChanged={handleCameraChanged}
             >
                 {bounds && <Markers zoomLevel={zoomLevel} bounds={bounds} />}
+                <MapUI />
             </GoogleMap>
-            <MapUI />
             <PanToUserOnceGeolocationReady />
         </>
     )

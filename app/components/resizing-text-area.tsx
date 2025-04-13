@@ -1,13 +1,19 @@
 type Props = {
     placeholder: string;
     value?: string;
+    maxChars?: number;
     onInput?: (value: string) => any;
 };
 export default function ResizingTextArea({
     placeholder,
-    value,
+    value = "",
+    maxChars,
     onInput,
 }: Props) {
+    
+    const showCharLimit = (maxChars != undefined) && (value.length > maxChars - 10);
+    const limitExceeded = (maxChars != undefined) && (value.length > maxChars);
+    
     function resizeToFitText(textarea: HTMLTextAreaElement) {
         textarea.style.height = "auto";
         textarea.style.height = textarea.scrollHeight + "px";
@@ -19,14 +25,27 @@ export default function ResizingTextArea({
     }
 
     return (
-        <textarea
-            placeholder={placeholder}
-            onInput={handleInput}
-            className="
-                    m-5 p-3 rounded-md 
-                    resize-none overflow-y-hidden
-                    focus:outline-hidden focus:outline-solid focus:outline-2 focus:outline-black"
-            value={value}
-        />
+        <div className="relative grow">
+            
+            <textarea
+                placeholder={placeholder}
+                onInput={handleInput}
+                className={`
+                        p-3 rounded-md w-full h-full
+                        resize-none overflow-y-hidden
+                        ${showCharLimit && "pb-15"}
+                `}
+                value={value}
+            />
+            {   showCharLimit && 
+                <p className={`
+                    absolute right-3 bottom-3 
+                    bg-background ${limitExceeded && "text-failure"} rounded-md px-1
+                    text-sm
+                `}>
+                    {value.length}/{maxChars}
+                </p>
+            }
+        </div>
     );
 }

@@ -1,4 +1,4 @@
-import { MouseEvent } from "react";
+import { MouseEvent, ReactNode } from "react";
 
 type Props = Readonly<{
     src: string;
@@ -32,4 +32,29 @@ export default function ColoredSvg({
             className={className}
         ></div>
     );
+}
+
+type UIButtonProps = {
+    src: string,
+    iconSize: number,
+    onClick: () => any,
+    children?: ReactNode,
+    className?: string
+}
+export function UIButton({ src, iconSize, onClick, className, children }: UIButtonProps) {
+    return (
+        <div 
+            className={` ${className} flex items-center bg-primary gap-2 p-2 rounded-md cursor-pointer`}
+            onClick={onClick}
+        >
+            <ColoredSvg 
+                src={src} 
+                width={iconSize} 
+                height={iconSize} 
+                color="var(--color-background)"
+            />
+            
+            {children && <label className="cursor-pointer text-background" style={{lineHeight: iconSize + "px"}}> { children } </label> }
+        </div>
+    )
 }

@@ -7,20 +7,22 @@ export default function Testing() {
 
     const uid = useUid();
     const username = useUsername()[0];
-    const avatar = useAvatar()[0];
+    const [avatar, avatarNum] = useAvatar();
     
     const sendNotif = useNotifications();
     
     return (
         <>
-            <div 
+            {/* <div 
                 className="fixed left-3 top-1/2 flex flex-col bg-primary p-3 text-xs"
                 onClick={() => sendNotif("asdaaaaaaaaaaaaaaa")}
             >
                 <p>uid: {uid ?? "null"}</p>
                 <p>username: {username ?? "null"}</p>
-                <p>avatar: {avatar}</p>
-            </div>
+                <p>avatar: {avatar} {avatarNum}</p>
+            </div> */}
         </>
     );
 }
+// cache loc for reloads/newtabs
+// vertical gap in avatar selector

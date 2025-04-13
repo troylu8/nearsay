@@ -44,7 +44,7 @@ export default function Modal({ title, children, onClose }: Prop) {
                     </h1>
                 </div>
                 
-                <div className="p-3 flex flex-col overflow-y-auto">
+                <div className="p-3 overflow-y-auto  ">
                     {children}
                 </div>
             </div>

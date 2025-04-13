@@ -2,6 +2,7 @@
 
 @theme inline {
     --color-primary: #964f63;
+    --color-secondary: #793682;
     --color-background: #f7f0ed;
 
     --color-success: #658d9f;
@@ -9,7 +10,7 @@
 
     --color-self-avatar: #cc3e47;
     --color-others-avatar: #4a7f60;
-    --color-anonymous-avatar: #793682;
+    --color-anonymous-avatar: var(--color-secondary);
 
     --color-post: #518ab3;
     --color-cluster: #7d539b;
@@ -42,11 +43,19 @@
     }
     button {
         cursor: pointer;
+        background-color: var(--color-primary);
+        border-radius: 6px;
+        padding: 0 8px;
+        color: var(--color-background);
     }
     h2 {
         color: var(--color-primary);
-        margin: 10px 0;
+        margin: 5px 0;
         font-size: large;
+        font-weight: bold;
+    }
+    h3 {
+        color: var(--color-primary);
         font-weight: bold;
     }
     a {
@@ -55,6 +64,31 @@
     }
     a:hover {
         color: var(--color-primary);
+    }
+    input[type="text"],
+    input[type="password"],
+    textarea {
+        border: solid var(--color-primary) 2px;
+        padding: 4px;
+        border-radius: 6px;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    textarea:focus {
+        outline: none;
+        border-color: var(--color-secondary);
+    }
+
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        border-radius: 99999px;
+        background: var(--color-primary);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-secondary);
     }
 
     /* click through containers (flexbox of clickables) allow mouse events to pass through its gaps */

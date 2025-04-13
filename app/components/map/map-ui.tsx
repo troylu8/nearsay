@@ -1,5 +1,5 @@
 import { useMap } from "@vis.gl/react-google-maps";
-import ColoredSvg from "../colored-svg";
+import ColoredSvg, { UIButton } from "../colored-svg";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Circle } from "./circle";
 import { toArrayCoords, useGeolocation } from "../../contexts/geolocation-provider";
@@ -23,30 +23,6 @@ export default function MapUI() {
 }
 
 
-type UIButtonProps = {
-    src: string,
-    iconSize: number,
-    onClick: () => any,
-    children?: ReactNode,
-}
-function UIButton({ src, iconSize, onClick, children }: UIButtonProps) {
-    return (
-        <div 
-            className={`flex items-center bg-primary gap-2 p-2 rounded-md cursor-pointer`}
-            onClick={onClick}
-        >
-            <ColoredSvg 
-                src={src} 
-                width={iconSize} 
-                height={iconSize} 
-                color="var(--color-background)"
-            />
-            
-            {children && <label className="cursor-pointer text-background" style={{lineHeight: iconSize + "px"}}> { children } </label> }
-        </div>
-    )
-}
-
 function ChatButton() {
     const [_, sendChatMsg] = useChat();
 
@@ -61,21 +37,19 @@ function ChatButton() {
     return (
         <>
             <div className="w-full max-w-(--breakpoint-sm) flex gap-3 items-center justify-end click-through-container">
-                <UIButton
-                    src={chatboxVisible? "/icons/x.svg" : "/icons/chat.svg"}
-                    iconSize={20}
-                    onClick={() => setChatboxVisible(!chatboxVisible)}
-                >
-                    {!chatboxVisible && "chat"}
-                </UIButton>
-                
                 {
-                    chatboxVisible && 
+                    chatboxVisible ?
                     <>
+                        <UIButton
+                            src="/icons/x.svg"
+                            iconSize={10}
+                            onClick={() => setChatboxVisible(false)}
+                        />
                         <BindedInput
                             bind={[msg, setMsg]}
-                            className="flex-1 rounded-md border-2 border-primary p-1 bg-background" 
+                            className="flex-1 bg-background" 
                             placeholder="shout to the world..."
+                            maxChars={500}
                             onSubmit={handleSend}
                         />
                         <UIButton
@@ -83,7 +57,14 @@ function ChatButton() {
                             iconSize={20}
                             onClick={handleSend}
                         />
-                    </>
+                    </> :
+                    <UIButton
+                        src="/icons/chat.svg"
+                        iconSize={20}
+                        onClick={() => setChatboxVisible(true)}
+                    >
+                        chat
+                    </UIButton>
                 }
             </div>
         </>

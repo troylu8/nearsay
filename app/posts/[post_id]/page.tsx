@@ -103,10 +103,14 @@ export default function Page({ params }: Props) {
         } else {
             sendNotification(
                 <p>
-                    <Link href={`/sign-up?origin=/posts/${post_id}?set-vote=${nextVote}`} scroll={false}> create an account </Link>
-                    or
-                    <Link href={`/sign-in?origin=/posts/${post_id}?set-vote=${nextVote}`} scroll={false}> sign in </Link>
-                    to {ACTION_NAME[nextVote]} this post.
+                    <Link 
+                        href={`/sign-in?origin=/posts/${post_id}?set-vote=${nextVote}`} 
+                        scroll={false}
+                        className="text-background"
+                    > 
+                        sign in 
+                    </Link>
+                    &nbsp; to {ACTION_NAME[nextVote]} this post.
                 </p>
             );
         }
@@ -126,17 +130,17 @@ export default function Page({ params }: Props) {
     
     return (
         <Modal title="post">
-            <div className="h-full m-5 mb-7 overflow-y-auto">
+            <div className="mx-5">
                 <div className="flex items-center gap-3">
                     <div className={`avatar-frame ${avatarColor}`}> 
                         {post.authorAvatar ?? randomEmoticon(post_id)} 
                     </div>
-                    <p className="my-3 select-auto"> {post.authorName ?? "[anonymous writer]"} </p>
+                    <p className="my-3 select-text"> {post.authorName ?? "[anonymous writer]"} </p>
                 </div>
-                <p className="my-3 select-auto"> {post.body} </p>
+                <p className="my-3 select-text"> {post.body} </p>
 
                 {/* property icons row */}
-                <div className="flex justify-between mt-6">
+                <div className="flex justify-between py-6">
                     <div className="flex gap-3 justify-start">
                         <PropertyIcon 
                             src={vote === Vote.LIKE ? "/icons/star-filled.svg" : "/icons/star.svg"} 

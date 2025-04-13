@@ -110,12 +110,12 @@ export default function AccountContextProvider({ children }: Props) {
         setUsername(username);
     }
     async function signIn(newUsername: string, password: string) {
-        if (username != null) throw new Error(`already signed in as {username}!`);
-
+        if (username != null) throw new Error(`already signed in as ${username}!`);
+        console.log("sending sign in req");
         const { jwt: nextJWT, avatar } = await socketfetch<{jwt: string, avatar: number}>("sign-in", {
             username: newUsername,
             password: hash(password),
-            pos: geolocation,
+            pos: geolocation? toArrayCoords(geolocation) : undefined,
             guest_jwt: jwt
         });
 
@@ -169,7 +169,9 @@ export default function AccountContextProvider({ children }: Props) {
     function signInAsGuest(enterWorld: boolean) {
         clearAccountInfo();
         
-        if (enterWorld) enterWorldAsGuest(randomEmoticonIndex());
+        const avatar = randomEmoticonIndex();
+        setAvatar(avatar);
+        if (enterWorld) enterWorldAsGuest(avatar);
     }
     
     // initialize jwt, avatar, username, presence based on localStorage data
@@ -179,6 +181,7 @@ export default function AccountContextProvider({ children }: Props) {
         
         const savedPresence = localStorage.getItem("invisible") == null;
         setPresenceState(savedPresence);
+        
         
         
         if (savedJWT == null) signInAsGuest(savedPresence);
@@ -196,10 +199,8 @@ export default function AccountContextProvider({ children }: Props) {
                 signInAsGuest(savedPresence);
             });
         }
-            
-    }, []);
-    
-    useEffect(() => {
+        
+        
         const onExit = () => exitWorld(false);
         window.addEventListener("beforeunload", onExit);
         return () => window.removeEventListener("beforeunload", onExit);
