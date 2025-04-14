@@ -1,41 +1,31 @@
+
 type Props = {
     placeholder: string;
-    value?: string;
+    bind: [string, (nextText: string) => any];
     maxChars?: number;
-    onInput?: (value: string) => any;
 };
-export default function ResizingTextArea({
+export default function LimitedTextArea({
     placeholder,
-    value = "",
+    bind,
     maxChars,
-    onInput,
 }: Props) {
+    const [text, setText] = bind;
     
-    const showCharLimit = (maxChars != undefined) && (value.length > maxChars - 10);
-    const limitExceeded = (maxChars != undefined) && (value.length > maxChars);
-    
-    function resizeToFitText(textarea: HTMLTextAreaElement) {
-        textarea.style.height = "auto";
-        textarea.style.height = textarea.scrollHeight + "px";
-    }
-
-    function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
-        resizeToFitText(e.currentTarget);
-        if (onInput) onInput(e.currentTarget.value);
-    }
+    const showCharLimit = (maxChars != undefined) && (text.length > maxChars - 10);
+    const limitExceeded = (maxChars != undefined) && (text.length > maxChars);
 
     return (
-        <div className="relative grow">
+        <div className="relative grow max-h-full">
             
             <textarea
                 placeholder={placeholder}
-                onInput={handleInput}
+                onInput={e => setText(e.currentTarget.value)}
                 className={`
                         p-3 rounded-md w-full h-full
-                        resize-none overflow-y-hidden
+                        resize-none min-h-[50vh]
                         ${showCharLimit && "pb-15"}
                 `}
-                value={value}
+                value={text}
             />
             {   showCharLimit && 
                 <p className={`
@@ -43,7 +33,7 @@ export default function ResizingTextArea({
                     bg-background ${limitExceeded && "text-failure"} rounded-md px-1
                     text-sm
                 `}>
-                    {value.length}/{maxChars}
+                    {text.length}/{maxChars}
                 </p>
             }
         </div>

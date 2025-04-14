@@ -85,7 +85,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         let req = socketfetch<Markers>("view-shift", currViewData);
         markersReq.current = req;
         
-        console.log("req", currViewData);
+        // console.log("req", currViewData);
         
         req.then(markers => {
             // if a new request has been made before this one finishes, ignore the results
@@ -95,7 +95,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             markers.posts.sort((a, b) => a.id < b.id? -1 : 1);
             markers.users.sort((a, b) => a.id < b.id? -1 : 1);
             
-            console.log("recv", markers);
+            // console.log("recv", markers);
             
             setMarkers(markers);
             markersReq.current = null;
@@ -263,6 +263,7 @@ type ClusterMarkerProps = {
 }
 const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => {
     const mouseDownPosRef = useRef<[number, number] | null>(null);
+    const sendNotif = useNotifications();
     
     function handleMouseDown(x: number, y: number) {
         mouseDownPosRef.current = [x, y];
@@ -290,9 +291,18 @@ const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => {
                 cluster.blurb? 
                     <div 
                         className="post-marker p-[6px] cursor-pointer" 
-                        onMouseDown={e => handleMouseDown(e.clientX, e.clientY)}
-                        onMouseUp={e => handleMouseUp(e.clientX, e.clientY)}
-                        onClickCapture={e => e.stopPropagation()}
+                        onTouchStart={e => {
+                            handleMouseDown(e.targetTouches.item(0).clientX, e.targetTouches.item(0).clientY);
+                        }}
+                        onMouseDown={e => {
+                            handleMouseDown(e.clientX, e.clientY)
+                        }}
+                        onTouchEnd={e => {
+                            handleMouseUp(e.changedTouches.item(0).clientX, e.changedTouches.item(0).clientY)
+                        }}
+                        onMouseUp={e => {
+                            handleMouseUp(e.clientX, e.clientY)
+                        }}
                     >
                         <ColoredSvg 
                             src="/icons/message-dots.svg"

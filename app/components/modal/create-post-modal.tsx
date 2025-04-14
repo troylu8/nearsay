@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Modal from "./modal";
-import ResizingTextArea from "../resizing-text-area";
+import LimitedTextArea from "../resizing-text-area";
 import { socketfetch } from "@/lib/server";
 import { UIButton } from "../colored-svg";
 import { useJWT } from "@/app/contexts/account-providers";
@@ -23,12 +23,11 @@ export default function CreatePostModal({ pos, onPost, onCancel }: Props) {
 
     return (
         <Modal title="leave a note" onClose={() => {if (onCancel) onCancel()}}>
-            <div className="flex flex-col gap-3">
-                <ResizingTextArea
-                    placeholder="tell everyone what you have to say..."
-                    value={body}
+            <div className="flex flex-col gap-3 max-h-full">
+                <LimitedTextArea
+                    placeholder="tell the world what you think..."
+                    bind={[body, setBody]}
                     maxChars={500}
-                    onInput={setBody}
                 />
                 
                 <UIButton

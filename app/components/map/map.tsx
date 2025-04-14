@@ -46,7 +46,6 @@ function MapInner() {
                 lat: postPos![1],
             };
             if (!map?.getBounds()?.contains(postPosLatLng)) {
-                console.log("panning to post");
                 map?.panTo(postPosLatLng);
             }
         }
@@ -63,6 +62,7 @@ function MapInner() {
                 disableDefaultUI
                 keyboardShortcuts={false}
                 onCameraChanged={handleCameraChanged}
+                clickableIcons={false}
             >
                 {bounds && map && <Markers zoomLevel={map.getZoom()!} bounds={bounds} />}
                 <MapUI />

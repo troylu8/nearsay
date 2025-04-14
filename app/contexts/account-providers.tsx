@@ -88,7 +88,6 @@ export default function AccountContextProvider({ children }: Props) {
     const [geolocation, onceGeolocationReady] = useGeolocation();
 
     function clearAccountInfo() {
-        console.log("clearing acc data");
         setSelfId(null);
         setUsername(null);
         localStorage.removeItem("jwt");
@@ -113,12 +112,12 @@ export default function AccountContextProvider({ children }: Props) {
     }
     async function signIn(newUsername: string, password: string) {
         if (username != null) throw new Error(`already signed in as ${username}!`);
-        console.log("sending sign in req");
+        
         const { jwt: nextJWT, avatar } = await socketfetch<{jwt: string, avatar: number}>("sign-in", {
             username: newUsername,
             password: hash(password),
-            pos: geolocation? toArrayCoords(geolocation) : undefined,
-            guest_jwt: jwt
+            pos: (geolocation && presence)? toArrayCoords(geolocation) : undefined,
+            guest_jwt: presence? jwt : undefined
         });
 
         setJWT(nextJWT);
@@ -126,9 +125,20 @@ export default function AccountContextProvider({ children }: Props) {
         setUsername(newUsername);
         setAvatar(avatar);
     }
+    
+    function enterWorldAsGuest(avatar: number) {
+        onceGeolocationReady(coords => {
+            socketfetch<string>("enter-world-as-guest", { 
+                pos: toArrayCoords(coords), 
+                avatar
+            })
+            .then(nextJWT => setJWT(nextJWT));
+        });
+    }
+    
     async function enterWorld() {
         if (!geolocation) return;
-        if (jwt) {
+        if (username) {
             await socketfetch("enter-world", { jwt, pos: toArrayCoords(geolocation) });
         }
         else    enterWorldAsGuest(avatar);
@@ -146,7 +156,7 @@ export default function AccountContextProvider({ children }: Props) {
         }
     }
     async function signOut(deleteAccount?: boolean) {
-        await exitWorld(undefined, deleteAccount);
+        if (presence) await exitWorld(true, deleteAccount);
         clearAccountInfo();
     }
     
@@ -162,16 +172,7 @@ export default function AccountContextProvider({ children }: Props) {
         return () => navigator.geolocation?.clearWatch(watchId);
     }, [jwt]);
     
-    function enterWorldAsGuest(avatar: number) {
-        onceGeolocationReady(coords => {
-            console.log("signing in as guest");
-            socketfetch<string>("sign-up-as-guest", { 
-                pos: toArrayCoords(coords), 
-                avatar
-            })
-            .then(nextJWT => setJWT(nextJWT));
-        });
-    }
+    
     
     function signInAsGuest(enterWorld: boolean) {
         clearAccountInfo();
@@ -191,7 +192,6 @@ export default function AccountContextProvider({ children }: Props) {
         
         if (savedJWT == null) signInAsGuest(savedPresence);
         else {
-            console.log("signing in from jwt");
             
             type SignInFromJWTResp = {username: string, avatar: number};
             
@@ -214,7 +214,7 @@ export default function AccountContextProvider({ children }: Props) {
                 }
             }
             catch (e) {
-                console.log("err signing in as user, signing as guest instead");
+                console.error("err signing in as user, signing as guest instead");
                 console.error(e);
                 signInAsGuest(savedPresence);
             }

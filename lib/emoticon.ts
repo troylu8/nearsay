@@ -8,10 +8,10 @@
 // emoticon index = line number - 10
 export const EMOTICONS: Readonly<string[]> = [
     "(T^T)",
-    "(^▽^)",
+    "(^v^)",
     "(-3-)",
-    "(>ᴗ<)",
-    "(╹ᴗ╹)",
+    "(>w<)",
+    "(O_O)",
 ];
 export function randomEmoticonIndex(seed?: string) {
     if (seed) {

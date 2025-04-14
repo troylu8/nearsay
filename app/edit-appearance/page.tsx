@@ -32,7 +32,7 @@ function AvatarEditor() {
             await changeAvatar(next);
         }
         catch (e) {
-            console.log(e);
+            console.error(e);
             sendNotification("server error when changing avatar");
         }
     }

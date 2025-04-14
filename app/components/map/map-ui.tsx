@@ -48,7 +48,7 @@ function ChatButton() {
                         <BindedInput
                             bind={[msg, setMsg]}
                             className="flex-1 bg-background" 
-                            placeholder="shout to the world..."
+                            placeholder="type chat msg..."
                             maxChars={500}
                             onSubmit={handleSend}
                         />
@@ -99,7 +99,6 @@ function PlaceNoteButton() {
         
         // if user is offscreen OR too zoomed out
         if (!map.getBounds()?.contains(userPos) || map.getZoom()! < 15) {
-            console.log("panning to user");
             map.panTo(userPos);
             map.setZoom(17);
         }

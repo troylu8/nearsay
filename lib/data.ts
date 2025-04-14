@@ -1,4 +1,3 @@
-import path from "path";
 import { SERVER_URL } from "./server";
 import { Vote } from "./types";
 
@@ -8,14 +7,14 @@ export async function fetchPost(jwt: string | undefined, post_id: string) {
     if (jwt) headers["Authorization"] = `Bearer ${jwt}`;
     if (sessionStorage.getItem(post_id) == null) headers["Increment-View"] = "";
     
-    const resp = await fetch(path.join(SERVER_URL, "posts", post_id), {headers} );
+    const resp = await fetch(`${SERVER_URL}/posts/${post_id}`, {headers} );
     if (resp.ok) sessionStorage.setItem(post_id, "");
     
     return await resp.json();
 }
 
 export function sendVoteRequest(jwt: string, post_id: string, vote: Vote) {
-    return fetch(path.join(SERVER_URL, "vote", post_id), {
+    return fetch(`${SERVER_URL}/vote/${post_id}`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + jwt },
         body: vote,

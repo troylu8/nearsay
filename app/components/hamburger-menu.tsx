@@ -9,9 +9,7 @@ import { useAccountControls, usePresence, useJWT, useUsername } from "../context
 
 export default function HamburgerMenu() {
     
-    const signedOut = useJWT() == undefined;
     const [presence, setPresence] = usePresence();
-    const invisible = !signedOut && presence;
     
     const [username, _] = useUsername();
     const signOut = useAccountControls()[2];
@@ -37,8 +35,8 @@ export default function HamburgerMenu() {
             onMouseDown={e => e.stopPropagation()}
             onClick={() => setShowDropdown(!showDropdown)}
         >
-            <div className={` w-3 h-3 rounded-full ${invisible? "bg-green-600" : "border-gray-300 border-[3px]"}`}></div>
-            <p> {signedOut? "[signed out]" : username ?? "[signed in as guest]"} </p>
+            <div className={` w-3 h-3 rounded-full ${presence? "bg-green-600" : "border-gray-300 border-[3px]"}`}></div>
+            <p> {username ?? "[signed in as guest]"} </p>
             <div className="relative bg-primary rounded-md p-2">
                 <ColoredSvg 
                     src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} 
