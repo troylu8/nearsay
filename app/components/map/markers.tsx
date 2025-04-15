@@ -14,6 +14,7 @@ import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provid
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import ColoredSvg from "../colored-svg";
 import { useImmer } from "use-immer";
+import { fetchOnlineUser } from "@/lib/data";
 
 type UserPOI = {
     id: string,
@@ -123,6 +124,14 @@ export default function Markers({ zoomLevel, bounds }: Props) {
                 };
             });
         }
+        function handleUserUpdate(update: {id: string, avatar?: number, username?: string}) {
+            setMarkers(draft => {
+                const user = draft.users.find(u => u.id == update.id);
+                if (!user) return;
+                if (update.avatar != null) user.avatar = update.avatar;
+                if (update.username != null) user.username = update.username;
+            });
+        }
         function handleNewPost(newPost: Cluster) {
             setMarkers( draft => {
                 insertUserOrPost(draft.posts, newPost);
@@ -136,41 +145,64 @@ export default function Markers({ zoomLevel, bounds }: Props) {
                 };
             });
         }
-        function handleUserUpdate(update: {id: string, avatar?: number, username?: string}) {
-            setMarkers(draft => {
-                const user = draft.users.find(u => u.id == update.id);
-                if (!user) return;
-                if (update.avatar != null) user.avatar = update.avatar;
-                if (update.username != null) user.username = update.username;
-            });
-        }
         socket.on("user-enter", handleUserEnter);
         socket.on("user-leave", handleUserLeave);
+        socket.on("user-update", handleUserUpdate);
         socket.on("new-post", handleNewPost);
         socket.on("post-delete", handlePostDelete);
-        socket.on("user-update", handleUserUpdate);
         
         return () => { 
             socket.removeListener("user-enter", handleUserEnter); 
             socket.removeListener("user-leave", handleUserLeave); 
+            socket.removeListener("user-update", handleUserUpdate);
             socket.removeListener("new-post", handleNewPost); 
             socket.removeListener("post-delete", handlePostDelete); 
-            socket.removeListener("user-update", handleUserUpdate);
         }
+    }, []);
+    
+    useEffect(() => {
+        function handleUserMove({id, pos}: {id: string, pos: Pos}) {
+            setMarkers( draft => {
+                const user = draft.users.find(u => u.id == id);
+                
+                if (user) {
+                    
+                    // user moved around within view
+                    if (withinSplitRect(splitView, pos[0], pos[1])) 
+                        user.pos = pos;
+                    
+                    // user moved out of view
+                    else return {
+                        posts: draft.posts,
+                        users: draft.users.filter(u => u.id != uid)
+                    };
+                }
+                
+                // user moved into view
+                else {
+                    fetchOnlineUser(id)
+                    .then(({avatar, username}) => {
+                        insertUserOrPost(draft.users, {id, pos, avatar, username});
+                    })
+                }
+            });
+        }
+        socket.on("user-move", handleUserMove);
+        return () => { socket.removeListener("user-move", handleUserMove); }
     }, []);
     
     return (
         <>
-            {/* <TestDisplay key="test" view={splitView} viewShiftData={currData}  /> */}
+            <TestDisplay key="test" view={splitView} viewShiftData={currViewData}  />
             <SelfMarker key="you" chatMsgs={chatMsgs["you"]} />
             {
                 markers.users
-                .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
+                // .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
                 .map(u => <UserMarker key={u.id} user={u} chatMsgs={chatMsgs[u.id]} />)
             }
             {
                 markers.posts
-                .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
+                // .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
                 .map(cluster => <ClusterMarker key={cluster.id} cluster={cluster} onClick={id => router.replace("/posts/" + id, { scroll: false })} />)
             }
         </>
@@ -263,7 +295,6 @@ type ClusterMarkerProps = {
 }
 const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => {
     const mouseDownPosRef = useRef<[number, number] | null>(null);
-    const sendNotif = useNotifications();
     
     function handleMouseDown(x: number, y: number) {
         mouseDownPosRef.current = [x, y];
@@ -310,7 +341,7 @@ const ClusterMarker = memo( ({cluster, onClick}: ClusterMarkerProps) => {
                             height={25} 
                             color="white"
                         />
-                        <p className="[--outline-color:var(--color-post)] text-outline"> "{cluster.blurb}" </p>
+                        <p className="[--outline-color:var(--color-post)] text-outline"> "{cluster.blurb}{cluster.blurb.length == 25 && "..." }" </p>
                     </div> 
                     :
                     <div className="post-marker bg-cluster after:border-t-cluster">

@@ -90,8 +90,8 @@ export function addGap(view: SplitRect) {
     let gapH;
     if (isSplit(view)) {
         const [a, b] = view as [Rect, Rect];
-        gapW = (a.right - a.left + (b.right - b.left)) * 0.1;
-        gapH = (a.top - a.bottom) * 0.1;
+        gapW = (a.right - a.left + (b.right - b.left)) * 0.3;
+        gapH = (a.top - a.bottom) * 0.3;
 
         if (a.right - a.left < gapW) {
             view[0] = null;
@@ -128,8 +128,8 @@ export function addGap(view: SplitRect) {
             if (b.right == 180) b.left += gapW;
         }
     } else {
-        gapW = (view[0]!.right - view[0]!.left) * 0.1;
-        gapH = (view[0]!.top - view[0]!.bottom) * 0.1;
+        gapW = (view[0]!.right - view[0]!.left) * 0.3;
+        gapH = (view[0]!.top - view[0]!.bottom) * 0.3;
         view[0]!.top -= gapH;
         view[0]!.bottom += gapH;
         view[0]!.left += gapW;

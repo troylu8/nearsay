@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useRef } from "react";
 import useSWR from "swr";
 
-import { fetchPost, sendVoteRequest } from "@/lib/data";
+import { fetchPost, sendVote } from "@/lib/data";
 import { Pos, Vote } from "@/lib/types";
 
 import NotFound from "@/app/not-found";
@@ -124,7 +124,7 @@ export default function Page({ params }: Props) {
             
         voteReqInProgressRef.current = true;
         
-        const resp = await sendVoteRequest(jwt, post_id, nextVote)
+        const resp = await sendVote(jwt, post_id, nextVote)
         
         if (resp.ok)    setVote(nextVote);
         else            sendNotification("server error");

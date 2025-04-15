@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import ReceptionModal from "../components/modal/reception-modal";
 
 export default function SignIn() {
-    return <ReceptionModal mode="sign-in"/>
+    return (
+        <Suspense>
+            <ReceptionModal mode="sign-in"/>
+        </Suspense>
+    )
 }

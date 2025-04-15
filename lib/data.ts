@@ -13,7 +13,18 @@ export async function fetchPost(jwt: string | undefined, post_id: string) {
     return await resp.json();
 }
 
-export function sendVoteRequest(jwt: string, post_id: string, vote: Vote) {
+export type FetchUserResp = {
+    _id: string,
+    username: string,
+    avatar: number,
+}
+
+export async function fetchOnlineUser(uid: string) {
+    const resp = await fetch(`${SERVER_URL}/users/online/${uid}`);
+    return await resp.json() as FetchUserResp;
+}
+
+export function sendVote(jwt: string, post_id: string, vote: Vote) {
     return fetch(`${SERVER_URL}/vote/${post_id}`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + jwt },
