@@ -15,6 +15,7 @@ import { useNotifications } from "@/app/contexts/notifications-provider";
 import ColoredSvg from "../colored-svg";
 import { useImmer } from "use-immer";
 import { fetchOnlineUser } from "@/lib/data";
+import { original, produce } from "immer";
 
 type UserPOI = {
     id: string,
@@ -68,7 +69,8 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     const uid = useUid();
     const sendNotification = useNotifications();
     
-    const [markers, setMarkers] = useImmer<Markers>({ posts: [], users: []});
+    const [posts, setPosts] = useState<Cluster[]>([]);
+    const [users, setUsers] = useState<UserPOI[]>([]);
     const updateViewShiftCache = useViewShiftDataCache();
     
     const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
@@ -88,17 +90,18 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         
         // console.log("req", currViewData);
         
-        req.then(markers => {
+        req.then(({posts, users}) => {
             // if a new request has been made before this one finishes, ignore the results
             if (markersReq.current != req) return; 
             
             // sort users and posts by id, so that receiving the same items in a different order won't trigger rerender
-            markers.posts.sort((a, b) => a.id < b.id? -1 : 1);
-            markers.users.sort((a, b) => a.id < b.id? -1 : 1);
+            posts.sort((a, b) => a.id < b.id? -1 : 1);
+            users.sort((a, b) => a.id < b.id? -1 : 1);
             
             // console.log("recv", markers);
             
-            setMarkers(markers);
+            setPosts(posts);
+            setUsers(users);
             markersReq.current = null;
         })
         .catch(e => {
@@ -110,40 +113,40 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     
     const [chatMsgs] = useChat();
     
+    function handleUserEnter(newUser: UserPOI) {
+        console.log("handle u enter");
+        setUsers(prev => {
+            const next = [...prev];
+            insertUserOrPost(next, newUser);
+            return next;
+        });
+    }
+    function handleUserLeave(uid: string) {
+        setUsers( prev => prev.filter(u => u.id != uid));
+    }
+    function handleUserUpdate(update: {id: string, avatar?: number, username?: string}) {
+        setUsers( prev => {
+            return prev.map(user => {
+                if (user.id == update.id) {
+                    const updatedUser = {...user};
+                    if (update.avatar != null) updatedUser.avatar = update.avatar;
+                    if (update.username != null) updatedUser.username = update.username;
+                    return updatedUser;
+                }
+                else return user;
+            })
+        });
+    }
+    
     useEffect(() => {
-        function handleUserEnter(newUser: UserPOI) {
-            setMarkers( draft => {
-                insertUserOrPost(draft.users, newUser);
-            } );
-        }
-        function handleUserLeave(uid: string) {
-            setMarkers( draft => {
-                return {
-                    posts: draft.posts,
-                    users: draft.users.filter(u => u.id != uid)
-                };
-            });
-        }
-        function handleUserUpdate(update: {id: string, avatar?: number, username?: string}) {
-            setMarkers(draft => {
-                const user = draft.users.find(u => u.id == update.id);
-                if (!user) return;
-                if (update.avatar != null) user.avatar = update.avatar;
-                if (update.username != null) user.username = update.username;
-            });
-        }
         function handleNewPost(newPost: Cluster) {
-            setMarkers( draft => {
-                insertUserOrPost(draft.posts, newPost);
+            setPosts( prev => {
+                insertUserOrPost(prev, newPost);
+                return [...prev];
             });
         }
-        function handlePostDelete(post_id: string) {
-            setMarkers( draft => {
-                return {
-                    posts: draft.posts.filter(p => p.id != post_id),
-                    users: draft.users,
-                };
-            });
+        function handlePostDelete(postId: string) {
+            setPosts(prev => prev.filter(p => p.id != postId))
         }
         socket.on("user-enter", handleUserEnter);
         socket.on("user-leave", handleUserLeave);
@@ -160,48 +163,60 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         }
     }, []);
     
+    useEffect(() => console.log("posts", posts), [posts]);
+    useEffect(() => console.log("users", users), [users]);
+    
     useEffect(() => {
         function handleUserMove({id, pos}: {id: string, pos: Pos}) {
-            setMarkers( draft => {
-                const user = draft.users.find(u => u.id == id);
+            
+            const user = users.find(u => u.id == id);
                 
-                if (user) {
-                    
-                    // user moved around within view
-                    if (withinSplitRect(splitView, pos[0], pos[1])) 
-                        user.pos = pos;
-                    
-                    // user moved out of view
-                    else return {
-                        posts: draft.posts,
-                        users: draft.users.filter(u => u.id != uid)
-                    };
-                }
+            const USER_WAS_IN_BOUNDS = user != undefined;
+            const NEW_POS_IN_BOUNDS = withinSplitRect(view, pos[0], pos[1]);
+            
+            // user moved around within bounds
+            if (USER_WAS_IN_BOUNDS && NEW_POS_IN_BOUNDS) {
+                setUsers(prev => {
+                    return prev.map(user => (user.id == id)? {...user, pos: pos} : user);
+                });
+            }
+            
+            // user moved out of bounds
+            else if (USER_WAS_IN_BOUNDS && !NEW_POS_IN_BOUNDS) {
+                handleUserLeave(id);
+            }
+            
+            // user moved into bounds
+            else if (!USER_WAS_IN_BOUNDS && NEW_POS_IN_BOUNDS) {
+                console.log("moved into view");
                 
-                // user moved into view
-                else {
-                    fetchOnlineUser(id)
-                    .then(({avatar, username}) => {
-                        insertUserOrPost(draft.users, {id, pos, avatar, username});
-                    })
-                }
-            });
+                // temporarily add anonymous avatar
+                handleUserEnter({id, pos, avatar: 0}); 
+                
+                // update with avatar and username after its available
+                fetchOnlineUser(id).then(({avatar, username}) => {
+                    
+                    console.log("fetched user info", avatar, username);
+                    handleUserUpdate({id, avatar, username});
+                    
+                });
+            }
         }
         socket.on("user-move", handleUserMove);
         return () => { socket.removeListener("user-move", handleUserMove); }
-    }, []);
+    }, [view, users]);
     
     return (
         <>
             <TestDisplay key="test" view={splitView} viewShiftData={currViewData}  />
             <SelfMarker key="you" chatMsgs={chatMsgs["you"]} />
             {
-                markers.users
+                users
                 // .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
                 .map(u => <UserMarker key={u.id} user={u} chatMsgs={chatMsgs[u.id]} />)
             }
             {
-                markers.posts
+                posts
                 // .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
                 .map(cluster => <ClusterMarker key={cluster.id} cluster={cluster} onClick={id => router.replace("/posts/" + id, { scroll: false })} />)
             }

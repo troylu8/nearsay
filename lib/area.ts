@@ -44,7 +44,7 @@ function alignToTiles(view: Rect): [number, Rect] {
 
 export type SplitRect = [Rect | null, Rect | null];
 export function withinSplitRect(splitRect: SplitRect, x: number, y: number) {
-    return (splitRect[0] && within(splitRect[0], x, y)) || (splitRect[1] && within(splitRect[1], x, y));
+    return (splitRect[0] != null && within(splitRect[0], x, y)) || (splitRect[1] != null && within(splitRect[1], x, y));
 }
 
 
