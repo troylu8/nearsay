@@ -36,7 +36,7 @@ export default function HamburgerMenu() {
             onClick={() => setShowDropdown(!showDropdown)}
         >
             <div className={` w-3 h-3 rounded-full ${presence? "bg-green-600" : "border-gray-300 border-[3px]"}`}></div>
-            <p> {username ?? "[signed in as guest]"} </p>
+            <p className="[--outline-color:white] text-outline"> {username ?? "[browsing anonymously]"} </p>
             <div className="relative bg-primary rounded-md p-2">
                 <ColoredSvg 
                     src={showDropdown? "/icons/x.svg" : "/icons/hamburger.svg"} 

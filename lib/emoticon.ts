@@ -28,3 +28,5 @@ export function randomEmoticonIndex(seed?: string) {
 export function randomEmoticon(seed?: string) {
     return EMOTICONS[randomEmoticonIndex(seed)];
 }
+
+export const ERROR_EMOTICON = "(;°Д°)";

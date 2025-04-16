@@ -45,7 +45,6 @@ export default function ChatContextProvider({ children }: Props) {
     
     useEffect(() => {
         const handleChat = ({id, msg}: {id: string, msg: string}) => {
-            console.log("got chat msg", id, msg);
             appendChatMsg(id, msg);
         };
         const handleUserLeave = (uid: string) => setChatMsgs(draft => { delete draft[uid] });

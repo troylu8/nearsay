@@ -13,9 +13,7 @@ import { useAvatar, usePresence, useUid, useUsername } from "@/app/contexts/acco
 import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import ColoredSvg from "../colored-svg";
-import { useImmer } from "use-immer";
 import { fetchOnlineUser } from "@/lib/data";
-import { original, produce } from "immer";
 
 type UserPOI = {
     id: string,
@@ -74,7 +72,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     const updateViewShiftCache = useViewShiftDataCache();
     
     const splitView = split({top: bounds.north, bottom: bounds.south, left: bounds.west, right: bounds.east});
-    addGap(splitView);
+    // addGap(splitView);
     const [tile_layer, view] = getSplitTileRegion(splitView);
     const currViewData: ViewShiftData = { uid, zoom: zoomLevel, tile_layer, view };
     
@@ -114,7 +112,6 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     const [chatMsgs] = useChat();
     
     function handleUserEnter(newUser: UserPOI) {
-        console.log("handle u enter");
         setUsers(prev => {
             const next = [...prev];
             insertUserOrPost(next, newUser);
@@ -163,9 +160,6 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         }
     }, []);
     
-    useEffect(() => console.log("posts", posts), [posts]);
-    useEffect(() => console.log("users", users), [users]);
-    
     useEffect(() => {
         function handleUserMove({id, pos}: {id: string, pos: Pos}) {
             
@@ -188,17 +182,13 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             
             // user moved into bounds
             else if (!USER_WAS_IN_BOUNDS && NEW_POS_IN_BOUNDS) {
-                console.log("moved into view");
                 
                 // temporarily add anonymous avatar
                 handleUserEnter({id, pos, avatar: 0}); 
                 
                 // update with avatar and username after its available
                 fetchOnlineUser(id).then(({avatar, username}) => {
-                    
-                    console.log("fetched user info", avatar, username);
                     handleUserUpdate({id, avatar, username});
-                    
                 });
             }
         }
@@ -208,16 +198,16 @@ export default function Markers({ zoomLevel, bounds }: Props) {
     
     return (
         <>
-            <TestDisplay key="test" view={splitView} viewShiftData={currViewData}  />
+            {/* <TestDisplay key="test" view={splitView} viewShiftData={currViewData}  /> */}
             <SelfMarker key="you" chatMsgs={chatMsgs["you"]} />
             {
                 users
-                // .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
+                .filter(u => withinSplitRect(splitView, u.pos[0], u.pos[1]))
                 .map(u => <UserMarker key={u.id} user={u} chatMsgs={chatMsgs[u.id]} />)
             }
             {
                 posts
-                // .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
+                .filter(p => withinSplitRect(splitView, p.pos[0], p.pos[1]))    
                 .map(cluster => <ClusterMarker key={cluster.id} cluster={cluster} onClick={id => router.replace("/posts/" + id, { scroll: false })} />)
             }
         </>

@@ -12,6 +12,7 @@ import { useGeolocation } from "../../contexts/geolocation-provider";
 import Markers from "./markers";
 import MapUI from "./map-ui";
 import ColoredSvg from "../colored-svg";
+import { ERROR_EMOTICON } from "@/lib/emoticon";
 
 const DEFAULT_ZOOM = 9;
 
@@ -105,7 +106,7 @@ function PanToUserOnceGeolocationReady() {
             err => {
                 switch (err.code) {
                     case GeolocationPositionError.PERMISSION_DENIED: 
-                        setText("you've denied access to your location");
+                        setText("you've denied location access");
                         break;
                         
                     case GeolocationPositionError.POSITION_UNAVAILABLE: 
@@ -136,7 +137,7 @@ function PanToUserOnceGeolocationReady() {
                 if (e.animationName == "fade-out") setText(null);
             }}
         > 
-            {isError && <p> (;°Д°) </p>}
+            {isError && <p> {ERROR_EMOTICON} </p>}
             
             <p> { text } </p>
             

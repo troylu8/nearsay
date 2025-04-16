@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, useRef } from "react";
+import { useEffect, useState, use, useRef, Fragment } from "react";
 import useSWR from "swr";
 
 import { fetchPost, sendVote } from "@/lib/data";
@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useJWT, useUid, useUsername } from "@/app/contexts/account-providers";
 import { EMOTICONS, randomEmoticon } from "@/lib/emoticon";
 import { socketfetch } from "@/lib/server";
+import ErrorModal from "@/app/components/modal/error-modal";
 
 
 const ACTION_NAME: Readonly<Record<Vote, string>> = {
@@ -95,11 +96,16 @@ export default function Page({ params }: Props) {
         return () => updatePostPos(null);
     }, [data]);
     
-    //TODO: error page instead of not found page
-    if (error) return <NotFound />;
-    if (!data || isLoading) return <></>; //TODO: loading page
+    if (error) return (
+        <ErrorModal 
+            title="post" 
+            msg={`sorry, we had trouble getting post "${post_id}":`}
+            err={error}
+        />
+    );
+    if (!data || isLoading) return <Modal title="post"> please wait... </Modal>;
     const { post } = data;
-
+    
     async function handleVote(nextVote: Vote) {
 
         if (nextVote == vote) return;
@@ -190,7 +196,11 @@ export default function Page({ params }: Props) {
                         </div>
                     }
                 </div>
-                <p className="my-3 select-text"> {post.body} </p>
+                <p className="my-3 select-text">
+                    {
+                        post.body.split("\n").map((line, i) => <Fragment key={i}>{line}<br/></Fragment>)
+                    }
+                </p>
 
                 {/* property icons row */}
                 <div className="flex justify-between py-6">
@@ -265,10 +275,13 @@ type ExpiryIconProps = {
 function ExpiryIcon({ baseExpiry = 0, vote }: ExpiryIconProps) {
 
     const note = vote === Vote.LIKE ? "(+ 2d)" : vote === Vote.DISLIKE ? "(- 1d)" : undefined;
-
+    
+    const MS_UNTIL_EXPIRY = msTilDay(baseExpiry + LIFETIME_WEIGHT[vote]);
+    const TIME_DISPLAY = MS_UNTIL_EXPIRY > 0? `${toTimeDisplay(MS_UNTIL_EXPIRY)} left` : "til 0:00 UTC" 
+    
     return (
         <div className="relative">
-            <PropertyIcon src="/icons/clock.svg" value={toTimeDisplay(msTilDay(baseExpiry + LIFETIME_WEIGHT[vote])) + " left"} />
+            <PropertyIcon src="/icons/clock.svg" value={TIME_DISPLAY} />
             {note && (
                 <p 
                     className="absolute bottom-full left-1/2 -translate-x-1/2 text-nowrap" 
