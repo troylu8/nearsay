@@ -15,7 +15,7 @@ export default function ErrorModal({title, msg, err}: Props) {
             </p>
             
             <p className="text-failure mt-5">
-                {JSON.stringify(err)}
+                {err.message}
             </p>
         </Modal>
     )

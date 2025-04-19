@@ -55,7 +55,7 @@ type UsePostType = {
     isLoading: boolean;
 };
 function usePost(jwt: string | undefined, post_id: string): UsePostType {
-    return useSWR(post_id, () => fetchPost(jwt, post_id) );
+    return useSWR(post_id, () => fetchPost(jwt, post_id));
 }
 
 type Props = {
@@ -96,7 +96,8 @@ export default function Page({ params }: Props) {
         return () => updatePostPos(null);
     }, [data]);
     
-    if (error) return (
+     
+    if (error) return error.message == "404"? <NotFound/> : (
         <ErrorModal 
             title="post" 
             msg={`sorry, we had trouble getting post "${post_id}":`}

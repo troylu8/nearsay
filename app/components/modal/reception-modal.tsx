@@ -89,27 +89,25 @@ export default function ReceptionModal({ mode, onSuccess }: Props) {
                 onSuccess!();
             }
             catch (err: any) {
+                console.error(err);
                 if (err.code == 401)            setPasswordErr("wrong password");
                 else if (err.code == 404)       setUsernameErr("username doesnt exist");
                 else if (err.code == 500)       sendNotification("server error");
-                else {
-                    console.error(err);
-                    sendNotification(`unexpected error: ${err}`);
-                }
+                else                            sendNotification(`unexpected error: ${err}`);
             }
         }
 
         // submit was clicked when creating an account
         else if (verifyUsernameInput(username) && verifyPasswordsInput(password, passwordRepeated)) {
 
-            //TODO: loading bar
             try {
-                await signUp(username, password);
+                await signUp(username, password, true);
 
                 sendNotification(`account created! welcome, ${username}`);
                 onSuccess!();
             }
             catch (err: any) {
+                console.error(err);
                 if (err.code == 409)        setUsernameErr("username taken");
                 else                        sendNotification("server error");
             }

@@ -70,7 +70,7 @@ function AvatarEditor() {
 function DeleteAccount() {
     const username = useUsername()[0];
     const sendNotification = useNotifications();
-    const deleteAccount = () => useAccountControls()[2](true);
+    const [_, __, signOut] = useAccountControls();
     const router = useRouter();
 
     const [confirmation, setConfirmation] = useState("");
@@ -81,7 +81,7 @@ function DeleteAccount() {
         if (confirmation != CONFIRM_MESSAGE) return;
 
         try {
-            await deleteAccount();
+            await signOut(true);
             sendNotification("account successfully deleted");
             router.replace("/", {scroll: false});
         }
@@ -112,6 +112,9 @@ function UsernameEditor() {
 
     const [newUsername, setNewUsername] = useState("");
     const [usernameErr, setUsernameErr] = useState<string | null>(null);
+    
+    const [requestActive, setRequestActive] = useState(false); 
+    
     function verifyUsernameInput(newUsername: string) {
         if (newUsername == "") {
             setUsernameErr("username can't be empty");
@@ -128,13 +131,13 @@ function UsernameEditor() {
     }
 
     async function handleChangeUsername() {
-        if (verifyUsernameInput(newUsername)) {
-            //TODO: loading bar
+        if (!requestActive && verifyUsernameInput(newUsername)) {
             try {
+                setRequestActive(true);
                 await changeUsername(newUsername);
+                setRequestActive(false);
                 setNewUsername("");
                 sendNotification(`username changed! hello, ${newUsername}`);
-                
             }
             catch (err: any) {
                 if (err.code == 409)        setUsernameErr("username taken");
@@ -160,7 +163,7 @@ function UsernameEditor() {
                             placeholder="new username.."
                             onSubmit={handleChangeUsername}
                         />
-                        <button onClick={handleChangeUsername}>apply</button>
+                        <button onClick={handleChangeUsername}>{requestActive? "..." : "apply"}</button>
                     </div>
                     {usernameErr && <p className="text-failure"> (;°Д°) {usernameErr}</p>}
                 </>

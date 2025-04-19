@@ -8,9 +8,14 @@ export async function fetchPost(jwt: string | undefined, post_id: string) {
     if (sessionStorage.getItem(post_id) == null) headers["Increment-View"] = "";
     
     const resp = await fetch(`${SERVER_URL}/posts/${post_id}`, {headers} );
-    if (resp.ok) sessionStorage.setItem(post_id, "");
+    if (resp.ok) {
+        sessionStorage.setItem(post_id, "");
+        return await resp.json();
+    }
+    else {
+        throw new Error("" + resp.status);
+    }
     
-    return await resp.json();
 }
 
 export type FetchUserResp = {

@@ -1,3 +1,4 @@
+import { ERROR_EMOTICON } from "@/lib/emoticon";
 import Link from "next/link";
 
 export default function NotFound() {
@@ -8,7 +9,7 @@ export default function NotFound() {
             flex flex-col justify-center items-center gap-3"
         >
             <h2>[404] page not found</h2>
-            <p>this link leads nowhere</p>
+            <p> {ERROR_EMOTICON} this link leads nowhere</p>
             <Link href="/" scroll={false}>
                 <p> back to map </p>
             </Link>

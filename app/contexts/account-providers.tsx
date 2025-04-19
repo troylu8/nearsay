@@ -15,7 +15,7 @@ const AvatarContext = createContext<
     [string | null, number, (nextAvatar: number) => Promise<void>] | null
 >(null);
 
-type SignUp = (username: string, password: string, avatar?: number) => Promise<void>
+type SignUp = (username: string, password: string, fromGuest: boolean) => Promise<void>
 type SignIn = (username: string, password: string) => Promise<void>
 type SignOut = (deleteAccount?: boolean) => Promise<void>
 const AccountControlsContext = createContext<[SignUp, SignIn, SignOut] | null>(null);
@@ -95,18 +95,17 @@ export default function AccountContextProvider({ children }: Props) {
     }
     
     /** if `newAvatar` is not given, sign up using guest jwt */
-    async function signUp(username: string, password: string, avatar?: number) {
+    async function signUp(username: string, password: string, fromGuest: boolean) {
         password = hash(password);
         
-        if (avatar == undefined) {
+        if (fromGuest && presence && jwt) {
             await socketfetch("sign-up-from-guest", {guest_jwt: jwt, username, password });
-            localStorage.setItem("jwt", jwt!);
+            localStorage.setItem("jwt", jwt);
         }
         else {
-            const nextJWT = await socketfetch<string>("sign-up", {username, password, avatar, pos: geolocation});
+            const nextJWT = await socketfetch<string>("sign-up", {username, password, avatar, pos: presence? geolocation : undefined});
             setJWT(nextJWT);
             localStorage.setItem("jwt", nextJWT);
-            setAvatar(avatar);
         }
         setUsername(username);
     }
@@ -156,8 +155,8 @@ export default function AccountContextProvider({ children }: Props) {
         }
     }
     async function signOut(deleteAccount?: boolean) {
-        if (presence) await exitWorld(true, deleteAccount);
-        clearAccountInfo();
+        if (presence || deleteAccount) await exitWorld(presence, deleteAccount);
+        if (!presence) clearAccountInfo();
     }
     
     // send move event with jwt 
@@ -200,23 +199,24 @@ export default function AccountContextProvider({ children }: Props) {
                 setUsername(username);
                 setAvatar(avatar);
             }
-             
-            try {
-                if (savedPresence) {
-                    onceGeolocationReady(async pos => {
-                        await socketfetch<SignInFromJWTResp>("sign-in-from-jwt", {jwt: savedJWT, pos: toArrayCoords(pos)})
-                        .then(initAccInfo);
-                    });
-                }
-                else {
-                    socketfetch<SignInFromJWTResp>("sign-in-from-jwt", {jwt: savedJWT})
-                    .then(initAccInfo)
-                }
-            }
-            catch (e) {
+            function fallbackAsGuest(e: any) {
                 console.error("err signing in as user, signing as guest instead");
                 console.error(e);
                 signInAsGuest(savedPresence);
+            }
+            
+             
+            if (savedPresence) {
+                onceGeolocationReady(async pos => {
+                    await socketfetch<SignInFromJWTResp>("sign-in-from-jwt", {jwt: savedJWT, pos: toArrayCoords(pos)})
+                    .then(initAccInfo)
+                    .catch(fallbackAsGuest)
+                });
+            }
+            else {
+                socketfetch<SignInFromJWTResp>("sign-in-from-jwt", {jwt: savedJWT})
+                .then(initAccInfo)
+                .catch(fallbackAsGuest)
             }
         }
     }, []);
