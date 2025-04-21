@@ -4,8 +4,10 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
-        "start": "next start",
+        "//build": "next build",
+        "//start": "next start",
+        "build": "next build && tsc --project tsconfig.server.json",
+        "start": "cross-env NODE_ENV=production node dist/server.js",
         "a": "netstat -ano | findstr :3000, taskkill /F /PID "
     },
     "dependencies": {
@@ -15,7 +17,8 @@
         "react-dom": "^19.0.0",
         "socket.io-client": "^4.8.1",
         "swr": "^2.3.2",
-        "use-immer": "^0.11.0"
+        "use-immer": "^0.11.0",
+        "cross-env": "^7.0.3"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.0.17",
@@ -24,6 +27,7 @@
         "@types/react-dom": "^19",
         "postcss": "^8",
         "tailwindcss": "^4.0.17",
-        "typescript": "^5"
+        "typescript": "^5",
+        "ts-node": "^10.9.1"
     }
 }

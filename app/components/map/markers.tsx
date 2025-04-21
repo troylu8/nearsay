@@ -86,7 +86,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
         let req = socketfetch<Markers>("view-shift", currViewData);
         markersReq.current = req;
         
-        // console.log("req", currViewData);
+        console.log("req", currViewData);
         
         req.then(({posts, users}) => {
             // if a new request has been made before this one finishes, ignore the results
@@ -96,7 +96,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             posts.sort((a, b) => a.id < b.id? -1 : 1);
             users.sort((a, b) => a.id < b.id? -1 : 1);
             
-            // console.log("recv", markers);
+            console.log("recv", posts, users);
             
             setPosts(posts);
             setUsers(users);
