@@ -19,7 +19,7 @@ app.prepare()
         const parsedUrl = parse(req.url!, true);
         handle(req, res, parsedUrl);
     })
-    .listen(3000);
+    .listen(443);
     
     console.log("nextjs server listening..");
 });
