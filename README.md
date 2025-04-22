@@ -6,4 +6,7 @@
 
 <img src="readme-resources/nearsay-icon.png" alt="nearsay icon" width="100" align="right" /> 
 
-The message board to shout your thoughts to the world.
+A message board for shouting your thoughts to the world.
+
+🗺️ visit >> ![nearsay.troylu.com](https://nearsay.troylu.com)
+
