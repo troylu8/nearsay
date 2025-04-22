@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import ColoredSvg from "./colored-svg";
 import { useNotifications } from "../contexts/notifications-provider";
 import Link from "next/link";
-import { useAccountControls, usePresence, useJWT, useUsername } from "../contexts/account-providers";
+import { useAccountControls, usePresence, useUsername } from "../contexts/account-providers";
 
 
 export default function HamburgerMenu() {

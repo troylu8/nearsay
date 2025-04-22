@@ -4,7 +4,7 @@ import { useEffect, useState, use, useRef, Fragment } from "react";
 import useSWR from "swr";
 
 import { fetchPost, sendVote } from "@/lib/data";
-import { Pos, Vote } from "@/lib/types";
+import { Vote } from "@/lib/types";
 
 import NotFound from "@/app/not-found";
 import ColoredSvg, { UIButton } from "@/app/components/colored-svg";
@@ -13,7 +13,7 @@ import Modal from "@/app/components/modal/modal";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useJWT, useUid, useUsername } from "@/app/contexts/account-providers";
+import { useJWT, useUsername } from "@/app/contexts/account-providers";
 import { EMOTICONS, randomEmoticon } from "@/lib/emoticon";
 import { socketfetch } from "@/lib/server";
 import ErrorModal from "@/app/components/modal/error-modal";
@@ -167,10 +167,10 @@ export default function Page({ params }: Props) {
     const baseLikes = priorVote == Vote.LIKE ? likes - 1 : likes;
     const baseDislikes = priorVote == Vote.DISLIKE ? dislikes - 1 : dislikes;
     
-    const avatarColor = 
-        !post.authorAvatar ? "bg-anonymous-avatar" :
-        post.authorName == username?  "bg-self-avatar" :
-        "bg-others-avatar";
+    const [avatarColor, usernameColor] = 
+        post.authorAvatar == undefined ? ["bg-secondary", "text-secondary"] :
+        post.authorName == username?  ["bg-self-avatar", "text-self-avatar"] :
+        ["bg-others-avatar", "text-others-avatar"];
     
     return (
         <Modal title="post">
@@ -179,7 +179,7 @@ export default function Page({ params }: Props) {
                     <div className={`avatar-frame ${avatarColor}`}> 
                         {post.authorAvatar? EMOTICONS[post.authorAvatar] : randomEmoticon(post_id)} 
                     </div>
-                    <p className="my-3 select-text"> {post.authorName ?? "[anonymous]"} </p>
+                    <p className={`my-3 select-text ${usernameColor}`}> {post.authorName ?? "[anonymous]"} </p>
                     
                     {username != null && post.authorName === username &&
                         <div className="grow flex flex-row-reverse gap-3 items-center">
@@ -208,13 +208,13 @@ export default function Page({ params }: Props) {
                     <div className="flex gap-3 justify-start">
                         <PropertyIcon 
                             src={vote === Vote.LIKE ? "/icons/star-filled.svg" : "/icons/star.svg"} 
-                            color={vote === Vote.LIKE ? COLOR[Vote.LIKE] : undefined} 
+                            color={COLOR[Vote.LIKE]} 
                             value={vote == Vote.LIKE ? baseLikes + 1 : baseLikes} 
                             onClick={() => handleVote(vote === Vote.LIKE ? Vote.NONE : Vote.LIKE)} 
                         />
                         <PropertyIcon 
                             src={vote === Vote.DISLIKE ? "/icons/dislike-filled.svg" : "/icons/dislike.svg"} 
-                            color={vote === Vote.DISLIKE ? COLOR[Vote.DISLIKE] : undefined} 
+                            color={COLOR[Vote.DISLIKE]} 
                             value={vote == Vote.DISLIKE ? baseDislikes + 1 : baseDislikes} 
                             onClick={() => handleVote(vote === Vote.DISLIKE ? Vote.NONE : Vote.DISLIKE)} 
                         />

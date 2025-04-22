@@ -6,7 +6,6 @@ import { useJWT } from "./account-providers";
 import { toArrayCoords, useGeolocation } from "./geolocation-provider";
 import { genID } from "@/lib/data";
 import { useImmer } from "use-immer";
-import { useNotifications } from "./notifications-provider";
 
 
 type ChatMsgs = Record<string, [string, string][]>;

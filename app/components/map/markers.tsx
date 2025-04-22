@@ -1,15 +1,15 @@
 "use client";
 
-import { addGap, Rect, split, SplitRect, within, withinSplitRect, BOUND, splitRectsEqual, getSplitTileRegion } from "@/lib/area";
-import { AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
+import { split, SplitRect,  withinSplitRect,  splitRectsEqual, getSplitTileRegion } from "@/lib/area";
+import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { useRouter } from "next/navigation";
-import { Pos, User } from "@/lib/types";
+import { Pos } from "@/lib/types";
 import { EMOTICONS } from "@/lib/emoticon";
 import { socket, socketfetch } from "@/lib/server";
 import TestDisplay from "./test-display";
-import { useEffect, useLayoutEffect, useRef, useState, memo } from "react";
+import { useEffect,  useRef, useState, memo } from "react";
 import { useChat } from "@/app/contexts/chat-provider";
-import { useAvatar, usePresence, useUid, useUsername } from "@/app/contexts/account-providers";
+import { useAvatar, usePresence, useUid } from "@/app/contexts/account-providers";
 import { toArrayCoords, useGeolocation } from "@/app/contexts/geolocation-provider";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import ColoredSvg from "../colored-svg";
@@ -269,11 +269,12 @@ const UserMarker = memo( ({ user, chatMsgs, zIndex = 10, className }: UserMarker
                         <p 
                             key={id} 
                             className="
-                                p-1 bg-primary rounded-md mb-2 
+                                p-1 bg-primary outline-2 outline-background rounded-md mb-2 
                                 text-center w-fit max-w-[300px] break-words 
                                 text-background text-[16px] px-[7px] py-[4px]
                                 anim-fade-in
                             "
+                            style={{fontFamily: "Cascadia, monospace"}}
                         >
                             {msg}  
                         </p>
@@ -286,7 +287,7 @@ const UserMarker = memo( ({ user, chatMsgs, zIndex = 10, className }: UserMarker
         <div className="flex flex-col"> 
             <div className={`avatar-frame translate-y-1/2 [--outline-color:var(--color-others-avatar)] ${className} self-center`}>
                 {EMOTICONS[user.avatar]}
-                <p className="absolute top-full left-1/2 -translate-x-1/2 text-outline">
+                <p className="absolute top-full left-1/2 -translate-x-1/2 text-outline" style={{fontFamily: "Cascadia, monospace"}}>
                     {user.username}
                 </p>
             </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, use, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { toArrayCoords, useGeolocation } from "./geolocation-provider";
-import { SERVER_URL, socket, socketfetch } from "@/lib/server";
+import {  socketfetch } from "@/lib/server";
 import { createHash } from "crypto";
 import { EMOTICONS, randomEmoticonIndex } from "@/lib/emoticon";
 

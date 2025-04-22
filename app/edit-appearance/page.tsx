@@ -3,7 +3,7 @@
 import { useState } from "react";
 import BindedInput from "../components/text-input";
 import Modal from "../components/modal/modal";
-import {  useAccountControls, useAvatar, usePresence, useUsername } from "@/app/contexts/account-providers";
+import {  useAccountControls, useAvatar, useUsername } from "@/app/contexts/account-providers";
 import { useNotifications } from "@/app/contexts/notifications-provider";
 import Link from "next/link";
 
@@ -100,7 +100,7 @@ function DeleteAccount() {
                     valid={confirmation == CONFIRM_MESSAGE}
                     placeholder={CONFIRM_MESSAGE}
                 />
-                <button onClick={handleDeleteAccount} disabled={confirmation != CONFIRM_MESSAGE}>delete account</button>
+                <button onClick={handleDeleteAccount} disabled={confirmation != CONFIRM_MESSAGE}>delete!</button>
             </div>
         </div>
     )

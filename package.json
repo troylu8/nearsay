@@ -5,11 +5,8 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "//build": "next build",
-        "//start": "next start",
-        "build": "next build && tsc --project tsconfig.server.json",
-        "start": "cross-env NODE_ENV=production node dist/server.js",
-        "a": "netstat -ano | findstr :3000, taskkill /F /PID "
+        "build": "tsc --project tsconfig.server.json && next build",
+        "start": "cross-env NODE_ENV=production node dist/server.js"
     },
     "dependencies": {
         "@vis.gl/react-google-maps": "^1.4.2",

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme inline {
+@theme {
     --color-primary: #964f63;
     --color-secondary: #793682;
     --color-background: #f7f0ed;
@@ -10,7 +10,6 @@
 
     --color-self-avatar: #cc3e47;
     --color-others-avatar: #4a7f60;
-    --color-anonymous-avatar: var(--color-secondary);
 
     --color-post: #518ab3;
     --color-cluster: #7d539b;

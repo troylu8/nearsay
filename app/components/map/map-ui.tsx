@@ -1,8 +1,8 @@
 import { useMap } from "@vis.gl/react-google-maps";
-import ColoredSvg, { UIButton } from "../colored-svg";
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { UIButton } from "../colored-svg";
+import { useCallback, useEffect, useState } from "react";
 import { Circle } from "./circle";
-import { toArrayCoords, useGeolocation } from "../../contexts/geolocation-provider";
+import { useGeolocation } from "../../contexts/geolocation-provider";
 import CreatePostModal from "../modal/create-post-modal";
 import BindedInput from "../text-input";
 import { useChat } from "@/app/contexts/chat-provider";
