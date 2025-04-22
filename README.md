@@ -10,10 +10,10 @@ A message board for shouting your thoughts to the world.
 🌎 visit! >> [nearsay.troylu.com](https://nearsay.troylu.com)
 
 <p align="center">
-    <img height="400" style="border-radius:10px" src="readme-resources/chat.png">
-    <img height="400" style="border-radius:10px" src="readme-resources/appearance.png">
-    <img height="400" style="border-radius:10px" src="readme-resources/post.png">
-    <img height="400" style="border-radius:10px" src="readme-resources/placing.png">
+    <img height="700" style="border-radius:10px" src="readme-resources/chat.png">
+    <img height="700" style="border-radius:10px" src="readme-resources/appearance.png">
+    <img height="700" style="border-radius:10px" src="readme-resources/post.png">
+    <img height="700" style="border-radius:10px" src="readme-resources/placing.png">
 </p>
 
 
