@@ -21,11 +21,12 @@ A message board for shouting your thoughts to the world.
 no login required!*
 
 <p align="center">
-    <img height="700" style="border-radius:10px" src="readme-resources/chat.png">
-    <img height="700" style="border-radius:10px" src="readme-resources/appearance.png">
-    <img height="700" style="border-radius:10px" src="readme-resources/post.png">
-    <img height="700" style="border-radius:10px" src="readme-resources/placing.png">
+    <img width="390" src="readme-resources/chat.png">
+    <img width="390" src="readme-resources/appearance.png">
+    <img width="390" src="readme-resources/post.png">
+    <img width="390" src="readme-resources/placing.png">
 </p>
+
 
 *creating an account lets you:
  - give likes/dislikes 
