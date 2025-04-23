@@ -20,7 +20,7 @@ export function roundDown(n: number, size: number) {
 
 /** returns `[tile layer, aligned rect]` */
 function alignToTiles(view: Rect): [number, Rect] {
-    const viewSize = Math.max(view.right - view.left, view.top - view.bottom);
+    const viewSize = Math.min(view.right - view.left, view.top - view.bottom);
     
     let layer = 0;
     let tileSize = BOUND * 2;
