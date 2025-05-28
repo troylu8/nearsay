@@ -1,5 +1,5 @@
-> [!NOTE]  
-> The link at [nearsay.troylu.com](https://nearsay.troylu.com) doesn't work anymore because my AWS EC2 free tier ran out and I have nowhere to host it 😭
+> [!NOTE] 
+> `5/28/2025` The link at [nearsay.troylu.com](https://nearsay.troylu.com) doesn't work anymore because my AWS EC2 free tier ran out and I have nowhere to host it 😭 
 
 # nearsay
 
