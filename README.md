@@ -1,3 +1,6 @@
+> [!NOTE]  
+> The link at [nearsay.troylu.com](https://nearsay.troylu.com) doesn't work anymore because my AWS EC2 free tier ran out and I have nowhere to host it 😭
+
 # nearsay
 
 [![github](https://img.shields.io/badge/-nearsay-%23181717?logo=github)](https://github.com/troylu8/nearsay)
