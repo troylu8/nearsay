@@ -2,8 +2,8 @@ import { io } from "socket.io-client";
 
 
 // export const SERVER_URL = "https://troy-book.tail2138e6.ts.net:8443/";
-// export const SERVER_URL = "http://3.136.27.0:5000";
-export const SERVER_URL = "https://nearsay.troylu.com:5000";
+// export const SERVER_URL = "http://localhost:21114";
+export const SERVER_URL = "https://api-nearsay.troylu.com";
 
 export const socket = io(SERVER_URL);
 

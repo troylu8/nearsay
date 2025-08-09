@@ -103,7 +103,7 @@ export default function Markers({ zoomLevel, bounds }: Props) {
             markersReq.current = null;
         })
         .catch(e => {
-            sendNotification("error getting map data from server");
+            sendNotification("server is down, map data unavailable");
             console.error(e);
         });
         
