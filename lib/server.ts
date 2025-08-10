@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 // export const SERVER_URL = "http://localhost:21114";
 export const SERVER_URL = "https://api-nearsay.troylu.com";
 
-export const socket = io(SERVER_URL);
+export const socket = io(SERVER_URL, {transports: ['websocket']});
 
 function isOk(status: number) {
     return status >= 200 && status <= 299;
